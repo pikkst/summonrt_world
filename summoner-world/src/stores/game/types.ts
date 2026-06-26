@@ -88,6 +88,27 @@ export interface GameStoreState {
     endTime: number;
     totalDuration: number;
   } | null;
+  capturing: {
+    missionId: string;
+    creature: {
+      key: string;
+      name: string;
+      class: CreatureClass;
+      type: CreatureType;
+      elements: Element[];
+      baseHealth: number;
+      baseAttack: number;
+      baseDefense: number;
+      baseSpeed: number;
+      baseMana: number;
+      baseExpValue: number;
+      skills: { key: string; name: string; description: string; element?: Element; power: number; cost: number }[];
+      description: string;
+      isBoss?: boolean;
+    };
+    endTime: number;
+    totalDuration: number;
+  } | null;
   activity: {
     type: 'creature_training' | 'physical_training' | 'rest' | 'search_tracks' | 'search_animals';
     creatureId?: string;
@@ -138,8 +159,9 @@ export interface GameActions {
    switchCreatureInCombat: (creatureId: string) => void;
    searchArea: () => void;
    finishSearch: (resourceKey: string) => void;
-   gatherResource: (resourceKey: string) => void;
-   captureCreature: () => void;
+    gatherResource: (resourceKey: string) => void;
+    captureCreature: () => void;
+    finishCapture: () => void;
    openCreaturePanel: () => void;
    openInventory: () => void;
    openWorldMap: () => void;

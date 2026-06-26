@@ -75,9 +75,11 @@ export const GameShell: React.FC = () => {
   const exploreTile = useGameStore((s) => s.exploreTile);
   const activity = useGameStore((s) => s.activity);
   const cancelActivity = useGameStore((s) => s.cancelActivity);
+  const capturing = useGameStore((s) => s.capturing);
 
   const [input, setInput] = useState('');
   const [exploreProgress, setExploreProgress] = useState(0);
+  const [captureProgress, setCaptureProgress] = useState(0);
   const logEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -96,6 +98,23 @@ export const GameShell: React.FC = () => {
     }
     return () => clearInterval(interval);
   }, [exploring]);
+
+  useEffect(() => {
+    let interval: any;
+    if (capturing) {
+      interval = setInterval(() => {
+        const now = Date.now();
+        const total = capturing.totalDuration;
+        const remaining = capturing.endTime - now;
+        const progress = Math.max(0, Math.min(100, ((total - remaining) / total) * 100));
+        setCaptureProgress(progress);
+        if (progress >= 100) clearInterval(interval);
+      }, 100);
+    } else {
+      setCaptureProgress(0);
+    }
+    return () => clearInterval(interval);
+  }, [capturing]);
 
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -189,7 +208,9 @@ export const GameShell: React.FC = () => {
       }
       case 'capture':
       case 'catch':
-        if (!tile?.explored) {
+        if (capturing) {
+          appendLog('You are already attempting to capture a creature.', 'warning');
+        } else if (!tile?.explored) {
           appendLog('Explore this sector first to seek out nearby souls.', 'warning');
         } else {
           captureCreature();
@@ -522,21 +543,31 @@ export const GameShell: React.FC = () => {
                    </div>
                 </div>
 
-                {/* Interactive Points */}
-                <div className="mt-8 flex flex-wrap gap-4">
-                   {exploring ? (
-                     <div className="text-xs font-black text-indigo-500 uppercase tracking-widest animate-pulse">Establishing Neural Link...</div>
-                   ) : activity ? (
-                     <div className="border border-gray-700 p-4 rounded-md bg-black/30 flex items-center gap-4">
-                       <span className="text-sm text-indigo-400 animate-pulse">⏳ {activity.message}</span>
-                       <button 
-                         onClick={cancelActivity}
-                         className="px-3 py-1 bg-red-800/30 hover:bg-red-800/50 border border-red-800/50 rounded text-[10px] font-black uppercase tracking-widest text-red-400 transition-colors"
-                       >
-                         Cancel
-                       </button>
-                     </div>
-                   ) : (
+                 {/* Interactive Points */}
+                 <div className="mt-8 flex flex-wrap gap-4">
+                    {exploring ? (
+                      <div className="text-xs font-black text-indigo-500 uppercase tracking-widest animate-pulse">Establishing Neural Link...</div>
+                    ) : capturing ? (
+                      <div className="w-full">
+                        <div className="flex justify-between text-xs font-black text-rose-500 uppercase tracking-widest mb-1">
+                          <span>Binding Soul...</span>
+                          <span>{Math.round(captureProgress)}%</span>
+                        </div>
+                        <div className="h-2 bg-gray-900 rounded-full overflow-hidden border border-rose-500/20">
+                          <div className="h-full bg-rose-500 transition-all duration-100" style={{ width: `${captureProgress}%` }} />
+                        </div>
+                      </div>
+                    ) : activity ? (
+                      <div className="border border-gray-700 p-4 rounded-md bg-black/30 flex items-center gap-4">
+                        <span className="text-sm text-indigo-400 animate-pulse">⏳ {activity.message}</span>
+                        <button 
+                          onClick={cancelActivity}
+                          className="px-3 py-1 bg-red-800/30 hover:bg-red-800/50 border border-red-800/50 rounded text-[10px] font-black uppercase tracking-widest text-red-400 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
                      <>
                        <button onClick={searchArea} className="text-xs font-black text-emerald-500 uppercase tracking-widest border-b-2 border-emerald-500/20 pb-1 hover:border-emerald-500 transition-all">Search Area</button>
                        {tile?.resourceType && tile.resourceQty && (
@@ -544,7 +575,7 @@ export const GameShell: React.FC = () => {
                            Gather {RESOURCES[tile.resourceType]?.name}
                          </button>
                        )}
-                       <button onClick={captureCreature} className="text-xs font-black text-rose-500 uppercase tracking-widest border-b-2 border-rose-500/20 pb-1 hover:border-rose-500 transition-all">Manifest Soul</button>
+                        <button onClick={captureCreature} disabled={!!capturing} className="text-xs font-black text-rose-500 uppercase tracking-widest border-b-2 border-rose-500/20 pb-1 hover:border-rose-500 transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-rose-500/20">Manifest Soul</button>
                      </>
                    )}
                 </div>

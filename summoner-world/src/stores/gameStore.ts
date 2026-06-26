@@ -32,6 +32,7 @@ const initialGameState: GameStoreState = {
   dungeon: { active: false, worldId: 1, currentFloor: 0, totalFloors: 3, clearedFloors: [], bossDefeated: false, inEncounter: false },
   exploring: null,
   searching: null,
+  capturing: null,
   activity: null,
   nearbyPlayers: [],
     community: {

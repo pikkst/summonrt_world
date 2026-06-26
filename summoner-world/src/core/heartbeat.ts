@@ -16,6 +16,7 @@ export interface HeartbeatCallbacks {
     CARAVAN_ROUTE: (mission: ActiveMission) => void;
     SEARCH_AREA: (mission: ActiveMission) => void;
     GATHER_RESOURCE: (mission: ActiveMission) => void;
+    CAPTURE_CREATURE: (mission: ActiveMission) => void;
   };
 }
 

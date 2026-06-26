@@ -15,10 +15,11 @@ const createEmptyCallbacks = (): HeartbeatCallbacks => ({
     STORE_VISIT: vi.fn(),
     TAX_EDICT: vi.fn(),
     CARAVAN_ROUTE: vi.fn(),
-    SEARCH_AREA: vi.fn(),
-    GATHER_RESOURCE: vi.fn(),
-  },
-});
+      SEARCH_AREA: vi.fn(),
+      GATHER_RESOURCE: vi.fn(),
+      CAPTURE_CREATURE: vi.fn(),
+    },
+  });
 
 describe('createHeartbeat', () => {
   beforeEach(() => {

@@ -407,6 +407,7 @@ set({
       missions: state.missions,
       exploring: state.exploring,
       searching: state.searching,
+      capturing: state.capturing,
       lastLogoutTimestamp: state.lastLogoutTimestamp,
       log: state.log.slice(-500),
       savedAt: Date.now(),
@@ -507,6 +508,7 @@ set({
         missions: data.missions || [],
         exploring: data.exploring || null,
         searching: data.searching || null,
+        capturing: data.capturing || null,
         lastLogoutTimestamp: logoutTimestamp,
           initialized: true,
         });

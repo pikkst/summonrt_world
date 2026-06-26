@@ -268,8 +268,13 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
   },
 
   captureCreature: () => {
-    const { player, worlds, currentWorldId, appendLog } = get();
+    const { player, worlds, currentWorldId, capturing, appendLog } = get();
     if (!player) return;
+
+    if (capturing) {
+      appendLog('You are already attempting to capture a creature.', 'warning');
+      return;
+    }
 
     const world = worlds.get(currentWorldId);
     if (!world) return;
@@ -291,6 +296,50 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
       return;
     }
 
+    const duration = 60;
+    const mission = get().addMissionWithModifiers({
+      type: 'CAPTURE_CREATURE',
+      assigned_creatures: [],
+      world_layer: currentWorldId,
+      duration_seconds: duration,
+    });
+
+    if (mission) {
+      set({
+        capturing: {
+          missionId: mission.mission_id,
+          creature: {
+            key: creature.key,
+            name: creature.name,
+            class: creature.class,
+            type: creature.type,
+            elements: creature.elements,
+            baseHealth: creature.baseHealth,
+            baseAttack: creature.baseAttack,
+            baseDefense: creature.baseDefense,
+            baseSpeed: creature.baseSpeed,
+            baseMana: creature.baseMana,
+            baseExpValue: creature.baseExpValue,
+            skills: creature.skills.map((s) => typeof s === 'string' ? { key: s, name: '', description: '', power: 0, cost: 0 } : s),
+            description: creature.description,
+            isBoss: creature.isBoss,
+          },
+          endTime: mission.end_time,
+          totalDuration: mission.duration_seconds * 1000,
+        },
+      });
+      appendLog(`Beginning capture ritual for ${creature.name}... (${mission.duration_seconds}s)`, 'info');
+    }
+  },
+
+  finishCapture: () => {
+    const { player, capturing, appendLog } = get();
+    if (!player || !capturing) return;
+
+    const creature = capturing.creature;
+
+    const hasNebulaShroud = player.skillsUnlocked?.['nebula_shroud'] === true;
+
     let rarityPenalty = 1.0;
     switch (creature.class) {
       case 'common': rarityPenalty = 1.0; break;
@@ -306,18 +355,18 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
       rarityPenalty = Math.min(1.0, rarityPenalty * 1.5);
     }
 
-    const creatureLevel = currentWorldId;
+    const creatureLevel = player.currentWorldId || 1;
     const levelDiff = creatureLevel - player.level;
     const levelFactor = levelDiff > 0 ? Math.max(0.1, 1 - (levelDiff * 0.05)) : 1.0;
 
     if (creatureLevel > player.level + 5 && !hasNebulaShroud) {
       appendLog(`This ${creature.name} (Level ${creatureLevel}) is far too powerful for you to bind! You need to be at least Level ${creatureLevel - 5}.`, 'warning');
+      set({ capturing: null });
       return;
     }
 
-    let baseChance = 0.60;
-
     const hasWildWhisper = player.skillsUnlocked?.['wild_whisper'] === true;
+    let baseChance = 0.60;
     if (hasWildWhisper) {
       baseChance += 0.15;
     }
@@ -326,7 +375,7 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
 
     const roll = Math.random();
     if (roll < pCapture) {
-      player.creatures.push({
+      const newCreature = {
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         templateKey: creature.key,
         nickname: creature.name,
@@ -346,8 +395,7 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
         speed: creature.baseSpeed,
         elements: creature.elements,
         type: creature.type,
-      });
-      appendLog(`✨ Success! You captured a new creature: ${creature.name} (${creature.class.toUpperCase()})!`, 'success');
+      };
 
       set((state) => {
         const updatedQuests = state.player!.activeQuests.map((q: QuestInstance) => {
@@ -362,10 +410,12 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
         return {
           player: {
             ...state.player!,
+            creatures: [...state.player!.creatures, newCreature],
             activeQuests: updatedQuests,
           }
         };
       });
+      appendLog(`✨ Success! You captured a new creature: ${creature.name} (${creature.class.toUpperCase()})!`, 'success');
     } else {
       appendLog(`💨 Failed to capture ${creature.name}. The creature's soul broke free of your binding spell! (Capture Chance: ${Math.round(pCapture * 100)}%)`, 'warning');
 
@@ -375,6 +425,8 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
         }, 500);
       }
     }
+
+    set({ capturing: null });
   },
 
   interactNPC: () => {
@@ -1035,15 +1087,21 @@ const heartbeat = createHeartbeat({
              state.finishSearch(state.searching.resourceType!);
            }
          },
-         GATHER_RESOURCE: (mission: ActiveMission) => {
-           const state = get();
-           const resourceType = mission.modifiers?.resource_type as string | undefined;
-           if (state.searching && resourceType) {
-             state.finishSearch(resourceType);
-           }
-         },
-       },
-     });
+          GATHER_RESOURCE: (mission: ActiveMission) => {
+            const state = get();
+            const resourceType = mission.modifiers?.resource_type as string | undefined;
+            if (state.searching && resourceType) {
+              state.finishSearch(resourceType);
+            }
+          },
+          CAPTURE_CREATURE: () => {
+            const state = get();
+            if (state.capturing) {
+              state.finishCapture();
+            }
+          },
+        },
+      });
 
     const beforeCount = get().missions.length;
     heartbeat.tick();
@@ -1090,15 +1148,21 @@ const instance = createHeartbeat({
              state.finishSearch(state.searching.resourceType!);
            }
          },
-         GATHER_RESOURCE: (mission: ActiveMission) => {
-           const state = get();
-           const resourceType = mission.modifiers?.resource_type as string | undefined;
-           if (state.searching && resourceType) {
-             state.finishSearch(resourceType);
-           }
-         },
-       },
-     });
+          GATHER_RESOURCE: (mission: ActiveMission) => {
+            const state = get();
+            const resourceType = mission.modifiers?.resource_type as string | undefined;
+            if (state.searching && resourceType) {
+              state.finishSearch(resourceType);
+            }
+          },
+          CAPTURE_CREATURE: () => {
+            const state = get();
+            if (state.capturing) {
+              state.finishCapture();
+            }
+          },
+        },
+      });
 
     instance.start();
     set({ heartbeat: instance });

@@ -114,6 +114,17 @@ describe('SEARCH_AREA and GATHER_RESOURCE mission types', () => {
     expect(mission.duration_seconds).toBe(85);
     expect(mission.modifiers.tree_speed_pct).toBe(15);
   });
+
+  it('creates CAPTURE_CREATURE mission with correct type and duration', () => {
+    const mission = createActiveMission({
+      type: 'CAPTURE_CREATURE',
+      assigned_creatures: [],
+      world_layer: 1,
+      duration_seconds: 60,
+    });
+    expect(mission.type).toBe('CAPTURE_CREATURE');
+    expect(mission.duration_seconds).toBeGreaterThanOrEqual(60);
+  });
 });
 
 describe('getCreatureAgilityMod', () => {
@@ -324,6 +335,7 @@ describe('Property-based testing: Mission Queue invariants', () => {
     'CARAVAN_ROUTE',
     'SEARCH_AREA',
     'GATHER_RESOURCE',
+    'CAPTURE_CREATURE',
   ] as const;
 
   function generateRandomMission(index: number): ActiveMission {

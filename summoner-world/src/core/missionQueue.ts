@@ -12,7 +12,8 @@ export type MissionType =
   | 'TAX_EDICT'
   | 'CARAVAN_ROUTE'
   | 'SEARCH_AREA'
-  | 'GATHER_RESOURCE';
+  | 'GATHER_RESOURCE'
+  | 'CAPTURE_CREATURE';
 
 export type MissionStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
