@@ -44,6 +44,7 @@ const initialGameState: GameStoreState = {
     trades: [],
   },
   missions: [],
+  heartbeat: null,
   };
 
 export const useGameStore = create<GameStore>()(

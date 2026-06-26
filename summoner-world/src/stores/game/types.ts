@@ -31,6 +31,7 @@ import type {
 
 import type { ActiveMission } from '../../core/missionQueue.ts';
 import type { MissionType, MissionModifiers } from '../../core/missionQueue.ts';
+import type { HeartbeatInstance } from '../../core/heartbeat.ts';
 
 export type {
   PlayerState,
@@ -60,6 +61,7 @@ export type {
   ActiveMission,
   MissionType,
   MissionModifiers,
+  HeartbeatInstance,
 };
 
 export interface GameStoreState {
@@ -91,6 +93,7 @@ export interface GameStoreState {
   community: CommunityState;
   missions: ActiveMission[];
   lastLogoutTimestamp?: number;
+  heartbeat: HeartbeatInstance | null;
 }
 
 export interface GameActions {
@@ -176,7 +179,9 @@ addMission: (mission: ActiveMission) => void;
      duration_seconds: number;
      extraModifiers?: MissionModifiers;
    }) => ActiveMission | undefined;
-   processOfflineCatchUp: (logoutTimestamp: number) => number;
+    processOfflineCatchUp: (logoutTimestamp: number) => number;
+    startHeartbeat: () => void;
+    stopHeartbeat: () => void;
 }
 
 export type GameStore = GameStoreState & GameActions;

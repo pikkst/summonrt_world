@@ -119,6 +119,8 @@ const player: PlayerState = {
       dungeon: { active: false, worldId: 1, currentFloor: 0, totalFloors: 3, clearedFloors: [], bossDefeated: false, inEncounter: false, encounterType: undefined },
       exploring: null,
     });
+
+    get().startHeartbeat();
   },
 
   register: async (username: string, password: string, options: { name?: string; archetype?: string } = {}): Promise<boolean> => {
@@ -159,9 +161,10 @@ set({
            },
            worlds,
            currentWorldId: serverPlayer.currentWorld || 1,
-           initialized: true,
-           log: [createLog(`Welcome, ${serverPlayer.name || serverPlayer.username}. Your profile is now persistent.`, 'system', 0)],
-         });
+          initialized: true,
+            log: [createLog(`Welcome, ${serverPlayer.name || serverPlayer.username}. Your profile is now persistent.`, 'system', 0)],
+          });
+          get().startHeartbeat();
         appendLog('Registration complete. Your journey is saved to MongoDB.', 'success');
         return true;
       }
@@ -239,9 +242,10 @@ set({
            },
            worlds,
            currentWorldId: serverPlayer.currentWorld || 1,
-           initialized: true,
-           log: [createLog(`Welcome back, ${serverPlayer.username}!`, 'system', 0)],
-         });
+            initialized: true,
+            log: [createLog(`Welcome back, ${serverPlayer.username}!`, 'system', 0)],
+          });
+          get().startHeartbeat();
         set({
           nearbyPlayers: res.data.nearby?.areaPlayers || res.data.nearby || [],
           community: {
@@ -401,6 +405,7 @@ set({
       dungeon: state.dungeon,
       activity: state.activity,
       missions: state.missions,
+      exploring: state.exploring,
       lastLogoutTimestamp: state.lastLogoutTimestamp,
       log: state.log.slice(-500),
       savedAt: Date.now(),
@@ -499,11 +504,14 @@ set({
         dungeon: data.dungeon || { active: false, worldId: 1, currentFloor: 0, totalFloors: 3, clearedFloors: [], bossDefeated: false, inEncounter: false, encounterType: undefined },
         activity: data.activity || null,
         missions: data.missions || [],
+        exploring: data.exploring || null,
         lastLogoutTimestamp: logoutTimestamp,
-        initialized: true,
-      });
-      
-      if (logoutTimestamp && (data.missions || []).length > 0) {
+          initialized: true,
+        });
+
+        get().startHeartbeat();
+        
+        if (logoutTimestamp && (data.missions || []).length > 0) {
         const resolved = get().processOfflineCatchUp(logoutTimestamp);
         if (resolved > 0) {
           set({ lastLogoutTimestamp: undefined });

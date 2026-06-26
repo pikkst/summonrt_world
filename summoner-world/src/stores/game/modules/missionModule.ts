@@ -7,8 +7,9 @@ import { generateCreatureTemplate } from '../../../modules/creatures/creatureFac
 import { SeededRandom } from '../../../utils/SeededRandom.ts';
 import type { MissionStatus, MissionModifiers, ActiveMission } from '../../../core/missionQueue.ts';
 import { createActiveMission, getCreatureAgilityMod, MissionType } from '../../../core/missionQueue.ts';
-import { getAggregateStats, getAllNodes, getCareerModifiers } from '../../../data/careerTree/index';
+import type { HeartbeatInstance } from '../../../core/heartbeat.ts';
 import { createHeartbeat } from '../../../core/heartbeat.ts';
+import { getAggregateStats, getAllNodes, getCareerModifiers } from '../../../data/careerTree/index';
 import axios from 'axios';
 
 export const missionActions = (set: SetState<GameStore>, get: () => GameStore) => ({
@@ -41,18 +42,26 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
       return;
     }
 
-    const duration = currentWorldId * 30000;
-    const endTime = Date.now() + duration;
+    const duration = currentWorldId * 30;
+    const mission = get().addMissionWithModifiers({
+      type: 'EXPLORE_TIER_1',
+      assigned_creatures: [],
+      world_layer: currentWorldId,
+      duration_seconds: duration,
+    });
 
-    set({ exploring: { tileKey: newTileKey, endTime, totalDuration: duration, targetX: newX, targetY: newY } });
-    appendLog(`Venturing into unknown sector (${newX}, ${newY}). Arrival in ${duration / 1000}s...`, 'info');
-
-    setTimeout(() => {
-      const state = get();
-      if (state.exploring?.tileKey === newTileKey) {
-        state.finishMovement(newX, newY, newTileKey, true);
-      }
-    }, duration);
+    if (mission) {
+      set({
+        exploring: {
+          tileKey: newTileKey,
+          endTime: mission.end_time,
+          totalDuration: mission.duration_seconds * 1000,
+          targetX: newX,
+          targetY: newY,
+        },
+      });
+      appendLog(`Starting exploration mission to sector (${newX}, ${newY}). ETA: ${mission.duration_seconds}s`, 'info');
+    }
   },
 
   finishMovement: (x: number, y: number, tileKey: string, newlyExplored: boolean = false) => {
@@ -867,7 +876,7 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
 
   addMission: (mission: ActiveMission) => {
     set((state) => ({
-      missions: [...state.missions, mission]
+      missions: [...state.missions, { ...mission, status: 'IN_PROGRESS' as MissionStatus }]
     }));
   },
 
@@ -904,10 +913,12 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
       modifiers,
     });
 
+    const inProgressMission = { ...mission, status: 'IN_PROGRESS' as MissionStatus };
+
     set((state) => ({
-      missions: [...state.missions, mission]
+      missions: [...state.missions, inProgressMission]
     }));
-    return mission;
+    return inProgressMission;
   },
 
   completeMission: (missionId: string) => {
@@ -935,8 +946,13 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
   processOfflineCatchUp: (logoutTimestamp: number): number => {
     const now = Date.now();
     const missions = get().missions;
-    
+
     if (missions.length === 0) return 0;
+
+    const updatedMissions = missions.map((m) =>
+      m.status === 'PENDING' ? { ...m, status: 'IN_PROGRESS' as MissionStatus } : m
+    );
+    set({ missions: updatedMissions });
 
     const heartbeat = createHeartbeat({
       getCurrentTime: () => now,
@@ -944,7 +960,12 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
       removeMission: (id) => get().removeMission(id),
       getMissionById: (id) => get().missions.find((m) => m.mission_id === id),
       resolveMissionCallbacks: {
-        EXPLORE_TIER_1: () => {},
+        EXPLORE_TIER_1: () => {
+          const state = get();
+          if (state.exploring) {
+            state.finishMovement(state.exploring.targetX!, state.exploring.targetY!, state.exploring.tileKey, true);
+          }
+        },
         SCOUT_DUNGEON: () => {},
         SMELT_ORE: () => {},
         CRAFT_ITEM: () => {},
@@ -969,5 +990,42 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
     }
 
     return resolvedCount;
+  },
+
+  startHeartbeat: () => {
+    const { heartbeat } = get();
+    if (heartbeat) return;
+
+    const instance = createHeartbeat({
+      getCurrentTime: Date.now,
+      getMissions: () => get().missions,
+      removeMission: (id) => get().removeMission(id),
+      getMissionById: (id) => get().missions.find((m) => m.mission_id === id),
+      resolveMissionCallbacks: {
+        EXPLORE_TIER_1: () => {
+          const state = get();
+          if (state.exploring) {
+            state.finishMovement(state.exploring.targetX!, state.exploring.targetY!, state.exploring.tileKey, true);
+          }
+        },
+        SCOUT_DUNGEON: () => {},
+        SMELT_ORE: () => {},
+        CRAFT_ITEM: () => {},
+        STORE_VISIT: () => {},
+        TAX_EDICT: () => {},
+        CARAVAN_ROUTE: () => {},
+      },
+    });
+
+    instance.start();
+    set({ heartbeat: instance });
+  },
+
+  stopHeartbeat: () => {
+    const { heartbeat } = get();
+    if (heartbeat) {
+      heartbeat.stop();
+    }
+    set({ heartbeat: null });
   },
 });
