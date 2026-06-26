@@ -10,7 +10,9 @@ export type MissionType =
   | 'CRAFT_ITEM'
   | 'STORE_VISIT'
   | 'TAX_EDICT'
-  | 'CARAVAN_ROUTE';
+  | 'CARAVAN_ROUTE'
+  | 'SEARCH_AREA'
+  | 'GATHER_RESOURCE';
 
 export type MissionStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
@@ -20,7 +22,8 @@ export interface MissionModifiers {
   yield_bonus_pct?: number;
   tree_speed_pct?: number;
   creature_agility_mod?: number;
-  [key: string]: number | undefined;
+  resource_type?: string;
+  [key: string]: number | string | undefined;
 }
 
 export interface ActiveMission {

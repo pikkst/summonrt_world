@@ -161,7 +161,7 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
   },
 
   searchArea: () => {
-    const { player, worlds, currentWorldId, appendLog } = get();
+    const { player, worlds, currentWorldId, searching } = get();
     if (!player) return;
 
     const world = worlds.get(currentWorldId);
@@ -170,23 +170,64 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
     const tileKey = getTileKey(player.tileX, player.tileY);
     const tile = world.tiles.get(tileKey);
     if (!tile || !tile.resourceType) {
-      appendLog('You found nothing of interest here.', 'info');
+      get().appendLog('You found nothing of interest here.', 'info');
       return;
     }
 
-    const found = Math.min(tile.resourceQty ?? 0, 1 + Math.floor(Math.random() * 2));
-    const existing = (player.inventory || []).find((i) => i.templateKey === tile.resourceType);
-    if (existing) {
-      existing.quantity += found;
-    } else {
-      player.inventory.push({ templateKey: tile.resourceType, quantity: found });
+    if (searching) {
+      get().appendLog('You are already searching this area.', 'warning');
+      return;
     }
-    tile.resourceQty = Math.max(0, (tile.resourceQty ?? 0) - found);
-    appendLog(`You found ${found} ${tile.resourceType}!`, 'success');
+
+    const duration = 15 + Math.floor(Math.random() * 30);
+    const mission = get().addMissionWithModifiers({
+      type: 'SEARCH_AREA',
+      assigned_creatures: [],
+      world_layer: currentWorldId,
+      duration_seconds: duration,
+      extraModifiers: { resource_type: tile.resourceType },
+    });
+
+    if (mission) {
+      set({
+        searching: {
+          missionId: mission.mission_id,
+          resourceType: tile.resourceType,
+          endTime: mission.end_time,
+          totalDuration: mission.duration_seconds * 1000,
+        },
+      });
+      get().appendLog(`You begin searching the area for ${tile.resourceType}... (${duration}s)`, 'info');
+    }
+  },
+
+  finishSearch: (resourceKey: string) => {
+    const { player, worlds, currentWorldId, searching } = get();
+    if (!player || !searching) return;
+
+    const world = worlds.get(currentWorldId);
+    const tileKey = getTileKey(player.tileX, player.tileY);
+    const tile = world?.tiles.get(tileKey);
+
+    const found = Math.min(tile?.resourceQty ?? 0, 1 + Math.floor(Math.random() * 2));
+    if (found > 0 && tile) {
+      const existing = (player.inventory || []).find((i) => i.templateKey === resourceKey);
+      if (existing) {
+        existing.quantity += found;
+      } else {
+        player.inventory.push({ templateKey: resourceKey, quantity: found });
+      }
+      tile.resourceQty = Math.max(0, (tile.resourceQty ?? 0) - found);
+      get().appendLog(`You found ${found} ${resourceKey}!`, 'success');
+    } else {
+      get().appendLog('You found nothing of interest here.', 'info');
+    }
+
+    set({ searching: null });
   },
 
   gatherResource: (resourceKey: string) => {
-    const { player, worlds, currentWorldId, appendLog } = get();
+    const { player, worlds, currentWorldId, searching } = get();
     if (!player) return;
 
     const world = worlds.get(currentWorldId);
@@ -195,19 +236,35 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
     const tileKey = getTileKey(player.tileX, player.tileY);
     const tile = world.tiles.get(tileKey);
     if (!tile || tile.resourceType !== resourceKey || !tile.resourceQty || tile.resourceQty <= 0) {
-      appendLog('There is no such resource here.', 'warning');
+      get().appendLog('There is no such resource here.', 'warning');
       return;
     }
 
-    const gathered = Math.min(tile.resourceQty, 1 + Math.floor(Math.random() * 3));
-    const existing = (player.inventory || []).find((i) => i.templateKey === resourceKey);
-    if (existing) {
-      existing.quantity += gathered;
-    } else {
-      player.inventory.push({ templateKey: resourceKey, quantity: gathered });
+    if (searching) {
+      get().appendLog('You are already engaged in a gathering activity.', 'warning');
+      return;
     }
-    tile.resourceQty -= gathered;
-    appendLog(`You gathered ${gathered} ${resourceKey}.`, 'success');
+
+    const duration = 15 + Math.floor(Math.random() * 30);
+    const mission = get().addMissionWithModifiers({
+      type: 'GATHER_RESOURCE',
+      assigned_creatures: [],
+      world_layer: currentWorldId,
+      duration_seconds: duration,
+      extraModifiers: { resource_type: resourceKey },
+    });
+
+    if (mission) {
+      set({
+        searching: {
+          missionId: mission.mission_id,
+          resourceType: resourceKey,
+          endTime: mission.end_time,
+          totalDuration: mission.duration_seconds * 1000,
+        },
+      });
+      get().appendLog(`You begin gathering ${resourceKey}... (${duration}s)`, 'info');
+    }
   },
 
   captureCreature: () => {
@@ -954,26 +1011,39 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
     );
     set({ missions: updatedMissions });
 
-    const heartbeat = createHeartbeat({
-      getCurrentTime: () => now,
-      getMissions: () => get().missions,
-      removeMission: (id) => get().removeMission(id),
-      getMissionById: (id) => get().missions.find((m) => m.mission_id === id),
-      resolveMissionCallbacks: {
-        EXPLORE_TIER_1: () => {
-          const state = get();
-          if (state.exploring) {
-            state.finishMovement(state.exploring.targetX!, state.exploring.targetY!, state.exploring.tileKey, true);
-          }
-        },
-        SCOUT_DUNGEON: () => {},
-        SMELT_ORE: () => {},
-        CRAFT_ITEM: () => {},
-        STORE_VISIT: () => {},
-        TAX_EDICT: () => {},
-        CARAVAN_ROUTE: () => {},
-      },
-    });
+const heartbeat = createHeartbeat({
+       getCurrentTime: () => now,
+       getMissions: () => get().missions,
+       removeMission: (id) => get().removeMission(id),
+       getMissionById: (id) => get().missions.find((m) => m.mission_id === id),
+       resolveMissionCallbacks: {
+         EXPLORE_TIER_1: () => {
+           const state = get();
+           if (state.exploring) {
+             state.finishMovement(state.exploring.targetX!, state.exploring.targetY!, state.exploring.tileKey, true);
+           }
+         },
+         SCOUT_DUNGEON: () => {},
+         SMELT_ORE: () => {},
+         CRAFT_ITEM: () => {},
+         STORE_VISIT: () => {},
+         TAX_EDICT: () => {},
+         CARAVAN_ROUTE: () => {},
+         SEARCH_AREA: () => {
+           const state = get();
+           if (state.searching) {
+             state.finishSearch(state.searching.resourceType!);
+           }
+         },
+         GATHER_RESOURCE: (mission: ActiveMission) => {
+           const state = get();
+           const resourceType = mission.modifiers?.resource_type as string | undefined;
+           if (state.searching && resourceType) {
+             state.finishSearch(resourceType);
+           }
+         },
+       },
+     });
 
     const beforeCount = get().missions.length;
     heartbeat.tick();
@@ -996,26 +1066,39 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
     const { heartbeat } = get();
     if (heartbeat) return;
 
-    const instance = createHeartbeat({
-      getCurrentTime: Date.now,
-      getMissions: () => get().missions,
-      removeMission: (id) => get().removeMission(id),
-      getMissionById: (id) => get().missions.find((m) => m.mission_id === id),
-      resolveMissionCallbacks: {
-        EXPLORE_TIER_1: () => {
-          const state = get();
-          if (state.exploring) {
-            state.finishMovement(state.exploring.targetX!, state.exploring.targetY!, state.exploring.tileKey, true);
-          }
-        },
-        SCOUT_DUNGEON: () => {},
-        SMELT_ORE: () => {},
-        CRAFT_ITEM: () => {},
-        STORE_VISIT: () => {},
-        TAX_EDICT: () => {},
-        CARAVAN_ROUTE: () => {},
-      },
-    });
+const instance = createHeartbeat({
+       getCurrentTime: Date.now,
+       getMissions: () => get().missions,
+       removeMission: (id) => get().removeMission(id),
+       getMissionById: (id) => get().missions.find((m) => m.mission_id === id),
+       resolveMissionCallbacks: {
+         EXPLORE_TIER_1: () => {
+           const state = get();
+           if (state.exploring) {
+             state.finishMovement(state.exploring.targetX!, state.exploring.targetY!, state.exploring.tileKey, true);
+           }
+         },
+         SCOUT_DUNGEON: () => {},
+         SMELT_ORE: () => {},
+         CRAFT_ITEM: () => {},
+         STORE_VISIT: () => {},
+         TAX_EDICT: () => {},
+         CARAVAN_ROUTE: () => {},
+         SEARCH_AREA: () => {
+           const state = get();
+           if (state.searching) {
+             state.finishSearch(state.searching.resourceType!);
+           }
+         },
+         GATHER_RESOURCE: (mission: ActiveMission) => {
+           const state = get();
+           const resourceType = mission.modifiers?.resource_type as string | undefined;
+           if (state.searching && resourceType) {
+             state.finishSearch(resourceType);
+           }
+         },
+       },
+     });
 
     instance.start();
     set({ heartbeat: instance });

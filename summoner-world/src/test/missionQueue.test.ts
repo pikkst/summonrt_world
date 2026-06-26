@@ -46,6 +46,76 @@ describe('calculateCompressedDuration', () => {
   });
 });
 
+describe('SEARCH_AREA and GATHER_RESOURCE mission types', () => {
+  it('creates SEARCH_AREA mission with correct type', () => {
+    const mission = createActiveMission({
+      type: 'SEARCH_AREA',
+      assigned_creatures: [],
+      world_layer: 1,
+      duration_seconds: 30,
+    });
+    expect(mission.type).toBe('SEARCH_AREA');
+    expect(mission.duration_seconds).toBeGreaterThanOrEqual(60);
+  });
+
+  it('creates GATHER_RESOURCE mission with correct type', () => {
+    const mission = createActiveMission({
+      type: 'GATHER_RESOURCE',
+      assigned_creatures: [],
+      world_layer: 1,
+      duration_seconds: 30,
+    });
+    expect(mission.type).toBe('GATHER_RESOURCE');
+    expect(mission.duration_seconds).toBeGreaterThanOrEqual(60);
+  });
+
+  it('SEARCH_AREA mission stores resource_type in modifiers', () => {
+    const mission = createActiveMission({
+      type: 'SEARCH_AREA',
+      assigned_creatures: [],
+      world_layer: 1,
+      duration_seconds: 30,
+      modifiers: { resource_type: 'wood' },
+    });
+    expect(mission.modifiers.resource_type).toBe('wood');
+  });
+
+  it('GATHER_RESOURCE mission stores resource_type in modifiers', () => {
+    const mission = createActiveMission({
+      type: 'GATHER_RESOURCE',
+      assigned_creatures: [],
+      world_layer: 1,
+      duration_seconds: 30,
+      modifiers: { resource_type: 'ore' },
+    });
+    expect(mission.modifiers.resource_type).toBe('ore');
+  });
+
+  it('SEARCH_AREA mission respects speed modifiers from career tree', () => {
+    const mission = createActiveMission({
+      type: 'SEARCH_AREA',
+      assigned_creatures: [],
+      world_layer: 1,
+      duration_seconds: 100,
+      modifiers: { tree_speed_pct: 10 },
+    });
+    expect(mission.duration_seconds).toBe(90);
+    expect(mission.modifiers.tree_speed_pct).toBe(10);
+  });
+
+  it('GATHER_RESOURCE mission respects speed modifiers from career tree', () => {
+    const mission = createActiveMission({
+      type: 'GATHER_RESOURCE',
+      assigned_creatures: [],
+      world_layer: 1,
+      duration_seconds: 100,
+      modifiers: { tree_speed_pct: 15 },
+    });
+    expect(mission.duration_seconds).toBe(85);
+    expect(mission.modifiers.tree_speed_pct).toBe(15);
+  });
+});
+
 describe('getCreatureAgilityMod', () => {
   it('returns zero for an empty array', () => {
     expect(getCreatureAgilityMod([])).toBe(0);
@@ -252,6 +322,8 @@ describe('Property-based testing: Mission Queue invariants', () => {
     'STORE_VISIT',
     'TAX_EDICT',
     'CARAVAN_ROUTE',
+    'SEARCH_AREA',
+    'GATHER_RESOURCE',
   ] as const;
 
   function generateRandomMission(index: number): ActiveMission {

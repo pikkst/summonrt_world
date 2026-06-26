@@ -14,6 +14,8 @@ export interface HeartbeatCallbacks {
     STORE_VISIT: (mission: ActiveMission) => void;
     TAX_EDICT: (mission: ActiveMission) => void;
     CARAVAN_ROUTE: (mission: ActiveMission) => void;
+    SEARCH_AREA: (mission: ActiveMission) => void;
+    GATHER_RESOURCE: (mission: ActiveMission) => void;
   };
 }
 

@@ -2,6 +2,24 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createHeartbeat, resolveMission, updateMissionStatus, processMissionResult, type HeartbeatCallbacks } from '../core/heartbeat';
 import type { ActiveMission, MissionType } from '../core/missionQueue';
 
+const createEmptyCallbacks = (): HeartbeatCallbacks => ({
+  getCurrentTime: () => Date.now(),
+  getMissions: () => [],
+  removeMission: vi.fn(),
+  getMissionById: vi.fn(),
+  resolveMissionCallbacks: {
+    EXPLORE_TIER_1: vi.fn(),
+    SCOUT_DUNGEON: vi.fn(),
+    SMELT_ORE: vi.fn(),
+    CRAFT_ITEM: vi.fn(),
+    STORE_VISIT: vi.fn(),
+    TAX_EDICT: vi.fn(),
+    CARAVAN_ROUTE: vi.fn(),
+    SEARCH_AREA: vi.fn(),
+    GATHER_RESOURCE: vi.fn(),
+  },
+});
+
 describe('createHeartbeat', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -12,22 +30,7 @@ describe('createHeartbeat', () => {
   });
 
   it('should create heartbeat instance with start/stop/tick methods', () => {
-    const callbacks = {
-      getCurrentTime: () => Date.now(),
-      getMissions: () => [],
-      removeMission: vi.fn(),
-      getMissionById: () => undefined,
-      resolveMissionCallbacks: {
-        EXPLORE_TIER_1: vi.fn(),
-        SCOUT_DUNGEON: vi.fn(),
-        SMELT_ORE: vi.fn(),
-        CRAFT_ITEM: vi.fn(),
-        STORE_VISIT: vi.fn(),
-        TAX_EDICT: vi.fn(),
-        CARAVAN_ROUTE: vi.fn(),
-      },
-    };
-
+    const callbacks = createEmptyCallbacks();
     const heartbeat = createHeartbeat(callbacks);
     expect(heartbeat.start).toBeDefined();
     expect(heartbeat.stop).toBeDefined();
@@ -35,22 +38,7 @@ describe('createHeartbeat', () => {
   });
 
   it('should start 1-second interval loop', () => {
-    const callbacks = {
-      getCurrentTime: () => Date.now(),
-      getMissions: () => [],
-      removeMission: vi.fn(),
-      getMissionById: () => undefined,
-      resolveMissionCallbacks: {
-        EXPLORE_TIER_1: vi.fn(),
-        SCOUT_DUNGEON: vi.fn(),
-        SMELT_ORE: vi.fn(),
-        CRAFT_ITEM: vi.fn(),
-        STORE_VISIT: vi.fn(),
-        TAX_EDICT: vi.fn(),
-        CARAVAN_ROUTE: vi.fn(),
-      },
-    };
-
+    const callbacks = createEmptyCallbacks();
     const heartbeat = createHeartbeat(callbacks);
     heartbeat.start();
     
@@ -58,22 +46,7 @@ describe('createHeartbeat', () => {
   });
 
   it('should stop interval loop', () => {
-    const callbacks = {
-      getCurrentTime: () => Date.now(),
-      getMissions: () => [],
-      removeMission: vi.fn(),
-      getMissionById: () => undefined,
-      resolveMissionCallbacks: {
-        EXPLORE_TIER_1: vi.fn(),
-        SCOUT_DUNGEON: vi.fn(),
-        SMELT_ORE: vi.fn(),
-        CRAFT_ITEM: vi.fn(),
-        STORE_VISIT: vi.fn(),
-        TAX_EDICT: vi.fn(),
-        CARAVAN_ROUTE: vi.fn(),
-      },
-    };
-
+    const callbacks = createEmptyCallbacks();
     const heartbeat = createHeartbeat(callbacks);
     heartbeat.start();
     heartbeat.stop();
@@ -94,7 +67,7 @@ describe('createHeartbeat', () => {
       modifiers: {},
     };
 
-    const callbacks = {
+    const callbacks: HeartbeatCallbacks = {
       getCurrentTime: () => 15000,
       getMissions: () => [expiredMission],
       removeMission: vi.fn(),
@@ -107,6 +80,8 @@ describe('createHeartbeat', () => {
         STORE_VISIT: vi.fn(),
         TAX_EDICT: vi.fn(),
         CARAVAN_ROUTE: vi.fn(),
+        SEARCH_AREA: vi.fn(),
+        GATHER_RESOURCE: vi.fn(),
       },
     };
 
@@ -143,7 +118,7 @@ describe('createHeartbeat', () => {
     };
 
     const missions = [missionA, missionB];
-    const callbacks = {
+    const callbacks: HeartbeatCallbacks = {
       getCurrentTime: () => 20000,
       getMissions: () => missions,
       removeMission: vi.fn(),
@@ -156,6 +131,8 @@ describe('createHeartbeat', () => {
         STORE_VISIT: vi.fn(),
         TAX_EDICT: vi.fn(),
         CARAVAN_ROUTE: vi.fn(),
+        SEARCH_AREA: vi.fn(),
+        GATHER_RESOURCE: vi.fn(),
       },
     };
 
@@ -195,7 +172,7 @@ describe('createHeartbeat', () => {
     };
 
     const missions = [expired, active];
-    const callbacks = {
+    const callbacks: HeartbeatCallbacks = {
       getCurrentTime: () => 10000,
       getMissions: () => missions,
       removeMission: vi.fn(),
@@ -208,6 +185,8 @@ describe('createHeartbeat', () => {
         STORE_VISIT: vi.fn(),
         TAX_EDICT: vi.fn(),
         CARAVAN_ROUTE: vi.fn(),
+        SEARCH_AREA: vi.fn(),
+        GATHER_RESOURCE: vi.fn(),
       },
     };
 
@@ -232,11 +211,11 @@ describe('createHeartbeat', () => {
       modifiers: {},
     };
 
-    const callbacks = {
+    const callbacks: HeartbeatCallbacks = {
       getCurrentTime: () => 15000,
       getMissions: () => [activeMission],
       removeMission: vi.fn(),
-      getMissionById: () => activeMission,
+      getMissionById: vi.fn(),
       resolveMissionCallbacks: {
         EXPLORE_TIER_1: vi.fn(),
         SCOUT_DUNGEON: vi.fn(),
@@ -245,14 +224,15 @@ describe('createHeartbeat', () => {
         STORE_VISIT: vi.fn(),
         TAX_EDICT: vi.fn(),
         CARAVAN_ROUTE: vi.fn(),
+        SEARCH_AREA: vi.fn(),
+        GATHER_RESOURCE: vi.fn(),
       },
     };
-
     const heartbeat = createHeartbeat(callbacks);
     heartbeat.tick();
 
-expect(callbacks.removeMission).not.toHaveBeenCalled();
-   });
+    expect(callbacks.removeMission).not.toHaveBeenCalled();
+  });
 });
 
 describe('T2.11 - Offline catch-up with reward accumulation', () => {
@@ -293,7 +273,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
     const mission7 = createMission('caravan', 'CARAVAN_ROUTE', 4 * 60 * 60 * 1000);
     const mission8 = createMission('future', 'TAX_EDICT', 10 * 60 * 60 * 1000);
 
-    const callbacks = {
+    const callbacks: HeartbeatCallbacks = {
       getCurrentTime: () => loginTimestamp,
       getMissions: () => [mission1, mission2, mission3, mission4, mission5, mission6, mission7, mission8],
       removeMission: vi.fn((id: string) => {
@@ -327,6 +307,8 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
           accumulatedRewards.push({ templateKey: 'trade_goods', quantity: 3 });
           accumulatedXP.player += 100;
         },
+        SEARCH_AREA: () => {},
+        GATHER_RESOURCE: () => {},
       },
     };
 
@@ -350,7 +332,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
 
     const resolvedWithModifiers: ActiveMission[] = [];
 
-    const callbacks = {
+    const callbacks: HeartbeatCallbacks = {
       getCurrentTime: () => loginTimestamp,
       getMissions: () => [
         {
@@ -362,7 +344,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
           duration_seconds: 1800,
           end_time: logoutTimestamp + 1800000,
           status: 'IN_PROGRESS' as const,
-          modifiers: { tree_speed_pct: 20, creature_agility_mod: 10 },
+          modifiers: { tree_speed_pct: 20, creature_agility_mod: 10, resource_type: 'wood' },
         },
       ],
       removeMission: vi.fn((id: string) => {
@@ -378,10 +360,12 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
         STORE_VISIT: () => {},
         TAX_EDICT: () => {},
         CARAVAN_ROUTE: () => {},
+        SEARCH_AREA: () => {},
+        GATHER_RESOURCE: () => {},
       },
     };
 
-    const heartbeat = createHeartbeat(callbacks as HeartbeatCallbacks);
+    const heartbeat = createHeartbeat(callbacks);
     heartbeat.tick();
 
     expect(resolvedWithModifiers.length).toBe(1);
@@ -389,14 +373,14 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
     expect(resolvedWithModifiers[0]!.modifiers.creature_agility_mod).toBe(10);
   });
 
-it('should handle multiple combat missions and aggregate XP correctly', () => {
+  it('should handle multiple combat missions and aggregate XP correctly', () => {
     const logoutTimestamp = 3000000;
     const loginTimestamp = logoutTimestamp + 8 * 60 * 60 * 1000;
 
     const totalXp = { value: 0 };
     const totalRewards: string[] = [];
 
-    const callbacks = {
+    const callbacks: HeartbeatCallbacks = {
       getCurrentTime: () => loginTimestamp,
       getMissions: () => [
         {
@@ -435,10 +419,12 @@ it('should handle multiple combat missions and aggregate XP correctly', () => {
         STORE_VISIT: () => {},
         TAX_EDICT: () => {},
         CARAVAN_ROUTE: () => {},
+        SEARCH_AREA: () => {},
+        GATHER_RESOURCE: () => {},
       },
     };
 
-    const heartbeat = createHeartbeat(callbacks as HeartbeatCallbacks);
+    const heartbeat = createHeartbeat(callbacks);
     heartbeat.tick();
 
     expect(totalXp.value).toBe(90);
@@ -449,7 +435,7 @@ it('should handle multiple combat missions and aggregate XP correctly', () => {
     const logoutTimestamp = 4000000;
     const loginTimestamp = logoutTimestamp + 8 * 60 * 60 * 1000;
 
-    const callbacks = {
+    const callbacks: HeartbeatCallbacks = {
       getCurrentTime: () => loginTimestamp,
       getMissions: () => [
         {
@@ -485,10 +471,12 @@ it('should handle multiple combat missions and aggregate XP correctly', () => {
         STORE_VISIT: () => {},
         TAX_EDICT: () => {},
         CARAVAN_ROUTE: () => {},
+        SEARCH_AREA: () => {},
+        GATHER_RESOURCE: () => {},
       },
     };
 
-    const heartbeat = createHeartbeat(callbacks as HeartbeatCallbacks);
+    const heartbeat = createHeartbeat(callbacks);
     heartbeat.tick();
 
     const remaining = callbacks.getMissions().filter((m) => m.end_time > loginTimestamp);
@@ -573,6 +561,8 @@ it('should handle multiple combat missions and aggregate XP correctly', () => {
           xpTotal.value += 100;
           rewardCounts.caravan = (rewardCounts.caravan || 0) + 1;
         },
+        SEARCH_AREA: () => {},
+        GATHER_RESOURCE: () => {},
       },
     };
 
@@ -599,7 +589,7 @@ describe('resolveMission', () => {
       modifiers: {},
     };
 
-    const callbacks = {
+    const callbacks: HeartbeatCallbacks = {
       getCurrentTime: () => 15000,
       getMissions: () => [mission],
       removeMission: vi.fn(),
@@ -612,9 +602,11 @@ describe('resolveMission', () => {
         STORE_VISIT: vi.fn(),
         TAX_EDICT: vi.fn(),
         CARAVAN_ROUTE: vi.fn(),
+        SEARCH_AREA: vi.fn(),
+        GATHER_RESOURCE: vi.fn(),
       },
     };
-
+    
     const result = resolveMission(mission, callbacks);
     
     expect(result.victory).toBe(true);
@@ -636,7 +628,7 @@ describe('resolveMission', () => {
       modifiers: {},
     };
 
-    const callbacks = {
+    const callbacks: HeartbeatCallbacks = {
       getCurrentTime: () => 65000,
       getMissions: () => [mission],
       removeMission: vi.fn(),
@@ -649,6 +641,8 @@ describe('resolveMission', () => {
         STORE_VISIT: vi.fn(),
         TAX_EDICT: vi.fn(),
         CARAVAN_ROUTE: vi.fn(),
+        SEARCH_AREA: vi.fn(),
+        GATHER_RESOURCE: vi.fn(),
       },
     };
 
@@ -746,7 +740,7 @@ describe('offline catch-up scenarios', () => {
 
     const missions = [mission1, mission2, mission3];
     const resolvedIds: string[] = [];
-    const callbacks = {
+    const callbacks: HeartbeatCallbacks = {
       getCurrentTime: () => startTime + 8 * 60 * 60 * 1000,
       getMissions: () => missions,
       removeMission: (id: string) => {
@@ -763,6 +757,8 @@ describe('offline catch-up scenarios', () => {
         STORE_VISIT: vi.fn(),
         TAX_EDICT: vi.fn(),
         CARAVAN_ROUTE: vi.fn(),
+        SEARCH_AREA: vi.fn(),
+        GATHER_RESOURCE: vi.fn(),
       },
     };
 
@@ -789,7 +785,7 @@ describe('offline catch-up scenarios', () => {
       modifiers: {},
     };
 
-    const callbacks = {
+    const callbacks: HeartbeatCallbacks = {
       getCurrentTime: () => 20000,
       getMissions: () => [completed],
       removeMission: vi.fn(),
@@ -802,6 +798,8 @@ describe('offline catch-up scenarios', () => {
         STORE_VISIT: vi.fn(),
         TAX_EDICT: vi.fn(),
         CARAVAN_ROUTE: vi.fn(),
+        SEARCH_AREA: vi.fn(),
+        GATHER_RESOURCE: vi.fn(),
       },
     };
 
@@ -824,7 +822,7 @@ describe('offline catch-up scenarios', () => {
       modifiers: {},
     };
 
-    const callbacks = {
+    const callbacks: HeartbeatCallbacks = {
       getCurrentTime: () => 300000,
       getMissions: () => [pending],
       removeMission: vi.fn(),
@@ -837,6 +835,8 @@ describe('offline catch-up scenarios', () => {
         STORE_VISIT: vi.fn(),
         TAX_EDICT: vi.fn(),
         CARAVAN_ROUTE: vi.fn(),
+        SEARCH_AREA: vi.fn(),
+        GATHER_RESOURCE: vi.fn(),
       },
     };
 
