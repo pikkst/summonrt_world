@@ -1,0 +1,202 @@
+[
+  {
+    "id": "root_hub",
+    "name": "Adventurer",
+    "type": "minor",
+    "career_category": "General",
+    "connections": [],
+    "stats": {}
+  },
+  {
+    "id": "blacksmith_minor_1",
+    "name": "Apprentice Smith",
+    "type": "minor",
+    "career_category": "Blacksmith",
+    "connections": ["root_hub"],
+    "stats": {
+      "crafting_speed_pct": 5
+    }
+  },
+  {
+    "id": "blacksmith_notable_1",
+    "name": "Journeyman Smith",
+    "type": "notable",
+    "career_category": "Blacksmith",
+    "connections": ["blacksmith_minor_1"],
+    "stats": {
+      "crafting_speed_pct": 10,
+      "material_retention_chance": 5
+    }
+  },
+  {
+    "id": "blacksmith_keystone_1",
+    "name": "Master Smith",
+    "type": "keystone",
+    "career_category": "Blacksmith",
+    "connections": ["blacksmith_notable_1"],
+    "stats": {
+      "crafting_mastery": 1,
+      "unlocks_recipe_set": "advanced_weapons"
+    }
+  },
+  {
+    "id": "explorer_minor_1",
+    "name": "Pathfinder",
+    "type": "minor",
+    "career_category": "Explorer",
+    "connections": ["root_hub"],
+    "stats": {
+      "exploration_speed_pct": 5
+    }
+  },
+  {
+    "id": "explorer_notable_1",
+    "name": "Trailblazer",
+    "type": "notable",
+    "career_category": "Explorer",
+    "connections": ["explorer_minor_1"],
+    "stats": {
+      "exploration_speed_pct": 10,
+      "encounter_avoidance_chance": 5
+    }
+  },
+  {
+    "id": "explorer_keystone_1",
+    "name": "Cartographer",
+    "type": "keystone",
+    "career_category": "Explorer",
+    "connections": ["explorer_notable_1"],
+    "stats": {
+      "map_reveal_radius": 2,
+      "secret_discovery_chance": 10
+    }
+  },
+  {
+    "id": "official_minor_1",
+    "name": "Clerk",
+    "type": "minor",
+    "career_category": "Official",
+    "connections": ["root_hub"],
+    "stats": {
+      "tax_revenue_pct": 1
+    }
+  },
+  {
+    "id": "official_notable_1",
+    "name": "Magistrate",
+    "type": "notable",
+    "career_category": "Official",
+    "connections": ["official_minor_1"],
+    "stats": {
+      "tax_revenue_pct": 2,
+      "public_order_pct": 5
+    }
+  },
+  {
+    "id": "official_keystone_1",
+    "name": "Governor",
+    "type": "keystone",
+    "career_category": "Official",
+    "connections": ["official_notable_1"],
+    "stats": {
+      "settlement_upgrade_cost_pct": -15,
+      "unlocks_policy_making": 1
+    }
+  },
+  {
+    "id": "shopkeeper_minor_1",
+    "name": "Vendor",
+    "type": "minor",
+    "career_category": "Shopkeeper",
+    "connections": ["root_hub"],
+    "stats": {
+      "selling_price_pct": 2
+    }
+  },
+  {
+    "id": "shopkeeper_notable_1",
+    "name": "Merchant",
+    "type": "notable",
+    "career_category": "Shopkeeper",
+    "connections": ["shopkeeper_minor_1"],
+    "stats": {
+      "selling_price_pct": 3,
+      "store_traffic_pct": 5
+    }
+  },
+  {
+    "id": "shopkeeper_keystone_1",
+    "name": "Tycoon",
+    "type": "keystone",
+    "career_category": "Shopkeeper",
+    "connections": ["shopkeeper_notable_1"],
+    "stats": {
+      "unlocks_global_market": 1,
+      "rare_item_sourcing_chance": 5
+    }
+  },
+  {
+    "id": "broker_minor_1",
+    "name": "Courier",
+    "type": "minor",
+    "career_category": "Broker",
+    "connections": ["root_hub"],
+    "stats": {
+      "caravan_speed_pct": 5
+    }
+  },
+  {
+    "id": "broker_notable_1",
+    "name": "Trader",
+    "type": "notable",
+    "career_category": "Broker",
+    "connections": ["broker_minor_1"],
+    "stats": {
+      "caravan_speed_pct": 10,
+      "tariff_discount_pct": 5
+    }
+  },
+  {
+    "id": "broker_keystone_1",
+    "name": "Guildmaster",
+    "type": "keystone",
+    "career_category": "Broker",
+    "connections": ["broker_notable_1"],
+    "stats": {
+      "unlocks_trade_routes": 1,
+      "arbitrage_opportunity_chance": 10
+    }
+  },
+  {
+    "id": "summoner_minor_1",
+    "name": "Acolyte",
+    "type": "minor",
+    "career_category": "Summoner",
+    "connections": ["root_hub"],
+    "stats": {
+      "capture_bonus_pct": 1
+    }
+  },
+  {
+    "id": "summoner_notable_1",
+    "name": "Conjuror",
+    "type": "notable",
+    "career_category": "Summoner",
+    "connections": ["summoner_minor_1"],
+    "stats": {
+      "capture_bonus_pct": 2,
+      "fusion_success_chance": 5
+    }
+  },
+  {
+    "id": "summoner_keystone_1",
+    "name": "Arch-Summoner",
+    "type": "keystone",
+    "career_category": "Summoner",
+    "connections": ["summoner_notable_1"],
+    "stats": {
+      "unlocks_primal_fusion": 1,
+      "dual_element_chance": 1
+    }
+  }
+]

@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Times New Roman", Times, serif;
+}
+
+@layer base {
+  body {
+    @apply bg-black text-gray-200 overflow-hidden;
+  }
+}
+
+@layer components {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #000;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #444;
+  }
+}
+
+@keyframes exploreBar {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
