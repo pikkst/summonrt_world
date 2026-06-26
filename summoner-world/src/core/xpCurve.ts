@@ -19,3 +19,8 @@ export function getXPForLevel(startLevel: number, endLevel: number): bigint {
   if (startLevel === endLevel) return 0n;
   return getCumulativeXP(endLevel) - getCumulativeXP(startLevel);
 }
+
+export function getWorldModifier(worldIndex: number): number {
+  if (worldIndex < 1) throw new Error('World index must be at least 1');
+  return 1 + (worldIndex * 0.05);
+}

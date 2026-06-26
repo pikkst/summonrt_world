@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getXPThreshold, getCumulativeXP, getXPForLevel } from '../core/xpCurve';
+import { getXPThreshold, getCumulativeXP, getXPForLevel, getWorldModifier } from '../core/xpCurve';
 
 describe('getXPThreshold', () => {
   it('Level 1 threshold equals 100 XP', () => {
@@ -50,5 +50,30 @@ describe('getXPForLevel', () => {
 
   it('handles large level ranges without overflow', () => {
     expect(getXPForLevel(1, 1000) > 0n).toBe(true);
+  });
+});
+
+describe('getWorldModifier', () => {
+  it('World 1 modifier equals 1.05', () => {
+    expect(getWorldModifier(1)).toBe(1.05);
+  });
+
+  it('World 10 modifier equals 1.50', () => {
+    expect(getWorldModifier(10)).toBe(1.50);
+  });
+
+  it('World 100 modifier equals 6.00', () => {
+    expect(getWorldModifier(100)).toBe(6.00);
+  });
+
+  it('formula is 1 + (WorldIndex * 0.05)', () => {
+    for (let i = 1; i <= 100; i++) {
+      expect(getWorldModifier(i)).toBeCloseTo(1 + i * 0.05, 10);
+    }
+  });
+
+  it('throws for world index < 1', () => {
+    expect(() => getWorldModifier(0)).toThrow();
+    expect(() => getWorldModifier(-1)).toThrow();
   });
 });

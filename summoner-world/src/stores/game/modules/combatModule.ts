@@ -1,5 +1,5 @@
 import type { GameStore, GameStoreState, CombatState, CreatureTemplate, CreatureInstance, DungeonState, LogEntry, PlayerState, QuestInstance, Element, SetState } from '../types.ts';
-import { createLog, addPlayerXP, getPlayerElements } from '../helpers.ts';
+import { createLog, addPlayerXP, getPlayerElements, getWorldModifier } from '../helpers.ts';
 import { generateCreatureTemplate } from '../../../modules/creatures/creatureFactory.ts';
 import { SeededRandom } from '../../../utils/SeededRandom.ts';
 import { SKILL_TEMPLATES } from '../../../modules/creatures/creatureFactory.ts';
@@ -377,7 +377,7 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
       return c;
     });
 
-    const finalPlayerState = addPlayerXP(player, baseExpGained / 4, appendLog);
+    const finalPlayerState = addPlayerXP(player, baseExpGained / 4, appendLog, getWorldModifier(player.currentWorldId));
 
     const newInventory = [...finalPlayerState.inventory];
     if (eggDropped) {

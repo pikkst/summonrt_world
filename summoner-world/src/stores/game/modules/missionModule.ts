@@ -479,7 +479,7 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
   },
 
   completeQuest: (questId: string) => {
-    const { player, appendLog } = get();
+    const { player, currentWorldId, appendLog } = get();
     if (!player) return;
 
     const qIdx = player.activeQuests.findIndex(q => q.id === questId);
@@ -517,7 +517,7 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
       }
     };
 
-    const updatedPlayer = addPlayerXP(basePlayer, template.rewards?.exp || 0, appendLog);
+    const updatedPlayer = addPlayerXP(basePlayer, template.rewards?.exp || 0, appendLog, getWorldModifier(currentWorldId));
 
     set({ player: updatedPlayer });
     appendLog(`Quest Completed: ${template.title}!`, 'success');

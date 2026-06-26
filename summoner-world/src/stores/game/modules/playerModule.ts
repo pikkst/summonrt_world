@@ -1,5 +1,5 @@
 import type { GameStore, GameStoreState, LogEntry, ElementalAffinity, Element, InventoryStack, PlayerState, WorldData, QuestInstance, CreatureInstance, CommunityState, SetState } from '../types.ts';
-import { createLog, rollAffinity, getPlayerElements, addPlayerXP, calculateMovementModifiers, processTileDiscovery } from '../helpers.ts';
+import { createLog, rollAffinity, getPlayerElements, addPlayerXP, calculateMovementModifiers, processTileDiscovery, getWorldModifier } from '../helpers.ts';
 import { generateWorld, generateTile } from '../../../core/worldGenerator.ts';
 import { getTileKey, getNeighbors } from '../../../data/constants.ts';
 import { SeededRandom } from '../../../utils/SeededRandom.ts';
@@ -692,7 +692,7 @@ set({
   },
 
   finishActivity: () => {
-    const { player, activity, appendLog } = get();
+    const { player, currentWorldId, activity, appendLog } = get();
     if (!player || !activity) return;
 
     let xpGain = 0;
@@ -738,7 +738,7 @@ set({
         break;
     }
 
-    const updatedPlayer = addPlayerXP(player, xpGain, appendLog);
+    const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(currentWorldId));
 
     set({ player: updatedPlayer, activity: null });
     appendLog(message, 'success');

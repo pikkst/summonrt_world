@@ -42,8 +42,9 @@ export function getPlayerElements(player: PlayerState): Element[] {
   return elems;
 }
 
-export function addPlayerXP(player: PlayerState, xpGained: number, logFn: (text: string, type: LogEntry['type']) => void): PlayerState {
-  let newExp = player.experience + xpGained;
+export function addPlayerXP(player: PlayerState, xpGained: number, logFn: (text: string, type: LogEntry['type']) => void, worldModifier: number = 1): PlayerState {
+  const adjustedXp = xpGained * worldModifier;
+  let newExp = player.experience + adjustedXp;
   let newLevel = player.level;
   let skillPointsGained = 0;
 
