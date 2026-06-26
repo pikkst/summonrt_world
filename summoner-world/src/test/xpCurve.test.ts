@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getXPThreshold, getCumulativeXP, getXPForLevel, getWorldModifier } from '../core/xpCurve';
+import { getXPThreshold, getCumulativeXP, getXPForLevel, getWorldModifier, getAffinityBonusXP, calculateEncounterXP, type Element } from '../core/xpCurve';
 
 describe('getXPThreshold', () => {
   it('Level 1 threshold equals 100 XP', () => {
@@ -75,5 +75,80 @@ describe('getWorldModifier', () => {
   it('throws for world index < 1', () => {
     expect(() => getWorldModifier(0)).toThrow();
     expect(() => getWorldModifier(-1)).toThrow();
+  });
+});
+
+describe('getAffinityBonusXP', () => {
+  it('returns 1 when no attacker element', () => {
+    expect(getAffinityBonusXP(undefined, ['fire'])).toBe(1);
+  });
+
+  it('returns 1 when no defender elements', () => {
+    expect(getAffinityBonusXP('fire', undefined)).toBe(1);
+    expect(getAffinityBonusXP('fire', [])).toBe(1);
+  });
+
+  it('returns 1.15 for same element match', () => {
+    expect(getAffinityBonusXP('fire', ['fire'])).toBe(1.15);
+    expect(getAffinityBonusXP('water', ['water', 'earth'])).toBe(1.15);
+    expect(getAffinityBonusXP('nature', ['fire', 'nature'])).toBe(1.15);
+  });
+
+  it('returns 0.85 for opposing element match', () => {
+    expect(getAffinityBonusXP('fire', ['water'])).toBe(0.85);
+    expect(getAffinityBonusXP('fire', ['earth'])).toBe(0.85);
+    expect(getAffinityBonusXP('water', ['fire'])).toBe(0.85);
+    expect(getAffinityBonusXP('light', ['darkness'])).toBe(0.85);
+  });
+
+  it('returns 1 for neutral element match', () => {
+    expect(getAffinityBonusXP('fire', ['air'])).toBe(1);
+    expect(getAffinityBonusXP('fire', ['lightning'])).toBe(1);
+    expect(getAffinityBonusXP('light', ['fire'])).toBe(1);
+  });
+});
+
+describe('calculateEncounterXP', () => {
+  it('combines all XP modifiers correctly', () => {
+    const baseXp = 100;
+    const monsterLevel = 5;
+    const worldModifier = 1.25;
+    const atkElement = 'fire';
+    const defElements = ['fire'] as Element[];
+
+    const result = calculateEncounterXP(baseXp, monsterLevel, worldModifier, atkElement, defElements);
+    expect(result).toBe(719);
+  });
+
+  it('applies opposing element penalty', () => {
+    const baseXp = 100;
+    const monsterLevel = 5;
+    const worldModifier = 1.0;
+    const atkElement = 'fire';
+    const defElements = ['water'] as Element[];
+
+    const result = calculateEncounterXP(baseXp, monsterLevel, worldModifier, atkElement, defElements);
+    expect(result).toBe(425);
+  });
+
+  it('works without affinity bonus (neutral)', () => {
+    const baseXp = 100;
+    const monsterLevel = 5;
+    const worldModifier = 1.0;
+    const atkElement = 'fire';
+    const defElements = ['air'] as Element[];
+
+    const result = calculateEncounterXP(baseXp, monsterLevel, worldModifier, atkElement, defElements);
+    expect(result).toBe(500);
+  });
+
+  it('defaults to no bonus when elements are undefined', () => {
+    const baseXp = 100;
+    const monsterLevel = 5;
+    const worldModifier = 1.0;
+
+    expect(calculateEncounterXP(baseXp, monsterLevel, worldModifier, undefined, ['fire'] as Element[])).toBe(500);
+    expect(calculateEncounterXP(baseXp, monsterLevel, worldModifier, 'fire', undefined)).toBe(500);
+    expect(calculateEncounterXP(baseXp, monsterLevel, worldModifier, undefined, undefined)).toBe(500);
   });
 });
