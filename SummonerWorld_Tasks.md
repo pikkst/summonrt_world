@@ -58,7 +58,7 @@ Sprint goal: refine core loop to explore → gather → summon → combat → qu
 - [x] T3.1 – Convert `movePlayer` to non-immediate: register "Explore Sector" mission (duration = worldId × 30s), send to Queue, on completion add tile discovery + encounter roll
 - [x] T3.2 – Convert `searchArea`/`gatherResource` to missions (15–45s timer), not immediate actions
 - [x] T3.3 – Convert `captureCreature` to timed mission (60s capture attempt, success = roll + affinity check)
-- [ ] T3.4 – Implement `xpCurve.ts`: `XP_Base = 100 × (1.15)^(Level-1)`, test Level 1–1000
+- [x] T3.4 – Implement `xpCurve.ts`: `XP_Base = 100 × (1.15)^(Level-1)`, test Level 1–1000
 - [ ] T3.5 – Add World modifier XP: `WorldMod = 1 + (WorldIndex × 0.05)`
 - [ ] T3.6 – Implement Affinity bonus XP (1.15 same element, 0.85 opposing)
 - [ ] T3.7 – Unify `GameEngine.tickCreatures()` XP granting for entire party on mission completion
