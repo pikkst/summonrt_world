@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { getXPThreshold, getCumulativeXP, getXPForLevel, getWorldModifier, getAffinityBonusXP, calculateEncounterXP } from '../core/xpCurve';
-import type { Element } from '../types/game';
+import { getXPThreshold, getCumulativeXP, getXPForLevel, getWorldModifier, getAffinityBonusXP, calculateEncounterXP, getCreatureXPThreshold, getCreatureCumulativeXP, getCreatureXPForLevel, applyCreatureXP, checkEvolution } from '../core/xpCurve';
+import type { Element, CreatureInstance } from '../types/game';
+import { EVOLUTION_CHAINS } from '../data/constants.ts';
 
 describe('getXPThreshold', () => {
   it('Level 1 threshold equals 100 XP', () => {
@@ -187,5 +188,159 @@ describe('calculateEncounterXP', () => {
     expect(calculateEncounterXP(baseXp, monsterLevel, worldModifier, undefined, ['fire'] as Element[])).toBe(500);
     expect(calculateEncounterXP(baseXp, monsterLevel, worldModifier, 'fire', undefined)).toBe(500);
     expect(calculateEncounterXP(baseXp, monsterLevel, worldModifier, undefined, undefined)).toBe(500);
+  });
+});
+
+describe('getCreatureXPThreshold', () => {
+  it('Level 1 threshold equals 50 XP', () => {
+    expect(getCreatureXPThreshold(1)).toBe(50n);
+  });
+
+  it('Level 2 threshold equals 56 XP', () => {
+    expect(getCreatureXPThreshold(2)).toBe(56n);
+  });
+
+  it('Level 10 threshold matches formula 50 * (1.12)^9', () => {
+    const expected = Math.floor(50 * Math.pow(1.12, 9));
+    expect(getCreatureXPThreshold(10)).toBe(BigInt(expected));
+  });
+
+  it('Level 1000 threshold is calculable without overflow and returns correct value', () => {
+    const result = getCreatureXPThreshold(1000);
+    expect(typeof result === 'bigint').toBe(true);
+    expect(result > 0n).toBe(true);
+  });
+
+  it('threshold is monotonically increasing', () => {
+    let prev = getCreatureXPThreshold(1);
+    for (let i = 2; i <= 100; i++) {
+      const curr = getCreatureXPThreshold(i);
+      expect(curr > prev).toBe(true);
+      prev = curr;
+    }
+  });
+});
+
+describe('getCreatureCumulativeXP', () => {
+  it('Level 1 cumulative XP equals threshold for level 1', () => {
+    expect(getCreatureCumulativeXP(1)).toBe(50n);
+  });
+
+  it('Level 2 cumulative XP equals sum of level 1 and 2 thresholds', () => {
+    expect(getCreatureCumulativeXP(2)).toBe(106n);
+  });
+
+  it('Level 10 cumulative XP matches sum of thresholds', () => {
+    const total = getCreatureCumulativeXP(10);
+    const sumManual = Array.from({ length: 10 }, (_, i) => getCreatureXPThreshold(i + 1)).reduce((a, b) => a + b, 0n);
+    expect(total).toBe(sumManual);
+  });
+
+  it('Level 1000 cumulative XP is calculable without overflow', () => {
+    const result = getCreatureCumulativeXP(1000);
+    expect(typeof result === 'bigint').toBe(true);
+    expect(result > 0n).toBe(true);
+  });
+});
+
+describe('getCreatureXPForLevel', () => {
+  it('returns 0 when startLevel equals endLevel', () => {
+    expect(getCreatureXPForLevel(1, 1)).toBe(0n);
+  });
+
+  it('returns threshold for endLevel when starting from level 1', () => {
+    expect(getCreatureXPForLevel(1, 2)).toBe(56n);
+  });
+
+  it('handles large level ranges without overflow', () => {
+    expect(getCreatureXPForLevel(1, 1000) > 0n).toBe(true);
+  });
+});
+
+describe('applyCreatureXP with evolution', () => {
+  const baseCreature: CreatureInstance = {
+    id: 'test-1',
+    templateKey: 'common_brave_fang',
+    nickname: 'Brave Fang',
+    level: 1,
+    experience: 0n,
+    currentHealth: 50,
+    currentMana: 20,
+    maxHealth: 50,
+    maxMana: 20,
+    attack: 10,
+    defense: 5,
+    speed: 5,
+    class: 'common',
+    skills: [],
+    traits: [],
+    mutations: [],
+    affection: 0,
+  };
+
+  it('grants XP and levels up using creature XP formula', () => {
+    const result = applyCreatureXP(baseCreature, 60);
+    expect(result.leveledUp).toBe(true);
+    expect(result.newLevel).toBeGreaterThan(1);
+  });
+
+  it('triggers evolution when level meets evolution threshold', () => {
+    const highLevelCreature: CreatureInstance = {
+      ...baseCreature,
+      level: 9,
+      experience: 0n,
+    };
+    const xpNeeded = getCreatureXPThreshold(9);
+    const result = applyCreatureXP(highLevelCreature, Number(xpNeeded) + 10);
+    expect(result.leveledUp).toBe(true);
+    expect(result.evolved).toBe(true);
+    expect(result.newClass).toBe('uncommon');
+    expect(result.evolutionStage).toBe(1);
+  });
+
+  it('does not evolve before reaching threshold', () => {
+    const lowCreature: CreatureInstance = {
+      ...baseCreature,
+      level: 5,
+      experience: 0n,
+    };
+    const result = applyCreatureXP(lowCreature, 100);
+    expect(result.evolved).toBe(false);
+    expect(result.newClass).toBeUndefined();
+  });
+
+  it('applies stat gains on evolution', () => {
+    const evoCreature: CreatureInstance = {
+      ...baseCreature,
+      level: 9,
+      experience: 0n,
+      maxHealth: 100,
+      maxMana: 40,
+      attack: 20,
+      defense: 10,
+      speed: 10,
+    };
+    const xpNeeded = getCreatureXPThreshold(9);
+    const result = applyCreatureXP(evoCreature, Number(xpNeeded) + 10);
+    expect(result.evolved).toBe(true);
+    expect(result.creature.maxHealth).toBeGreaterThan(100);
+    expect(result.creature.attack).toBeGreaterThan(20);
+    expect(result.evolutionStats).toBeDefined();
+  });
+
+  it('does not evolve twice in same level-up batch', () => {
+    const highCreature: CreatureInstance = {
+      ...baseCreature,
+      level: 9,
+      experience: 0n,
+      maxHealth: 100,
+      attack: 20,
+      defense: 10,
+      speed: 10,
+    };
+    const xpNeeded = getCreatureXPThreshold(9);
+    const result = applyCreatureXP(highCreature, Number(xpNeeded) + 1000);
+    expect(result.evolved).toBe(true);
+    expect(result.evolutionStage).toBe(1);
   });
 });

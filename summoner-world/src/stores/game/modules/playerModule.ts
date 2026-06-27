@@ -713,13 +713,16 @@ const newCreature: any = {
     let message = `Your ${activity.type.replace(/_/g, ' ')} is complete!`;
 
     switch (activity.type) {
-      case 'creature_training': {
+       case 'creature_training': {
         const creature = player.creatures.find(c => c.id === activity.creatureId);
         if (creature) {
           const creatureXp = Math.floor(activity.duration / 1000) * 0.5;
           const xpResult = applyCreatureXP(creature, creatureXp);
           if (xpResult.leveledUp) {
             appendLog(`${creature.nickname || 'Creature'} reached Level ${xpResult.newLevel}! (+${xpResult.statsGained.hp} HP, +${xpResult.statsGained.attack} ATK, +${xpResult.statsGained.defense} DEF, +${xpResult.statsGained.speed} SPD)`, 'success');
+            if (xpResult.evolved) {
+              appendLog(`EVOLUTION! ${creature.nickname || 'Creature'} has evolved into ${xpResult.newClass?.toUpperCase() || 'a higher form'}!`, 'success');
+            }
           }
           appendLog(`${creature.nickname || 'Creature'} gained ${creatureXp} XP from training!`, 'success');
           xpGain = creatureXp / 4;

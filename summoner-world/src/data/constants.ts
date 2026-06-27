@@ -30,6 +30,35 @@ export const CREATURE_CLASSES = ['common','uncommon','rare','epic','legendary','
 export const CLASS_WEIGHTS = [60, 25, 10, 4, 0.9, 0.1];
 export const DIRECTIONS = [{dx:0,dy:-1,name:'north',nameEn:'north'},{dx:0,dy:1,name:'south',nameEn:'south'},{dx:-1,dy:0,name:'west',nameEn:'west'},{dx:1,dy:0,name:'east',nameEn:'east'}];
 
+export interface EvolutionStage {
+  minLevel: number;
+  newClass: string;
+  statMultiplier: number;
+}
+
+export const EVOLUTION_CHAINS: Record<string, EvolutionStage[]> = {
+  common: [
+    { minLevel: 10, newClass: 'uncommon', statMultiplier: 1.3 },
+    { minLevel: 30, newClass: 'rare', statMultiplier: 1.6 },
+    { minLevel: 60, newClass: 'epic', statMultiplier: 2.0 },
+  ],
+  uncommon: [
+    { minLevel: 20, newClass: 'rare', statMultiplier: 1.4 },
+    { minLevel: 50, newClass: 'epic', statMultiplier: 1.8 },
+    { minLevel: 80, newClass: 'legendary', statMultiplier: 2.2 },
+  ],
+  rare: [
+    { minLevel: 40, newClass: 'epic', statMultiplier: 1.4 },
+    { minLevel: 75, newClass: 'legendary', statMultiplier: 1.8 },
+  ],
+  epic: [
+    { minLevel: 60, newClass: 'legendary', statMultiplier: 1.5 },
+  ],
+  legendary: [
+    { minLevel: 90, newClass: 'mythical', statMultiplier: 1.6 },
+  ],
+};
+
 export function getBiomeForCoords(x: number, y: number, seed: number): string {
   // Natural gradient: Edge (0,0 or 2000,2000) is Water/Coast, moving towards center (1000,1000)
   const centerX = 1000;

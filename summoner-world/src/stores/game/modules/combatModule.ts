@@ -321,7 +321,7 @@ const eff = getElementalEffectiveness(skill.element, enemyElements);
       }
     }
 
-    const MAX_LEVEL = 20;
+    const MAX_LEVEL = 1000;
     const updatedCreatures = player.creatures.map((c: any) => {
       if (c.id !== creatureId) return c;
 
@@ -337,6 +337,9 @@ const eff = getElementalEffectiveness(skill.element, enemyElements);
         appendLog(`${c.nickname || 'Creature'} reached Level ${xpResult.newLevel}! (+${xpResult.statsGained.hp} HP, +${xpResult.statsGained.attack} ATK, +${xpResult.statsGained.defense} DEF, +${xpResult.statsGained.speed} SPD)`, 'success');
         if (xpResult.newLevel === MAX_LEVEL) {
           appendLog(`MAX LEVEL REACHED! ${c.nickname || 'Creature'} has reached its ultimate form!`, 'success');
+        }
+        if (xpResult.evolved) {
+          appendLog(`EVOLUTION! ${c.nickname || 'Creature'} has evolved into ${xpResult.newClass?.toUpperCase() || 'a higher form'}!`, 'success');
         }
 
         const newSkills = [...c.skills];

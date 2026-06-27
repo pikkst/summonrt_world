@@ -1,5 +1,7 @@
 import type { CreatureInstance } from '../types/game';
 import type { Element } from '../types/game';
+import type { EvolutionStage } from '../data/constants.ts';
+import { EVOLUTION_CHAINS } from '../data/constants.ts';
 
 export function getXPThreshold(level: number): bigint {
   if (level < 1) throw new Error('Level must be at least 1');
@@ -24,6 +26,32 @@ export function getXPForLevel(startLevel: number, endLevel: number): bigint {
   if (endLevel < startLevel) throw new Error('End level must be >= start level');
   if (startLevel === endLevel) return 0n;
   return getCumulativeXP(endLevel) - getCumulativeXP(startLevel);
+}
+
+export function getCreatureXPThreshold(level: number): bigint {
+  if (level < 1) throw new Error('Level must be at least 1');
+  if (level === 1) return 50n;
+  const base = 50n;
+  const exponent = level - 1;
+  const multiplierNum = 112n ** BigInt(exponent);
+  const multiplierDen = 100n ** BigInt(exponent);
+  return (base * multiplierNum) / multiplierDen;
+}
+
+export function getCreatureCumulativeXP(level: number): bigint {
+  if (level < 1) throw new Error('Level must be at least 1');
+  let total = 0n;
+  for (let i = 1; i <= level; i++) {
+    total += getCreatureXPThreshold(i);
+  }
+  return total;
+}
+
+export function getCreatureXPForLevel(startLevel: number, endLevel: number): bigint {
+  if (startLevel < 1) throw new Error('Start level must be at least 1');
+  if (endLevel < startLevel) throw new Error('End level must be >= start level');
+  if (startLevel === endLevel) return 0n;
+  return getCreatureCumulativeXP(endLevel) - getCreatureCumulativeXP(startLevel);
 }
 
 export function getWorldModifier(worldIndex: number): number {
@@ -86,6 +114,27 @@ export interface CreatureXPResult {
   leveledUp: boolean;
   newLevel: number;
   statsGained: { hp: number; attack: number; defense: number; speed: number };
+  evolved?: boolean;
+  evolutionStage?: number;
+  newClass?: string;
+  evolutionStats?: { hp: number; attack: number; defense: number; speed: number };
+}
+
+export function checkEvolution(creature: CreatureInstance): { stage: EvolutionStage; newClass: string; statMultiplier: number } | null {
+  const currentClass = creature.class || 'common';
+  const chain = EVOLUTION_CHAINS[currentClass];
+  if (!chain || chain.length === 0) return null;
+
+  const currentStage = creature.evolutionStage || 0;
+  if (currentStage >= chain.length) return null;
+
+  const nextStage = chain[currentStage];
+  if (!nextStage) return null;
+  if (creature.level >= nextStage.minLevel) {
+    return { stage: nextStage, newClass: nextStage.newClass, statMultiplier: nextStage.statMultiplier };
+  }
+
+  return null;
 }
 
 export function applyCreatureXP(
@@ -97,9 +146,13 @@ export function applyCreatureXP(
   let newLevel = creature.level;
   let leveledUp = false;
   let statsGained = { hp: 0, attack: 0, defense: 0, speed: 0 };
+  let evolved = false;
+  let evolutionStage = creature.evolutionStage || 0;
+  let newClass = creature.class || 'common';
+  let evolutionStats = { hp: 0, attack: 0, defense: 0, speed: 0 };
 
   while (newLevel < maxLevel) {
-    const threshold = getXPThreshold(newLevel);
+    const threshold = getCreatureXPThreshold(newLevel);
     if (newExp < threshold) break;
     newExp -= threshold;
     newLevel += 1;
@@ -109,6 +162,25 @@ export function applyCreatureXP(
     statsGained.attack += creature.isBossSummon ? 5 : 2;
     statsGained.defense += creature.isBossSummon ? 3 : 1;
     statsGained.speed += creature.isBossSummon ? 3 : 1;
+
+    const evoResult = checkEvolution({ ...creature, level: newLevel, class: newClass, evolutionStage });
+    if (evoResult && !evolved) {
+      evolved = true;
+      evolutionStage += 1;
+      newClass = evoResult.newClass;
+      const hpMult = Math.max(1, evoResult.statMultiplier);
+      const atkMult = Math.max(1, evoResult.statMultiplier);
+      const defMult = Math.max(1, evoResult.statMultiplier);
+      const spdMult = Math.max(1, evoResult.statMultiplier);
+      evolutionStats.hp = Math.floor(((creature.maxHealth || 50) * 0.1) * (hpMult - 1));
+      evolutionStats.attack = Math.floor(((creature.attack || 10) * 0.1) * (atkMult - 1));
+      evolutionStats.defense = Math.floor(((creature.defense || 5) * 0.1) * (defMult - 1));
+      evolutionStats.speed = Math.floor(((creature.speed || 5) * 0.1) * (spdMult - 1));
+      statsGained.hp += evolutionStats.hp;
+      statsGained.attack += evolutionStats.attack;
+      statsGained.defense += evolutionStats.defense;
+      statsGained.speed += evolutionStats.speed;
+    }
   }
 
   const newMaxHp = (creature.maxHealth || 50) + statsGained.hp;
@@ -116,6 +188,7 @@ export function applyCreatureXP(
 
   const updatedCreature: CreatureInstance = {
     ...creature,
+    class: newClass,
     level: newLevel,
     experience: newExp,
     maxHealth: newMaxHp,
@@ -123,6 +196,7 @@ export function applyCreatureXP(
     attack: (creature.attack || 10) + statsGained.attack,
     defense: (creature.defense || 5) + statsGained.defense,
     speed: (creature.speed || 5) + statsGained.speed,
+    evolutionStage,
   };
 
   if (leveledUp) {
@@ -130,7 +204,16 @@ export function applyCreatureXP(
     updatedCreature.currentMana = newMaxMana;
   }
 
-  return { creature: updatedCreature, leveledUp, newLevel, statsGained };
+  return {
+    creature: updatedCreature,
+    leveledUp,
+    newLevel,
+    statsGained,
+    evolved,
+    evolutionStage,
+    newClass: evolved ? newClass : undefined,
+    evolutionStats: evolved ? evolutionStats : undefined,
+  };
 }
 
 export function grantPartyXP(

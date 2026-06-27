@@ -59,6 +59,8 @@ export interface CreatureTemplate {
   skills: Skill[];
   description: string;
   isBoss?: boolean;
+  evolutionLevel?: number;
+  evolvesIntoKey?: string;
 }
 
 export interface CreatureInstance {
@@ -83,6 +85,8 @@ export interface CreatureInstance {
   mutations: string[];
   affection: number;
   isBossSummon?: boolean;
+  evolutionStage?: number;
+  evolvedFromKey?: string;
 }
 
 export type ItemType = 'material' | 'equipment' | 'consumable' | 'special' | 'egg';
