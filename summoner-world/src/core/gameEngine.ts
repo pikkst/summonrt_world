@@ -113,10 +113,6 @@ export class GameEngine {
     };
   }
 
-  getLevelThreshold(level: number): number {
-    return Math.floor(100 * Math.pow(1.15, level - 1));
-  }
-
   generateEncounter(worldId: number, tile: TileData, _affinity: ElementalAffinity): { template: CreatureTemplate; name: string } | null {
     const rng = new SeededRandom(this.rng.next() * 10000);
     
