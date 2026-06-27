@@ -65,8 +65,8 @@ Sprint goal: refine core loop to explore → gather → summon → combat → qu
 - [x] T3.8 – Fix `getLevelThreshold()` to use GDD formula
 - [x] T3.9 – Add level-up visual feedback (log + overlay) in mission completion callback
 - [x] T3.10 – Implement real-time `energy`/`nerve`/`happy`/`life` regeneration (offline mode) - The    names on UI may be different at the moment. Please align them.
-- [ ] T3.11 – Add turn-count based world-tick (1 turn = X minutes game-time), triggered in mission queue heartbeat
-- [ ] T3.12 – Standardize `Encounter XP` formula: `(MonsterBaseXP × MonsterLevel) × WorldMod × AffinityBonus`
+- [x] T3.11 – Add turn-count based world-tick (1 turn = X minutes game-time), triggered in mission queue heartbeat
+- [x] T3.12 – Standardize `Encounter XP` formula: `(MonsterBaseXP × MonsterLevel) × WorldMod × AffinityBonus`
 - [ ] T3.13 – Add experience display (progress bar) to ResourcePanel
 - [ ] T3.14 – Verify level 1000 achievable without overflow (use BigInt for XP fields)
 

@@ -1,5 +1,6 @@
-import type { CreatureInstance, InventoryStack, MissionResult } from '../types/game';
+import type { CreatureInstance, InventoryStack, MissionResult, Element } from '../types/game';
 import { SeededRandom } from '../utils/SeededRandom';
+import { calculateEncounterXP, getWorldModifier } from '../core/xpCurve';
 
 export type { CreatureInstance } from '../types/game';
 
@@ -128,7 +129,7 @@ export interface CombatTeamMember {
 export function resolveAutomatedCombat(
   teamA: CreatureInstance[],
   teamB: CreatureInstance[],
-  options?: { rngSeed?: number; xpFactor?: number }
+  options?: { rngSeed?: number; worldLayer?: number; atkElements?: Element[] }
 ): MissionResult {
   const log: string[] = [];
   const rewards: InventoryStack[] = [];
@@ -176,7 +177,15 @@ for (const atkr of aAlive) {
 
       if (target.creature.currentHealth <= 0) {
         target.isAlive = false;
-        const xpGain = 20 * (options?.xpFactor ?? 1);
+        const worldModifier = options?.worldLayer ? getWorldModifier(options.worldLayer) : 1;
+        const atkElement = options?.atkElements?.[0] || atkr.creature.elements?.[0];
+        const xpGain = calculateEncounterXP(
+          target.creature.baseExpValue || 20,
+          target.creature.level,
+          worldModifier,
+          atkElement,
+          target.creature.elements
+        );
         totalXp += xpGain;
         log.push(`${atkr.creature.nickname || 'Your creature'} defeated ${target.creature.nickname || 'Enemy'}! (+${xpGain} XP)`);
       } else {

@@ -1,9 +1,9 @@
 import type { GameStore, GameStoreState, CombatState, CreatureTemplate, CreatureInstance, DungeonState, LogEntry, PlayerState, QuestInstance, Element, SetState } from '../types.ts';
-import { createLog, addPlayerXP, getPlayerElements, getWorldModifier } from '../helpers.ts';
+import { createLog, addPlayerXP, getWorldModifier } from '../helpers.ts';
 import { generateCreatureTemplate } from '../../../modules/creatures/creatureFactory.ts';
-import { SeededRandom } from '../../../utils/SeededRandom.ts';
 import { SKILL_TEMPLATES } from '../../../modules/creatures/creatureFactory.ts';
-import { applyCreatureXP } from '../../../core/xpCurve.ts';
+import { applyCreatureXP, calculateEncounterXP } from '../../../core/xpCurve.ts';
+import { SeededRandom } from '../../../utils/SeededRandom.ts';
 
 const ELEMENTAL_ADVANTAGES: Record<string, string[]> = {
   fire: ['nature', 'ice', 'iron'],
@@ -289,8 +289,11 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
 
     const isBoss = (combat.enemyName || '').toLowerCase().includes('boss') || (combat.enemyName || '').toLowerCase().includes('guardian') || enemyTemplate?.isBoss;
     const baseExpGained = enemyTemplate?.baseExpValue || 20;
+    const monsterLevel = currentWorldId;
+    const worldModifier = getWorldModifier(currentWorldId);
+    const encounterXP = calculateEncounterXP(baseExpGained, monsterLevel, worldModifier, player.affinity.primary, enemyTemplate?.elements);
 
-    let combatLog = [...currentLog, `The ${combat.enemyName || 'Manifestation'} has been defeated!`, `+${baseExpGained} XP gained!`];
+    let combatLog = [...currentLog, `The ${combat.enemyName || 'Manifestation'} has been defeated!`, `+${encounterXP} XP gained!`];
 
     let eggDropped = false;
     if (isBoss) {
@@ -309,7 +312,7 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
         return { ...c, experience: 0 };
       }
 
-      const xpResult = applyCreatureXP(c, baseExpGained, MAX_LEVEL);
+      const xpResult = applyCreatureXP(c, encounterXP, MAX_LEVEL);
 
       if (xpResult.leveledUp) {
         const newMaxHp = xpResult.creature.maxHealth;
@@ -347,7 +350,7 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
       return xpResult.creature;
     });
 
-    const finalPlayerState = addPlayerXP(player, baseExpGained / 4, appendLog, getWorldModifier(player.currentWorldId));
+    const finalPlayerState = addPlayerXP(player, Math.floor(encounterXP / 4), appendLog, 1);
 
     const newInventory = [...finalPlayerState.inventory];
     if (eggDropped) {

@@ -1,11 +1,22 @@
 import type { ActiveMission, MissionStatus } from './missionQueue';
 import type { MissionResult } from '../types/game';
+import { calculateWorldTicks, type WorldTickCallbacks } from './worldTick';
 
 export interface HeartbeatCallbacks {
   getCurrentTime: () => number;
   getMissions: () => ActiveMission[];
   removeMission: (missionId: string) => void;
   getMissionById: (missionId: string) => ActiveMission | undefined;
+  getLastWorldTickTime: () => number;
+  setLastWorldTickTime: (time: number) => void;
+  getTurnCount: () => number;
+  setTurnCount: (count: number) => void;
+  getGameTimeMinutes: () => number;
+  setGameTimeMinutes: (minutes: number) => void;
+  getDayCount: () => number;
+  setDayCount: (count: number) => void;
+  onWorldTick?: (turnCount: number, gameTimeMinutes: number, dayCount: number) => void;
+  onMissionsProgress?: (minutesElapsed: number) => void;
   resolveMissionCallbacks: {
     EXPLORE_TIER_1: (mission: ActiveMission) => void;
     SCOUT_DUNGEON: (mission: ActiveMission) => void;
@@ -32,6 +43,31 @@ export function createHeartbeat(callbacks: HeartbeatCallbacks): HeartbeatInstanc
 
   const tick = (): void => {
     const now = callbacks.getCurrentTime();
+    const lastTickTime = callbacks.getLastWorldTickTime();
+
+    const previousTurnCount = callbacks.getTurnCount();
+    const worldTickResult = calculateWorldTicks({
+      currentRealTime: now,
+      lastWorldTickTime: lastTickTime,
+      turnCount: previousTurnCount,
+      gameTimeMinutes: callbacks.getGameTimeMinutes(),
+      dayCount: callbacks.getDayCount(),
+    });
+
+    const turnsAdvanced = worldTickResult.turnCount - previousTurnCount;
+
+    callbacks.setLastWorldTickTime(now);
+    callbacks.setTurnCount(worldTickResult.turnCount);
+    callbacks.setGameTimeMinutes(worldTickResult.gameTimeMinutes);
+    callbacks.setDayCount(worldTickResult.dayCount);
+
+    if (turnsAdvanced > 0 && callbacks.onWorldTick) {
+      callbacks.onWorldTick(worldTickResult.turnCount, worldTickResult.gameTimeMinutes, worldTickResult.dayCount);
+    }
+
+    const minutesElapsed = (now - lastTickTime) / (1000 * 60);
+    callbacks.onMissionsProgress?.(minutesElapsed);
+
     const missions = [...callbacks.getMissions()];
 
     for (const mission of missions) {
