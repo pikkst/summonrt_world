@@ -1,4 +1,24 @@
 export const ELEMENTS = ['fire','water','earth','air','lightning','iron','nature','ice','light','darkness'] as const;
+
+export const AFFINITY_WEIGHT = {
+  same: 1.0,
+  neutral: 0.3,
+  opposing: 0.1,
+} as const;
+
+export type AffinityWeightType = 'same' | 'neutral' | 'opposing';
+
+export const RARITY_PENALTY = {
+  common: 1.0,
+  uncommon: 0.8,
+  rare: 0.5,
+  epic: 0.25,
+  legendary: 0.15,
+  mythical: 0.1,
+} as const;
+
+export type RarityPenaltyType = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythical';
+
 export const ALL_ELEMENTS = ['fire','water','earth','air','lightning','iron','nature','ice','light','darkness','void','starlight','chaos','omni'] as const;
 export type AllElement = typeof ALL_ELEMENTS[number];
 export const BIOME_TYPES = ['forest','plains','mountains','swamp','desert','tundra','coast','volcanic','crystal_caves','sky_islands'] as const;
@@ -130,9 +150,79 @@ export function getTileKey(x: number, y: number): string {
 
 export function getNeighbors(x: number, y: number): Array<{ x: number; y: number }> {
  return [
-   { x: x - 1, y },
-   { x: x + 1, y },
-   { x, y: y - 1 },
-   { x, y: y + 1 },
+  { x: x - 1, y },
+  { x: x + 1, y },
+  { x, y: y - 1 },
+  { x, y: y + 1 },
  ];
+}
+
+export const ELEMENT_OPPOSITIONS: Record<string, string[]> = {
+  fire: ['water', 'earth', 'ice'],
+  water: ['fire', 'nature', 'lightning'],
+  earth: ['air', 'water', 'iron', 'lightning'],
+  air: ['earth', 'iron', 'nature'],
+  lightning: ['earth', 'fire', 'water'],
+  iron: ['lightning', 'air'],
+  nature: ['fire', 'ice'],
+  ice: ['fire', 'water', 'nature'],
+  light: ['darkness', 'void'],
+  darkness: ['light', 'starlight'],
+};
+
+export function getAffinityWeight(
+  playerElements: string[],
+  creatureElements: string[]
+): number {
+  if (!playerElements || playerElements.length === 0) return AFFINITY_WEIGHT.neutral;
+  if (!creatureElements || creatureElements.length === 0) return AFFINITY_WEIGHT.neutral;
+
+  for (const playerEl of playerElements) {
+    for (const creatureEl of creatureElements) {
+      if (playerEl === creatureEl) return AFFINITY_WEIGHT.same;
+      const opposites = ELEMENT_OPPOSITIONS[playerEl];
+      if (opposites && opposites.includes(creatureEl)) return AFFINITY_WEIGHT.opposing;
+    }
+  }
+  return AFFINITY_WEIGHT.neutral;
+}
+
+export interface CaptureFactors {
+  hpFactor: number;
+  affinityWeight: number;
+  rarityPenalty: number;
+  levelFactor: number;
+}
+
+export function calculateCaptureFactors(
+  currentHp: number,
+  maxHp: number,
+  playerElements: string[],
+  creatureElements: string[],
+  creatureClass: string,
+  playerLevel: number,
+  creatureWorldLevel: number
+): CaptureFactors {
+  const hpFactor = 1 - (currentHp / maxHp);
+  const affinityWeight = getAffinityWeight(playerElements, creatureElements);
+  const rarityPenalty = (RARITY_PENALTY as Record<string, number>)[creatureClass] ?? 1.0;
+  const levelDiff = Math.max(0, creatureWorldLevel - playerLevel);
+  const levelFactor = Math.max(0.1, 1 - (levelDiff * 0.02));
+
+  return { hpFactor, affinityWeight, rarityPenalty, levelFactor };
+}
+
+export function calculateBaseCaptureProbability(
+  currentHp: number,
+  maxHp: number,
+  playerElements: string[],
+  creatureElements: string[],
+  creatureClass: string,
+  playerLevel: number,
+  creatureWorldLevel: number
+): number {
+  const { hpFactor, affinityWeight, rarityPenalty, levelFactor } = calculateCaptureFactors(
+    currentHp, maxHp, playerElements, creatureElements, creatureClass, playerLevel, creatureWorldLevel
+  );
+  return hpFactor * affinityWeight * rarityPenalty * levelFactor;
 }

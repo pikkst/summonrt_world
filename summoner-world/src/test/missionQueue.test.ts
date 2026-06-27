@@ -9,6 +9,13 @@ import {
   type CreatureInstance,
   MissionStatus,
 } from '../core/missionQueue';
+import {
+  calculateBaseCaptureProbability,
+  calculateCaptureFactors,
+  AFFINITY_WEIGHT,
+  RARITY_PENALTY,
+  getAffinityWeight,
+} from '../data/constants';
 
 describe('calculateCompressedDuration', () => {
   it('returns base duration when both modifiers are zero', () => {
@@ -441,6 +448,148 @@ describe('Property-based testing: Mission Queue invariants', () => {
     removedIds.forEach(id => {
       expect(typeof id).toBe('string');
       expect(id).toMatch(/^mission_pbt_/);
+    });
+  });
+});
+
+describe('Capture Formula (T4.10)', () => {
+  describe('AFFINITY_WEIGHT constants', () => {
+    it('defines correct same element weight (1.0)', () => {
+      expect(AFFINITY_WEIGHT.same).toBe(1.0);
+    });
+
+    it('defines correct neutral weight (0.3)', () => {
+      expect(AFFINITY_WEIGHT.neutral).toBe(0.3);
+    });
+
+    it('defines correct opposing weight (0.1)', () => {
+      expect(AFFINITY_WEIGHT.opposing).toBe(0.1);
+    });
+  });
+
+  describe('RARITY_PENALTY constants', () => {
+    it('Common has no penalty (1.0)', () => {
+      expect(RARITY_PENALTY.common).toBe(1.0);
+    });
+
+    it('Mythical has lowest capture chance (0.1)', () => {
+      expect(RARITY_PENALTY.mythical).toBe(0.1);
+    });
+
+    it('penalties decrease with rarity', () => {
+      const penalties = [RARITY_PENALTY.common, RARITY_PENALTY.uncommon, RARITY_PENALTY.rare, RARITY_PENALTY.epic, RARITY_PENALTY.mythical];
+      for (let i = 0; i < penalties.length - 1; i++) {
+        expect(penalties[i]).toBeGreaterThanOrEqual(penalties[i + 1]);
+      }
+    });
+  });
+
+  describe('getAffinityWeight', () => {
+    it('returns opposite weight for opposing elements', () => {
+      const playerElements = ['fire'];
+      const creatureElements = ['water'];
+      expect(getAffinityWeight(playerElements, creatureElements)).toBe(AFFINITY_WEIGHT.opposing);
+    });
+
+    it('returns same weight for matching elements', () => {
+      const playerElements = ['fire', 'water'];
+      const creatureElements = ['fire'];
+      expect(getAffinityWeight(playerElements, creatureElements)).toBe(AFFINITY_WEIGHT.same);
+    });
+
+    it('returns neutral weight for non-matching non-opposing elements', () => {
+      const playerElements = ['fire'];
+      const creatureElements = ['light'];
+      expect(getAffinityWeight(playerElements, creatureElements)).toBe(AFFINITY_WEIGHT.neutral);
+    });
+
+    it('returns neutral weight for empty player elements', () => {
+      expect(getAffinityWeight([], ['fire'])).toBe(AFFINITY_WEIGHT.neutral);
+    });
+
+    it('returns neutral weight for empty creature elements', () => {
+      expect(getAffinityWeight(['fire'], [])).toBe(AFFINITY_WEIGHT.neutral);
+    });
+  });
+
+  describe('calculateCaptureFactors', () => {
+    it('calculates correct HP factor when creature at full health (0%)', () => {
+      const factors = calculateCaptureFactors(100, 100, ['fire'], ['fire'], 'common', 1, 1);
+      expect(factors.hpFactor).toBe(0);
+    });
+
+    it('calculates correct HP factor when creature at half health', () => {
+      const factors = calculateCaptureFactors(50, 100, ['fire'], ['fire'], 'common', 1, 1);
+      expect(factors.hpFactor).toBe(0.5);
+    });
+
+    it('calculates correct HP factor when creature near death', () => {
+      const factors = calculateCaptureFactors(10, 100, ['fire'], ['fire'], 'common', 1, 1);
+      expect(factors.hpFactor).toBe(0.9);
+    });
+
+it('levelFactor reduces by 2% per level difference', () => {
+      const sameLevel = calculateCaptureFactors(50, 100, ['fire'], ['fire'], 'common', 10, 10);
+      expect(sameLevel.levelFactor).toBe(1.0);
+
+      const higherWorld = calculateCaptureFactors(50, 100, ['fire'], ['fire'], 'common', 5, 10);
+      expect(higherWorld.levelFactor).toBeCloseTo(0.9);
+    });
+
+    it('levelFactor has minimum of 0.1', () => {
+      const factors = calculateCaptureFactors(50, 100, ['fire'], ['fire'], 'common', 1, 50);
+      expect(factors.levelFactor).toBe(0.1);
+    });
+  });
+
+  describe('calculateBaseCaptureProbability', () => {
+    it('uses exact GDD formula: HP × Affinity × Rarity × Level', () => {
+      const hp = 50, maxHp = 100;
+      const playerEls = ['fire'];
+      const creatureEls = ['fire'];
+      const creatureClass = 'common';
+      const playerLevel = 1;
+      const creatureLevel = 1;
+
+      const expected = (1 - hp / maxHp) * AFFINITY_WEIGHT.same * RARITY_PENALTY.common * 1.0;
+      const actual = calculateBaseCaptureProbability(hp, maxHp, playerEls, creatureEls, creatureClass, playerLevel, creatureLevel);
+
+      expect(actual).toBeCloseTo(expected);
+    });
+
+    it('wounded creature has higher capture chance than full health', () => {
+      const fullHp = calculateBaseCaptureProbability(100, 100, ['fire'], ['fire'], 'common', 1, 1);
+      const woundedHp = calculateBaseCaptureProbability(50, 100, ['fire'], ['fire'], 'common', 1, 1);
+
+      expect(woundedHp).toBeGreaterThan(fullHp);
+    });
+
+    it('same element has higher capture chance than opposing', () => {
+      const sameFactor = calculateBaseCaptureProbability(50, 100, ['fire'], ['fire'], 'common', 1, 1);
+      const neutralFactor = calculateBaseCaptureProbability(50, 100, ['fire'], ['light'], 'common', 1, 1);
+      const oppFactor = calculateBaseCaptureProbability(50, 100, ['fire'], ['water'], 'common', 1, 1);
+
+      expect(sameFactor).toBeGreaterThan(neutralFactor);
+      expect(neutralFactor).toBeGreaterThan(oppFactor);
+    });
+
+    it('higher level creature has lower capture chance', () => {
+      const lowLevel = calculateBaseCaptureProbability(50, 100, ['fire'], ['fire'], 'common', 10, 1);
+      const highLevel = calculateBaseCaptureProbability(50, 100, ['fire'], ['fire'], 'common', 10, 50);
+
+      expect(highLevel).toBeLessThan(lowLevel);
+    });
+
+    it('rarity penalty correctly affects capture chance', () => {
+      const commonChance = calculateBaseCaptureProbability(50, 100, ['fire'], ['fire'], 'common', 10, 1);
+      const mythicalChance = calculateBaseCaptureProbability(50, 100, ['fire'], ['fire'], 'mythical', 10, 1);
+
+      expect(commonChance).toBeGreaterThan(mythicalChance);
+    });
+
+    it('capture chance cannot exceed 1.0', () => {
+      const chance = calculateBaseCaptureProbability(1, 100, ['fire'], ['fire'], 'common', 1, 1);
+      expect(chance).toBeLessThanOrEqual(1.0);
     });
   });
 });

@@ -1,7 +1,7 @@
 import type { GameStore, GameStoreState, PlayerState, WorldData, LogEntry, QuestInstance, Element, CreatureInstance, SetState } from '../types.ts';
 import { createLog, calculateMovementModifiers, processTileDiscovery, getPlayerElements, addPlayerXP, getWorldModifier } from '../helpers.ts';
 import { generateTile } from '../../../core/worldGenerator.ts';
-import { getTileKey, getNeighbors } from '../../../data/constants.ts';
+import { getTileKey, getNeighbors, RARITY_PENALTY, AFFINITY_WEIGHT, getAffinityWeight, calculateBaseCaptureProbability } from '../../../data/constants.ts';
 import { QUEST_TEMPLATES } from '../../../data/quests.ts';
 import { generateCreatureTemplate } from '../../../modules/creatures/creatureFactory.ts';
 import { SeededRandom } from '../../../utils/SeededRandom.ts';
@@ -270,96 +270,81 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
   },
 
   captureCreature: () => {
-    const { player, worlds, currentWorldId, capturing, appendLog } = get();
-    if (!player) return;
+     const { player, worlds, currentWorldId, capturing, appendLog } = get();
+     if (!player) return;
 
-    if (capturing) {
-      appendLog('You are already attempting to capture a creature.', 'warning');
-      return;
-    }
+     if (capturing) {
+       appendLog('You are already attempting to capture a creature.', 'warning');
+       return;
+     }
 
-    const world = worlds.get(currentWorldId);
-    if (!world) return;
+     const world = worlds.get(currentWorldId);
+     if (!world) return;
 
-    if (player.creatures.length >= 6) {
-      appendLog('Your party is full (6/6). Release a creature first.', 'warning');
-      return;
-    }
+     if (player.creatures.length >= 6) {
+       appendLog('Your party is full (6/6). Release a creature first.', 'warning');
+       return;
+     }
 
-    const rng = new SeededRandom(Date.now() + Math.floor(Math.random() * 10000));
-    const creature = generateCreatureTemplate(currentWorldId, rng);
+     const rng = new SeededRandom(Date.now() + Math.floor(Math.random() * 10000));
+     const creature = generateCreatureTemplate(currentWorldId, rng);
 
-    const playerElements = getPlayerElements(player);
-    const hasNebulaShroud = player.skillsUnlocked?.['nebula_shroud'] === true;
-    const sharesElement = creature.elements.some((el) => playerElements.includes(el));
+     const playerElements = getPlayerElements(player);
+     const hasNebulaShroud = player.skillsUnlocked?.['nebula_shroud'] === true;
+     const hasElementMatch = creature.elements.some((el) => playerElements.includes(el));
 
-    if (!sharesElement && !hasNebulaShroud) {
-      appendLog(`Failed to capture ${creature.name}. Its elements are: ${creature.elements.join(', ').toUpperCase()}. You do not share an elemental affinity with this soul!`, 'warning');
-      return;
-    }
+     if (!hasElementMatch && !hasNebulaShroud) {
+       appendLog(`Failed to capture ${creature.name}. Its elements are: ${creature.elements.join(', ').toUpperCase()}. You do not share an elemental affinity with this soul!`, 'warning');
+       return;
+     }
 
-    const duration = 60;
-    const mission = get().addMissionWithModifiers({
-      type: 'CAPTURE_CREATURE',
-      assigned_creatures: [],
-      world_layer: currentWorldId,
-      duration_seconds: duration,
-    });
+     const duration = 60;
+     const mission = get().addMissionWithModifiers({
+       type: 'CAPTURE_CREATURE',
+       assigned_creatures: [],
+       world_layer: currentWorldId,
+       duration_seconds: duration,
+     });
 
-    if (mission) {
-      set({
-        capturing: {
-          missionId: mission.mission_id,
-          creature: {
-            key: creature.key,
-            name: creature.name,
-            class: creature.class,
-            type: creature.type,
-            elements: creature.elements,
-            baseHealth: creature.baseHealth,
-            baseAttack: creature.baseAttack,
-            baseDefense: creature.baseDefense,
-            baseSpeed: creature.baseSpeed,
-            baseMana: creature.baseMana,
-            baseExpValue: creature.baseExpValue,
-            skills: creature.skills.map((s) => typeof s === 'string' ? { key: s, name: '', description: '', power: 0, cost: 0 } : s),
-            description: creature.description,
-            isBoss: creature.isBoss,
+if (mission) {
+        const initialHpRatio = 0.5 + Math.random() * 0.5;
+        set({
+          capturing: {
+            missionId: mission.mission_id,
+            creature: {
+              key: creature.key,
+              name: creature.name,
+              class: creature.class,
+              type: creature.type,
+              elements: creature.elements,
+              baseHealth: creature.baseHealth,
+              baseAttack: creature.baseAttack,
+              baseDefense: creature.baseDefense,
+              baseSpeed: creature.baseSpeed,
+              baseMana: creature.baseMana,
+              baseExpValue: creature.baseExpValue,
+              skills: creature.skills.map((s) => typeof s === 'string' ? { key: s, name: '', description: '', power: 0, cost: 0 } : s),
+              description: creature.description,
+              isBoss: creature.isBoss,
+              currentHealth: Math.floor(creature.baseHealth * initialHpRatio),
+            },
+            endTime: mission.end_time,
+            totalDuration: mission.duration_seconds * 1000,
           },
-          endTime: mission.end_time,
-          totalDuration: mission.duration_seconds * 1000,
-        },
-      });
-      appendLog(`Beginning capture ritual for ${creature.name}... (${mission.duration_seconds}s)`, 'info');
-    }
-  },
+        });
+        appendLog(`Beginning capture ritual for ${creature.name}... (${mission.duration_seconds}s)`, 'info');
+      }
+    },
 
-  finishCapture: () => {
+finishCapture: () => {
     const { player, capturing, appendLog } = get();
     if (!player || !capturing) return;
 
     const creature = capturing.creature;
-
+    const playerElements = getPlayerElements(player);
     const hasNebulaShroud = player.skillsUnlocked?.['nebula_shroud'] === true;
 
-    let rarityPenalty = 1.0;
-    switch (creature.class) {
-      case 'common': rarityPenalty = 1.0; break;
-      case 'uncommon': rarityPenalty = 0.8; break;
-      case 'rare': rarityPenalty = 0.5; break;
-      case 'epic': rarityPenalty = 0.25; break;
-      case 'legendary': rarityPenalty = 0.1; break;
-      case 'mythical': rarityPenalty = 0.03; break;
-    }
-
-    const hasBeastmaster = player.skillsUnlocked?.['beastmaster'] === true;
-    if (hasBeastmaster) {
-      rarityPenalty = Math.min(1.0, rarityPenalty * 1.5);
-    }
-
     const creatureLevel = player.currentWorldId || 1;
-    const levelDiff = creatureLevel - player.level;
-    const levelFactor = levelDiff > 0 ? Math.max(0.1, 1 - (levelDiff * 0.05)) : 1.0;
 
     if (creatureLevel > player.level + 5 && !hasNebulaShroud) {
       appendLog(`This ${creature.name} (Level ${creatureLevel}) is far too powerful for you to bind! You need to be at least Level ${creatureLevel - 5}.`, 'warning');
@@ -367,13 +352,26 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
       return;
     }
 
-    const hasWildWhisper = player.skillsUnlocked?.['wild_whisper'] === true;
-    let baseChance = 0.60;
-    if (hasWildWhisper) {
-      baseChance += 0.15;
-    }
+    const currentHp = creature.currentHealth ?? creature.baseHealth;
+    const maxHp = creature.baseHealth;
+    
+    let pCapture = calculateBaseCaptureProbability(
+      currentHp,
+      maxHp,
+      playerElements,
+      creature.elements,
+      creature.class,
+      player.level,
+      creatureLevel
+    );
 
-    const pCapture = baseChance * rarityPenalty * levelFactor;
+    const hasWildWhisper = player.skillsUnlocked?.['wild_whisper'] === true;
+    const hasBeastmaster = player.skillsUnlocked?.['beastmaster'] === true;
+    const hasSummonerMinor = player.unlocked_node_ids?.includes('summoner_minor_1');
+    const hasSummonerNotable = player.unlocked_node_ids?.includes('summoner_notable_1');
+
+    const careerBonus = (player.skillPoints * 0.01) + (hasWildWhisper ? 0.15 : 0) + (hasBeastmaster ? 0.3 : 0) + (hasSummonerMinor ? 0.01 : 0) + (hasSummonerNotable ? 0.02 : 0);
+    pCapture = Math.min(0.95, pCapture + careerBonus);
 
     const roll = Math.random();
     if (roll < pCapture) {
@@ -381,9 +379,9 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
         id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         templateKey: creature.key,
         nickname: creature.name,
-level: 1,
-         experience: 0n,
-         currentHealth: creature.baseHealth,
+        level: 1,
+        experience: 0n,
+        currentHealth: creature.baseHealth,
         currentMana: creature.baseMana,
         maxHealth: creature.baseHealth,
         maxMana: creature.baseMana,
