@@ -83,8 +83,8 @@ Sprint goal: refine elemental system, creature generation, mutations and capture
 - [x] T4.8 – Implement creature XP formula: `XP_Required(Level) = 50 × (1.12)^(Level − 1)` with evolution triggers
 - [x] T4.9 – Implement mutation system on level-up: `BaseChance = 0.02 + (Tier × 0.01)`, types: stat shift, new skill, passive trait, elemental drift
 - [x] T4.10 – Implement exact capture formula: `P_capture = (1 − (MonsterHP / MaxHP)) × AffinityWeight × RarityPenalty × (1 − (LevelDiff × 0.02))`
-- [ ] T4.11 – Add `AffinityWeight` values (1.0 same element, 0.3 neutral, 0.1 opposing)
-- [ ] T4.12 – Add `RarityPenalty` values (Common 1.0 … Mythical 0.15)
+- [x] T4.11 – Add `AffinityWeight` values (1.0 same element, 0.3 neutral, 0.1 opposing)
+- [x] T4.12 – Add `RarityPenalty` values (Common 1.0 … Mythical 0.15)
 - [ ] T4.13 – Failed capture → aggressive encounter or persistent territorial hostility
 - [ ] T4.14 – Add creature affection system (level, training effect)
 - [ ] T4.15 – Add creature evolution paths (template-level `evolvesFromId`/`evolvesIntoId`)

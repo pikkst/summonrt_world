@@ -13,8 +13,8 @@ export const RARITY_PENALTY = {
   uncommon: 0.8,
   rare: 0.5,
   epic: 0.25,
-  legendary: 0.15,
-  mythical: 0.1,
+  legendary: 0.2,
+  mythical: 0.15,
 };
 
 export type RarityPenaltyType = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythical';

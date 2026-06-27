@@ -472,8 +472,8 @@ describe('Capture Formula (T4.10)', () => {
       expect(RARITY_PENALTY.common).toBe(1.0);
     });
 
-    it('Mythical has lowest capture chance (0.1)', () => {
-      expect(RARITY_PENALTY.mythical).toBe(0.1);
+    it('Mythical has lowest capture chance (0.15 per GDD)', () => {
+      expect(RARITY_PENALTY.mythical).toBe(0.15);
     });
 
     it('penalties decrease with rarity', () => {
