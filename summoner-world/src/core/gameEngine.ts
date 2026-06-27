@@ -1,6 +1,7 @@
 import type { ElementalAffinity, CreatureInstance, WorldData, LogEntry, ItemTemplate, TileData, CreatureTemplate, PlayerState } from '../types/game.ts';
 import { generateCreatureTemplate } from '../modules/creatures/creatureFactory.ts';
 import { SeededRandom } from '../utils/SeededRandom.ts';
+import { applyCreatureXP, grantPartyXP, getXPThreshold } from './xpCurve.ts';
 
 export interface GameEngineState {
   player: PlayerState | null;
@@ -17,45 +18,99 @@ export class GameEngine {
     this.rng = new SeededRandom(state.turnCount + (state.player?.id.charCodeAt(0) || 0));
   }
 
-  processTurn(): void {
+  processTurn(): Partial<GameEngineState> {
     this.rng = new SeededRandom(this.state.turnCount + (this.state.player?.id.charCodeAt(0) || 0));
-    this.tickWorlds();
-    this.tickPlayer();
-    this.tickCreatures();
+    const worldPatch = this.tickWorlds();
+    const playerPatch = this.tickPlayer();
+    const creaturePatch = this.tickCreatures();
+    return { ...worldPatch, ...playerPatch, ...creaturePatch };
   }
 
-  private tickWorlds(): void {
-    for (const world of this.state.worlds.values()) {
+  private tickWorlds(): Partial<GameEngineState> {
+    const worlds = new Map(this.state.worlds);
+    for (const world of worlds.values()) {
       for (const tile of world.tiles.values()) {
         if (tile.resourceQty !== undefined && tile.resourceQty < 5 && this.rng.chance(0.1)) {
           tile.resourceQty = (tile.resourceQty || 0) + 1;
         }
       }
     }
+    return { worlds };
   }
 
-  private tickPlayer(): void {
+  private tickPlayer(): Partial<GameEngineState> {
     const player = this.state.player;
-    if (!player) return;
+    if (!player) return {};
 
-    for (const creature of player.creatures) {
-      const template = generateCreatureTemplate(player.currentWorldId, this.rng);
-      creature.currentHealth = Math.min(creature.currentHealth + 2, template.baseHealth + creature.level * 5);
-      creature.currentMana = Math.min(creature.currentMana + 1, template.baseMana + creature.level * 3);
-    }
+    const updatedCreatures = player.creatures.map((c) => ({
+      ...c,
+      currentHealth: Math.min((c.currentHealth || 0) + 2, (c.maxHealth || 100)),
+      currentMana: Math.min((c.currentMana || 0) + 1, (c.maxMana || 50)),
+    }));
+
+    return {
+      player: {
+        ...player,
+        creatures: updatedCreatures,
+      },
+    };
   }
 
-  private tickCreatures(): void {
+  private tickCreatures(): Partial<GameEngineState> {
     const player = this.state.player;
-    if (!player) return;
-    player.experience += 1;
-    if (player.experience >= this.getLevelThreshold(player.level)) {
-      player.level += 1;
-      player.life.max += 10;
-      player.life.current = player.life.max;
-      player.energy.max += 5;
-      player.energy.current = player.energy.max;
+    if (!player) return {};
+
+    let newExp = player.experience + 1;
+    let newLevel = player.level;
+    let skillPointsGained = 0;
+
+    while (newExp >= Number(getXPThreshold(newLevel))) {
+      newExp -= Number(getXPThreshold(newLevel));
+      newLevel += 1;
+      skillPointsGained += 2;
     }
+
+    const updatedPlayer: PlayerState = {
+      ...player,
+      level: newLevel,
+      experience: newExp,
+      skillPoints: (player.skillPoints ?? 0) + skillPointsGained,
+    };
+
+    if (newLevel > player.level) {
+      updatedPlayer.life = {
+        ...player.life,
+        max: 100 + (newLevel * 10),
+        current: 100 + (newLevel * 10),
+      };
+      updatedPlayer.energy = {
+        ...player.energy,
+        max: 100 + (newLevel * 5),
+        current: 100 + (newLevel * 5),
+      };
+    }
+
+    const updatedCreatures = player.creatures.map((c) => applyCreatureXP(c, 1).creature);
+
+    return {
+      player: {
+        ...updatedPlayer,
+        creatures: updatedCreatures,
+      },
+    };
+  }
+
+  grantPartyXP(creatureIds: string[], baseXP: number): Partial<GameEngineState> {
+    const player = this.state.player;
+    if (!player || creatureIds.length === 0) return {};
+
+    const { updatedCreatures } = grantPartyXP(player.creatures, creatureIds, baseXP);
+    return {
+      player: {
+        ...player,
+        creatures: updatedCreatures,
+      },
+    };
   }
 
   getLevelThreshold(level: number): number {

@@ -3,6 +3,7 @@ import { createLog, addPlayerXP, getPlayerElements, getWorldModifier } from '../
 import { generateCreatureTemplate } from '../../../modules/creatures/creatureFactory.ts';
 import { SeededRandom } from '../../../utils/SeededRandom.ts';
 import { SKILL_TEMPLATES } from '../../../modules/creatures/creatureFactory.ts';
+import { applyCreatureXP } from '../../../core/xpCurve.ts';
 
 const ELEMENTAL_ADVANTAGES: Record<string, string[]> = {
   fire: ['nature', 'ice', 'iron'],
@@ -302,79 +303,48 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
 
     const MAX_LEVEL = 20;
     const updatedCreatures = player.creatures.map((c: any) => {
-      if (c.id === creatureId) {
-        if (c.level >= MAX_LEVEL) {
-          return { ...c, experience: 0 };
+      if (c.id !== creatureId) return c;
+
+      if (c.level >= MAX_LEVEL) {
+        return { ...c, experience: 0 };
+      }
+
+      const xpResult = applyCreatureXP(c, baseExpGained, MAX_LEVEL);
+
+      if (xpResult.leveledUp) {
+        const newMaxHp = xpResult.creature.maxHealth;
+        const newMaxMana = xpResult.creature.maxMana;
+        appendLog(`${c.nickname || 'Creature'} reached Level ${xpResult.newLevel}! (+${xpResult.statsGained.hp} HP, +${xpResult.statsGained.attack} ATK, +${xpResult.statsGained.defense} DEF, +${xpResult.statsGained.speed} SPD)`, 'success');
+        if (xpResult.newLevel === MAX_LEVEL) {
+          appendLog(`MAX LEVEL REACHED! ${c.nickname || 'Creature'} has reached its ultimate form!`, 'success');
         }
 
-        const xpGained = baseExpGained;
-        let newExp = (c.experience || 0) + xpGained;
-        let newLevel = c.level;
-        let leveledUp = false;
-        let statsGained = { hp: 0, attack: 0, defense: 0, speed: 0 };
-
-        while (newExp >= newLevel * 100 && newLevel < MAX_LEVEL) {
-          newExp -= newLevel * 100;
-          newLevel += 1;
-          leveledUp = true;
-
-          const hpGain = c.isBossSummon ? 25 : 10;
-          const atkGain = c.isBossSummon ? 5 : 2;
-          const defGain = c.isBossSummon ? 3 : 1;
-          const spdGain = c.isBossSummon ? 3 : 1;
-
-          statsGained.hp += hpGain;
-          statsGained.attack += atkGain;
-          statsGained.defense += defGain;
-          statsGained.speed += spdGain;
-        }
-
-        if (leveledUp) {
-          const newMaxHp = (c.maxHealth || 50) + statsGained.hp;
-          const newMaxMana = (c.maxMana || 20) + (c.isBossSummon ? 10 : 4);
-          appendLog(`${c.nickname || 'Creature'} reached Level ${newLevel}! (+${statsGained.hp} HP, +${statsGained.attack} ATK, +${statsGained.defense} DEF)`, 'success');
-          if (newLevel === MAX_LEVEL) {
-            appendLog(`MAX LEVEL REACHED! ${c.nickname || 'Creature'} has reached its ultimate form!`, 'success');
-          }
-
-          const newSkills = [...c.skills];
-          const availableSkills = SKILL_TEMPLATES.filter(s => {
-            if (newSkills.includes(s.key)) return false;
-            if (!s.element) return c.level >= 5;
-            return (c.elements || []).includes(s.element);
-          });
-          if (availableSkills.length > 0) {
-            availableSkills.sort((a, b) => a.power - b.power);
-            const maxSkills = c.class === 'common' ? 2 : c.class === 'uncommon' ? 3 : c.class === 'rare' ? 4 : c.class === 'epic' ? 5 : c.class === 'legendary' ? 6 : 8;
-            if (newSkills.length < maxSkills) {
-              const skillToLearn = c.level >= 10 ? availableSkills[availableSkills.length - 1]?.key : c.level >= 5 && availableSkills.length > 1 ? availableSkills[availableSkills.length - 2]?.key || availableSkills[0]?.key : availableSkills[0]?.key;
-              if (skillToLearn) {
-                newSkills.push(skillToLearn);
-                const skillName = SKILL_TEMPLATES.find(s => s.key === skillToLearn)?.name || skillToLearn;
-                appendLog(`${c.nickname || 'Creature'} learned new skill: ${skillName}!`, 'success');
-              }
+        const newSkills = [...c.skills];
+        const availableSkills = SKILL_TEMPLATES.filter(s => {
+          if (newSkills.includes(s.key)) return false;
+          if (!s.element) return xpResult.newLevel >= 5;
+          return (c.elements || []).includes(s.element);
+        });
+        if (availableSkills.length > 0) {
+          availableSkills.sort((a, b) => a.power - b.power);
+          const maxSkills = c.class === 'common' ? 2 : c.class === 'uncommon' ? 3 : c.class === 'rare' ? 4 : c.class === 'epic' ? 5 : c.class === 'legendary' ? 6 : 8;
+          if (newSkills.length < maxSkills) {
+            const skillToLearn = xpResult.newLevel >= 10 ? availableSkills[availableSkills.length - 1]?.key : xpResult.newLevel >= 5 && availableSkills.length > 1 ? availableSkills[availableSkills.length - 2]?.key || availableSkills[0]?.key : availableSkills[0]?.key;
+            if (skillToLearn) {
+              newSkills.push(skillToLearn);
+              const skillName = SKILL_TEMPLATES.find(s => s.key === skillToLearn)?.name || skillToLearn;
+              appendLog(`${c.nickname || 'Creature'} learned new skill: ${skillName}!`, 'success');
             }
           }
-
-          return {
-            ...c,
-            level: newLevel,
-            experience: newLevel === MAX_LEVEL ? 0 : newExp,
-            maxHealth: newMaxHp,
-            currentHealth: newMaxHp,
-            maxMana: newMaxMana,
-            currentMana: newMaxMana,
-            attack: (c.attack || 10) + statsGained.attack,
-            defense: (c.defense || 5) + statsGained.defense,
-            speed: (c.speed || 5) + statsGained.speed,
-            skills: newSkills,
-          };
         }
 
-        const playerXpGain = xpGained / 4;
-        return { ...c, experience: newExp };
+        return {
+          ...xpResult.creature,
+          skills: newSkills,
+        };
       }
-      return c;
+
+      return xpResult.creature;
     });
 
     const finalPlayerState = addPlayerXP(player, baseExpGained / 4, appendLog, getWorldModifier(player.currentWorldId));

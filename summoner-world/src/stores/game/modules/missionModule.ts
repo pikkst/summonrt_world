@@ -1,5 +1,5 @@
 import type { GameStore, GameStoreState, PlayerState, WorldData, LogEntry, QuestInstance, Element, CreatureInstance, SetState } from '../types.ts';
-import { createLog, calculateMovementModifiers, processTileDiscovery, getPlayerElements, addPlayerXP } from '../helpers.ts';
+import { createLog, calculateMovementModifiers, processTileDiscovery, getPlayerElements, addPlayerXP, getWorldModifier } from '../helpers.ts';
 import { generateTile } from '../../../core/worldGenerator.ts';
 import { getTileKey, getNeighbors } from '../../../data/constants.ts';
 import { QUEST_TEMPLATES } from '../../../data/quests.ts';
@@ -8,6 +8,8 @@ import { SeededRandom } from '../../../utils/SeededRandom.ts';
 import type { MissionStatus, MissionModifiers, ActiveMission } from '../../../core/missionQueue.ts';
 import { createActiveMission, getCreatureAgilityMod, MissionType } from '../../../core/missionQueue.ts';
 import type { HeartbeatInstance } from '../../../core/heartbeat.ts';
+import { grantPartyXP, applyCreatureXP } from '../../../core/xpCurve.ts';
+import type { GameEngineState } from '../../../core/gameEngine.ts';
 import { createHeartbeat } from '../../../core/heartbeat.ts';
 import { getAggregateStats, getAllNodes, getCareerModifiers } from '../../../data/careerTree/index';
 import axios from 'axios';
@@ -942,8 +944,18 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
         const creature = player.creatures.find(c => c.id === activity.creatureId);
         if (creature) {
           const creatureXp = Math.floor(activity.duration / 1000) * 0.5;
-          appendLog(`${creature.nickname} gained ${creatureXp} XP from training!`, 'success');
+          const xpResult = applyCreatureXP(creature, creatureXp);
+          if (xpResult.leveledUp) {
+            appendLog(`${creature.nickname || 'Creature'} reached Level ${xpResult.newLevel}! (+${xpResult.statsGained.hp} HP, +${xpResult.statsGained.attack} ATK, +${xpResult.statsGained.defense} DEF, +${xpResult.statsGained.speed} SPD)`, 'success');
+          }
+          appendLog(`${creature.nickname || 'Creature'} gained ${creatureXp} XP from training!`, 'success');
           xpGain = creatureXp / 4;
+          set((state) => ({
+            player: state.player ? {
+              ...state.player,
+              creatures: state.player.creatures.map((c: any) => c.id === creature.id ? xpResult.creature : c),
+            } : state.player,
+          }));
         }
         break;
       }
@@ -1063,42 +1075,75 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
     );
     set({ missions: updatedMissions });
 
-const heartbeat = createHeartbeat({
+    const getBaseXP = (mission: ActiveMission): number => {
+      const worldScale = 1 + (mission.world_layer - 1) * 0.05;
+      const baseByType: Record<string, number> = {
+        EXPLORE_TIER_1: 15,
+        SCOUT_DUNGEON: 30,
+        SMELT_ORE: 20,
+        CRAFT_ITEM: 30,
+        STORE_VISIT: 15,
+        TAX_EDICT: 40,
+        CARAVAN_ROUTE: 35,
+        SEARCH_AREA: 15,
+        GATHER_RESOURCE: 20,
+        CAPTURE_CREATURE: 25,
+      };
+      return Math.floor((baseByType[mission.type] || 10) * worldScale);
+    };
+
+    const heartbeat = createHeartbeat({
        getCurrentTime: () => now,
        getMissions: () => get().missions,
        removeMission: (id) => get().removeMission(id),
        getMissionById: (id) => get().missions.find((m) => m.mission_id === id),
        resolveMissionCallbacks: {
-         EXPLORE_TIER_1: () => {
+         EXPLORE_TIER_1: (mission) => {
            const state = get();
            if (state.exploring) {
              state.finishMovement(state.exploring.targetX!, state.exploring.targetY!, state.exploring.tileKey, true);
            }
+           get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
          },
-         SCOUT_DUNGEON: () => {},
-         SMELT_ORE: () => {},
-         CRAFT_ITEM: () => {},
-         STORE_VISIT: () => {},
-         TAX_EDICT: () => {},
-         CARAVAN_ROUTE: () => {},
-         SEARCH_AREA: () => {
+         SCOUT_DUNGEON: (mission) => {
+           get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+         },
+         SMELT_ORE: (mission) => {
+           get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+         },
+         CRAFT_ITEM: (mission) => {
+           get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+         },
+         STORE_VISIT: (mission) => {
+           get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+         },
+         TAX_EDICT: (mission) => {
+           get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+         },
+         CARAVAN_ROUTE: (mission) => {
+           get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+         },
+         SEARCH_AREA: (mission) => {
            const state = get();
            if (state.searching) {
              state.finishSearch(state.searching.resourceType!);
            }
+           get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
          },
-          GATHER_RESOURCE: (mission: ActiveMission) => {
+          GATHER_RESOURCE: (mission) => {
             const state = get();
             const resourceType = mission.modifiers?.resource_type as string | undefined;
             if (state.searching && resourceType) {
               state.finishSearch(resourceType);
             }
+            get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
           },
-          CAPTURE_CREATURE: () => {
+          CAPTURE_CREATURE: (mission) => {
             const state = get();
             if (state.capturing) {
               state.finishCapture();
             }
+            get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
           },
         },
       });
@@ -1124,42 +1169,75 @@ const heartbeat = createHeartbeat({
     const { heartbeat } = get();
     if (heartbeat) return;
 
-const instance = createHeartbeat({
+    const getBaseXP = (mission: ActiveMission): number => {
+      const worldScale = 1 + (mission.world_layer - 1) * 0.05;
+      const baseByType: Record<string, number> = {
+        EXPLORE_TIER_1: 15,
+        SCOUT_DUNGEON: 30,
+        SMELT_ORE: 20,
+        CRAFT_ITEM: 30,
+        STORE_VISIT: 15,
+        TAX_EDICT: 40,
+        CARAVAN_ROUTE: 35,
+        SEARCH_AREA: 15,
+        GATHER_RESOURCE: 20,
+        CAPTURE_CREATURE: 25,
+      };
+      return Math.floor((baseByType[mission.type] || 10) * worldScale);
+    };
+
+    const instance = createHeartbeat({
        getCurrentTime: Date.now,
        getMissions: () => get().missions,
        removeMission: (id) => get().removeMission(id),
        getMissionById: (id) => get().missions.find((m) => m.mission_id === id),
        resolveMissionCallbacks: {
-         EXPLORE_TIER_1: () => {
+         EXPLORE_TIER_1: (mission) => {
            const state = get();
            if (state.exploring) {
              state.finishMovement(state.exploring.targetX!, state.exploring.targetY!, state.exploring.tileKey, true);
            }
+           get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
          },
-         SCOUT_DUNGEON: () => {},
-         SMELT_ORE: () => {},
-         CRAFT_ITEM: () => {},
-         STORE_VISIT: () => {},
-         TAX_EDICT: () => {},
-         CARAVAN_ROUTE: () => {},
-         SEARCH_AREA: () => {
+         SCOUT_DUNGEON: (mission) => {
+           get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+         },
+         SMELT_ORE: (mission) => {
+           get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+         },
+         CRAFT_ITEM: (mission) => {
+           get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+         },
+         STORE_VISIT: (mission) => {
+           get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+         },
+         TAX_EDICT: (mission) => {
+           get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+         },
+         CARAVAN_ROUTE: (mission) => {
+           get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+         },
+         SEARCH_AREA: (mission) => {
            const state = get();
            if (state.searching) {
              state.finishSearch(state.searching.resourceType!);
            }
+           get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
          },
-          GATHER_RESOURCE: (mission: ActiveMission) => {
+          GATHER_RESOURCE: (mission) => {
             const state = get();
             const resourceType = mission.modifiers?.resource_type as string | undefined;
             if (state.searching && resourceType) {
               state.finishSearch(resourceType);
             }
+            get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
           },
-          CAPTURE_CREATURE: () => {
+          CAPTURE_CREATURE: (mission) => {
             const state = get();
             if (state.capturing) {
               state.finishCapture();
             }
+            get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
           },
         },
       });
@@ -1174,5 +1252,15 @@ const instance = createHeartbeat({
       heartbeat.stop();
     }
     set({ heartbeat: null });
+  },
+
+  grantMissionXP: (creatureIds: string[], baseXP: number) => {
+    const { player } = get();
+    if (!player || creatureIds.length === 0) return;
+
+    const { updatedCreatures } = grantPartyXP(player.creatures, creatureIds, baseXP);
+    set((state) => ({
+      player: state.player ? { ...state.player, creatures: updatedCreatures } : state.player,
+    }));
   },
 });

@@ -7,6 +7,7 @@ import { generateCreatureTemplate } from '../../../modules/creatures/creatureFac
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import { QUEST_TEMPLATES } from '../../../data/quests.ts';
+import { applyCreatureXP } from '../../../core/xpCurve.ts';
 
 export const playerActions = (set: SetState<GameStore>, get: () => GameStore) => ({
   initGame: (playerName: string, archetype: string = 'fighter') => {
@@ -703,8 +704,18 @@ set({
         const creature = player.creatures.find(c => c.id === activity.creatureId);
         if (creature) {
           const creatureXp = Math.floor(activity.duration / 1000) * 0.5;
-          appendLog(`${creature.nickname} gained ${creatureXp} XP from training!`, 'success');
+          const xpResult = applyCreatureXP(creature, creatureXp);
+          if (xpResult.leveledUp) {
+            appendLog(`${creature.nickname || 'Creature'} reached Level ${xpResult.newLevel}! (+${xpResult.statsGained.hp} HP, +${xpResult.statsGained.attack} ATK, +${xpResult.statsGained.defense} DEF, +${xpResult.statsGained.speed} SPD)`, 'success');
+          }
+          appendLog(`${creature.nickname || 'Creature'} gained ${creatureXp} XP from training!`, 'success');
           xpGain = creatureXp / 4;
+          set((state) => ({
+            player: state.player ? {
+              ...state.player,
+              creatures: state.player.creatures.map((c: any) => c.id === creature.id ? xpResult.creature : c),
+            } : state.player,
+          }));
         }
         break;
       }

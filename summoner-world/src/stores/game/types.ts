@@ -211,7 +211,8 @@ export interface GameActions {
      processOfflineCatchUp: (logoutTimestamp: number) => number;
      startHeartbeat: () => void;
      stopHeartbeat: () => void;
- }
+     grantMissionXP: (creatureIds: string[], baseXP: number) => void;
+  }
 
 export type GameStore = GameStoreState & GameActions;
 

@@ -1,3 +1,5 @@
+import type { CreatureInstance } from '../types/game';
+
 export function getXPThreshold(level: number): bigint {
   if (level < 1) throw new Error('Level must be at least 1');
   const xp = Math.pow(1.15, level - 1) * 100;
@@ -87,4 +89,76 @@ export function calculateEncounterXP(
 ): number {
   const affinityBonus = getAffinityBonusXP(atkElement, defElements);
   return Math.round(baseXp * monsterLevel * worldModifier * affinityBonus);
+}
+
+export interface CreatureXPResult {
+  creature: CreatureInstance;
+  leveledUp: boolean;
+  newLevel: number;
+  statsGained: { hp: number; attack: number; defense: number; speed: number };
+}
+
+export function applyCreatureXP(
+  creature: CreatureInstance,
+  xp: number,
+  maxLevel: number = 1000
+): CreatureXPResult {
+  let newExp = (creature.experience || 0) + xp;
+  let newLevel = creature.level;
+  let leveledUp = false;
+  let statsGained = { hp: 0, attack: 0, defense: 0, speed: 0 };
+
+  while (newLevel < maxLevel) {
+    const threshold = Number(getXPThreshold(newLevel));
+    if (newExp < threshold) break;
+    newExp -= threshold;
+    newLevel += 1;
+    leveledUp = true;
+
+    statsGained.hp += creature.isBossSummon ? 25 : 10;
+    statsGained.attack += creature.isBossSummon ? 5 : 2;
+    statsGained.defense += creature.isBossSummon ? 3 : 1;
+    statsGained.speed += creature.isBossSummon ? 3 : 1;
+  }
+
+  const newMaxHp = (creature.maxHealth || 50) + statsGained.hp;
+  const newMaxMana = (creature.maxMana || 20) + (creature.isBossSummon ? 10 : 4);
+
+  const updatedCreature: CreatureInstance = {
+    ...creature,
+    level: newLevel,
+    experience: newExp,
+    maxHealth: newMaxHp,
+    maxMana: newMaxMana,
+    attack: (creature.attack || 10) + statsGained.attack,
+    defense: (creature.defense || 5) + statsGained.defense,
+    speed: (creature.speed || 5) + statsGained.speed,
+  };
+
+  if (leveledUp) {
+    updatedCreature.currentHealth = newMaxHp;
+    updatedCreature.currentMana = newMaxMana;
+  }
+
+  return { creature: updatedCreature, leveledUp, newLevel, statsGained };
+}
+
+export function grantPartyXP(
+  creatures: CreatureInstance[],
+  creatureIds: string[],
+  baseXP: number,
+  maxLevel: number = 1000
+): { updatedCreatures: CreatureInstance[]; leveledUpIds: string[] } {
+  if (creatureIds.length === 0) return { updatedCreatures: creatures, leveledUpIds: [] };
+
+  const xpPerCreature = Math.max(1, Math.floor(baseXP / creatureIds.length));
+  const updatedCreatures = creatures.map((c) =>
+    creatureIds.includes(c.id) ? applyCreatureXP(c, xpPerCreature, maxLevel).creature : c
+  );
+
+  const leveledUpIds = updatedCreatures
+    .filter((c) => creatureIds.includes(c.id) && c.level > creatures.find((orig) => orig.id === c.id)!.level)
+    .map((c) => c.id);
+
+  return { updatedCreatures, leveledUpIds };
 }

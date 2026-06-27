@@ -61,7 +61,7 @@ Sprint goal: refine core loop to explore → gather → summon → combat → qu
 - [x] T3.4 – Implement `xpCurve.ts`: `XP_Base = 100 × (1.15)^(Level-1)`, test Level 1–1000
 - [x] T3.5 – Add World modifier XP: `WorldMod = 1 + (WorldIndex × 0.05)`
 - [x] T3.6 – Implement Affinity bonus XP (1.15 same element, 0.85 opposing)
-- [ ] T3.7 – Unify `GameEngine.tickCreatures()` XP granting for entire party on mission completion
+- [x] T3.7 – Unify `GameEngine.tickCreatures()` XP granting for entire party on mission completion
 - [ ] T3.8 – Fix `getLevelThreshold()` to use GDD formula
 - [ ] T3.9 – Add level-up visual feedback (log + overlay) in mission completion callback
 - [ ] T3.10 – Implement real-time `energy`/`nerve`/`happy`/`life` regeneration (offline mode)

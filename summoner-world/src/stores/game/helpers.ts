@@ -1,6 +1,8 @@
 import type { Element, ElementalAffinity, LogEntry, PlayerState, WorldData } from './types.ts';
 import { getNeighbors } from '../../data/constants.ts';
 import { generateTile } from '../../core/worldGenerator.ts';
+import { getWorldModifier } from '../../core/xpCurve.ts';
+export { getWorldModifier };
 
 export function rollAffinity(): ElementalAffinity {
   const elements: Element[] = ['fire','water','earth','air','lightning','iron','nature','ice','light','darkness','starlight','void','chaos'];

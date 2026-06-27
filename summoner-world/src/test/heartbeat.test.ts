@@ -83,6 +83,7 @@ describe('createHeartbeat', () => {
         CARAVAN_ROUTE: vi.fn(),
         SEARCH_AREA: vi.fn(),
         GATHER_RESOURCE: vi.fn(),
+        CAPTURE_CREATURE: vi.fn(),
       },
     };
 
@@ -134,6 +135,7 @@ describe('createHeartbeat', () => {
         CARAVAN_ROUTE: vi.fn(),
         SEARCH_AREA: vi.fn(),
         GATHER_RESOURCE: vi.fn(),
+        CAPTURE_CREATURE: vi.fn(),
       },
     };
 
@@ -188,6 +190,7 @@ describe('createHeartbeat', () => {
         CARAVAN_ROUTE: vi.fn(),
         SEARCH_AREA: vi.fn(),
         GATHER_RESOURCE: vi.fn(),
+        CAPTURE_CREATURE: vi.fn(),
       },
     };
 
@@ -227,6 +230,7 @@ describe('createHeartbeat', () => {
         CARAVAN_ROUTE: vi.fn(),
         SEARCH_AREA: vi.fn(),
         GATHER_RESOURCE: vi.fn(),
+        CAPTURE_CREATURE: vi.fn(),
       },
     };
     const heartbeat = createHeartbeat(callbacks);
@@ -310,6 +314,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
         },
         SEARCH_AREA: () => {},
         GATHER_RESOURCE: () => {},
+        CAPTURE_CREATURE: () => {},
       },
     };
 
@@ -363,6 +368,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
         CARAVAN_ROUTE: () => {},
         SEARCH_AREA: () => {},
         GATHER_RESOURCE: () => {},
+        CAPTURE_CREATURE: () => {},
       },
     };
 
@@ -422,6 +428,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
         CARAVAN_ROUTE: () => {},
         SEARCH_AREA: () => {},
         GATHER_RESOURCE: () => {},
+        CAPTURE_CREATURE: () => {},
       },
     };
 
@@ -474,6 +481,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
         CARAVAN_ROUTE: () => {},
         SEARCH_AREA: () => {},
         GATHER_RESOURCE: () => {},
+        CAPTURE_CREATURE: () => {},
       },
     };
 
@@ -564,6 +572,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
         },
         SEARCH_AREA: () => {},
         GATHER_RESOURCE: () => {},
+        CAPTURE_CREATURE: () => {},
       },
     };
 
@@ -605,6 +614,7 @@ describe('resolveMission', () => {
         CARAVAN_ROUTE: vi.fn(),
         SEARCH_AREA: vi.fn(),
         GATHER_RESOURCE: vi.fn(),
+        CAPTURE_CREATURE: vi.fn(),
       },
     };
     
@@ -644,6 +654,7 @@ describe('resolveMission', () => {
         CARAVAN_ROUTE: vi.fn(),
         SEARCH_AREA: vi.fn(),
         GATHER_RESOURCE: vi.fn(),
+        CAPTURE_CREATURE: vi.fn(),
       },
     };
 
@@ -760,6 +771,7 @@ describe('offline catch-up scenarios', () => {
         CARAVAN_ROUTE: vi.fn(),
         SEARCH_AREA: vi.fn(),
         GATHER_RESOURCE: vi.fn(),
+        CAPTURE_CREATURE: vi.fn(),
       },
     };
 
@@ -801,6 +813,7 @@ describe('offline catch-up scenarios', () => {
         CARAVAN_ROUTE: vi.fn(),
         SEARCH_AREA: vi.fn(),
         GATHER_RESOURCE: vi.fn(),
+        CAPTURE_CREATURE: vi.fn(),
       },
     };
 
@@ -838,6 +851,7 @@ describe('offline catch-up scenarios', () => {
         CARAVAN_ROUTE: vi.fn(),
         SEARCH_AREA: vi.fn(),
         GATHER_RESOURCE: vi.fn(),
+        CAPTURE_CREATURE: vi.fn(),
       },
     };
 
