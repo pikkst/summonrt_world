@@ -5,7 +5,7 @@ import { getXPThreshold, getWorldModifier } from '../../core/xpCurve.ts';
 export { getWorldModifier };
 
 export function rollAffinity(): ElementalAffinity {
-  const elements: Element[] = ['fire','water','earth','air','lightning','iron','nature','ice','light','darkness','starlight','void','chaos'];
+  const elements: Element[] = ['fire','water','earth','air','lightning','iron','nature','ice','light','darkness'];
   const primary = elements[Math.floor(Math.random() * elements.length)] as Element;
   const rand = Math.random();
   if (rand < 0.001) {

@@ -1,5 +1,5 @@
 import type { CreatureTemplate, Element, CreatureClass, CreatureType } from '../../types/game.ts';
-import { CREATURE_CLASSES } from '../../data/constants.ts';
+import { CREATURE_CLASSES, ELEMENTS } from '../../data/constants.ts';
 import { SeededRandom } from '../../utils/SeededRandom.ts';
 
 export const SKILL_TEMPLATES = [
@@ -24,7 +24,6 @@ export const TRAITS = [
   { key: 'magic_affinity', name: 'Mana Well', desc: '+2 Mana regeneration every turn' },
 ];
 
-export const ELEMENTS = ['fire','water','earth','air','lightning','iron','nature','ice','light','darkness'] as const;
 export const CREATURE_TYPES = ['beast', 'dragon', 'undead', 'construct', 'spirit', 'demon', 'celestial', 'insect', 'plant'] as const;
 
 export function generateCreatureTemplate(worldTier: number, rng: SeededRandom, isBoss: boolean = false): CreatureTemplate {
