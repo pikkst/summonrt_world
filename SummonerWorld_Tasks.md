@@ -68,7 +68,7 @@ Sprint goal: refine core loop to explore → gather → summon → combat → qu
 - [x] T3.11 – Add turn-count based world-tick (1 turn = X minutes game-time), triggered in mission queue heartbeat
 - [x] T3.12 – Standardize `Encounter XP` formula: `(MonsterBaseXP × MonsterLevel) × WorldMod × AffinityBonus`
 - [x] T3.13 – Add experience display (progress bar) to ResourcePanel
-- [ ] T3.14 – Verify level 1000 achievable without overflow (use BigInt for XP fields)
+- [x] T3.14 – Verify level 1000 achievable without overflow (use BigInt for XP fields)
 
 ## Sprint 4 – Elemental Affinity & Creature System (Month 4)
 Sprint goal: refine elemental system, creature generation, mutations and capture mechanics per GDD.

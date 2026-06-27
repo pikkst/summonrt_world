@@ -59,9 +59,9 @@ const player: PlayerState = {
        appearance: {},
        affinity,
        archetype,
-       level: 1,
-       experience: 0,
-       money: 1000 + (bonusStats.money || 0),
+level: 1,
+        experience: 0n,
+        money: 1000 + (bonusStats.money || 0),
        skillPoints: 0,
        skillsUnlocked: {},
        unspent_passive_points: 0,
@@ -606,13 +606,13 @@ set({
       case 'boss_egg': {
         if (stack.modifiers?.bossTemplate) {
           const template = JSON.parse(stack.modifiers.bossTemplate);
-          const newCreature: any = {
-            id: uuidv4(),
-            templateKey: template.key,
-            nickname: `Mini ${template.name}`,
-            level: 1,
-            experience: 0,
-            currentHealth: template.baseHealth / 2.5,
+const newCreature: any = {
+             id: uuidv4(),
+             templateKey: template.key,
+             nickname: `Mini ${template.name}`,
+             level: 1,
+             experience: 0n,
+             currentHealth: template.baseHealth / 2.5,
             maxHealth: template.baseHealth / 2.5,
             currentMana: template.baseMana / 2.5,
             maxMana: template.baseMana / 2.5,

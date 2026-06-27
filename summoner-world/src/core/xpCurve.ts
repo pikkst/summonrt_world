@@ -2,8 +2,11 @@ import type { CreatureInstance } from '../types/game';
 
 export function getXPThreshold(level: number): bigint {
   if (level < 1) throw new Error('Level must be at least 1');
-  const xp = Math.pow(1.15, level - 1) * 100;
-  return BigInt(Math.round(xp));
+  if (level === 1) return 100n;
+  const exponent = level - 1;
+  const numerator = 115n ** BigInt(exponent);
+  const denominator = 100n ** BigInt(exponent);
+  return (100n * numerator) / denominator;
 }
 
 export function getCumulativeXP(level: number): bigint {
@@ -100,16 +103,16 @@ export interface CreatureXPResult {
 
 export function applyCreatureXP(
   creature: CreatureInstance,
-  xp: number,
+  xp: bigint | number,
   maxLevel: number = 1000
 ): CreatureXPResult {
-  let newExp = (creature.experience || 0) + xp;
+  let newExp = (creature.experience ?? 0n) + BigInt(xp);
   let newLevel = creature.level;
   let leveledUp = false;
   let statsGained = { hp: 0, attack: 0, defense: 0, speed: 0 };
 
   while (newLevel < maxLevel) {
-    const threshold = Number(getXPThreshold(newLevel));
+    const threshold = getXPThreshold(newLevel);
     if (newExp < threshold) break;
     newExp -= threshold;
     newLevel += 1;

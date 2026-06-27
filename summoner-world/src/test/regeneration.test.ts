@@ -9,7 +9,7 @@ const basePlayer: PlayerState = {
   appearance: {},
   affinity: { primary: 'fire' },
   level: 1,
-  experience: 0,
+  experience: 0n,
   money: 100,
   skillPoints: 0,
   skillsUnlocked: {},

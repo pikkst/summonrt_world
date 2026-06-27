@@ -60,12 +60,12 @@ export class GameEngine {
     const player = this.state.player;
     if (!player) return {};
 
-    let newExp = player.experience + 1;
+    let newExp: bigint = BigInt(player.experience) + 1n;
     let newLevel = player.level;
     let skillPointsGained = 0;
 
-    while (newExp >= Number(getXPThreshold(newLevel))) {
-      newExp -= Number(getXPThreshold(newLevel));
+    while (newExp >= getXPThreshold(newLevel)) {
+      newExp -= getXPThreshold(newLevel);
       newLevel += 1;
       skillPointsGained += 2;
     }
@@ -90,7 +90,7 @@ export class GameEngine {
       };
     }
 
-    const updatedCreatures = player.creatures.map((c) => applyCreatureXP(c, 1).creature);
+    const updatedCreatures = player.creatures.map((c) => applyCreatureXP(c, 1n).creature);
 
     return {
       player: {

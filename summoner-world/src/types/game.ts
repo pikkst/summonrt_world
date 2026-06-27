@@ -66,9 +66,9 @@ export interface CreatureInstance {
    type?: CreatureType;
    baseExpValue?: number;
    elements?: Element[];
-  level: number;
-  experience: number;
-  currentHealth: number;
+   level: number;
+   experience: bigint;
+   currentHealth: number;
   currentMana: number;
   maxHealth: number;
   maxMana: number;
@@ -153,10 +153,10 @@ export interface PlayerState {
   name: string;
   gender: string;
   appearance: Record<string, any>;
-  affinity: ElementalAffinity;
-  level: number;
-  experience: number;
-  money: number;
+affinity: ElementalAffinity;
+   level: number;
+   experience: bigint;
+   money: number;
   archetype?: string;
 
 isOnline?: boolean;

@@ -309,7 +309,7 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
       if (c.id !== creatureId) return c;
 
       if (c.level >= MAX_LEVEL) {
-        return { ...c, experience: 0 };
+        return { ...c, experience: 0n };
       }
 
       const xpResult = applyCreatureXP(c, encounterXP, MAX_LEVEL);

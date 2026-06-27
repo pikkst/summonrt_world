@@ -28,8 +28,8 @@ export const ResourcePanel: React.FC = () => {
     );
   };
 
-  const nextLevelXP = Number(getXPThreshold(player.level));
-  const xpPercentage = Math.min(100, (player.experience / nextLevelXP) * 100);
+const nextLevelXP = Number(getXPThreshold(player.level));
+   const xpPercentage = Math.min(100, Number((player.experience * BigInt(100)) / BigInt(nextLevelXP)));
 
   return (
     <div className="flex gap-1 w-full bg-black/40 p-1 border-t border-gray-800">

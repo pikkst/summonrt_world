@@ -8,7 +8,7 @@ function createCreature(overrides: Partial<CreatureInstance> & { id: string }): 
     nickname: overrides.nickname ?? `Creature ${overrides.id}`,
     elements: overrides.elements ?? ['fire'],
     level: overrides.level ?? 1,
-    experience: overrides.experience ?? 0,
+    experience: overrides.experience ?? 0n,
     currentHealth: overrides.currentHealth ?? 30,
     maxHealth: overrides.maxHealth ?? 30,
     currentMana: overrides.currentMana ?? 10,

@@ -1,7 +1,7 @@
 import type { Element, ElementalAffinity, LogEntry, PlayerState, WorldData } from './types.ts';
 import { getNeighbors } from '../../data/constants.ts';
 import { generateTile } from '../../core/worldGenerator.ts';
-import { getWorldModifier } from '../../core/xpCurve.ts';
+import { getXPThreshold, getWorldModifier } from '../../core/xpCurve.ts';
 export { getWorldModifier };
 
 export function rollAffinity(): ElementalAffinity {
@@ -45,13 +45,13 @@ export function getPlayerElements(player: PlayerState): Element[] {
 }
 
 export function addPlayerXP(player: PlayerState, xpGained: number, logFn: (text: string, type: LogEntry['type']) => void, worldModifier: number = 1): PlayerState {
-  const adjustedXp = xpGained * worldModifier;
+  const adjustedXp = BigInt(Math.round(xpGained * worldModifier));
   let newExp = player.experience + adjustedXp;
   let newLevel = player.level;
   let skillPointsGained = 0;
 
-  while (newExp >= Math.floor(100 * Math.pow(1.15, newLevel - 1))) {
-    newExp -= Math.floor(100 * Math.pow(1.15, newLevel - 1));
+  while (newExp >= getXPThreshold(newLevel)) {
+    newExp -= getXPThreshold(newLevel);
     newLevel += 1;
     skillPointsGained += 2;
   }

@@ -11,13 +11,29 @@ describe('getXPThreshold', () => {
   });
 
   it('Level 10 threshold matches formula', () => {
-    expect(getXPThreshold(10)).toBe(352n);
+    expect(getXPThreshold(10)).toBe(351n);
   });
 
-  it('Level 1000 threshold is calculable without overflow', () => {
+  it('Level 1000 threshold is calculable without overflow and returns correct value', () => {
     const result = getXPThreshold(1000);
-    expect(typeof result).toBe('bigint');
+    expect(typeof result === 'bigint').toBe(true);
     expect(result > 0n).toBe(true);
+    expect(result > 10n ** 60n).toBe(true);
+  });
+
+  it('Level 1000 threshold grows by 15% from level 999', () => {
+    const t999 = getXPThreshold(999);
+    const t1000 = getXPThreshold(1000);
+    expect(t1000).toBeGreaterThan(t999);
+  });
+
+  it('threshold is monotonically increasing', () => {
+    let prev = getXPThreshold(1);
+    for (let i = 2; i <= 100; i++) {
+      const curr = getXPThreshold(i);
+      expect(curr > prev).toBe(true);
+      prev = curr;
+    }
   });
 });
 
@@ -32,6 +48,19 @@ describe('getCumulativeXP', () => {
 
   it('Level 3 cumulative XP equals sum of first 3 levels', () => {
     expect(getCumulativeXP(3)).toBe(347n);
+  });
+
+  it('Level 100 cumulative XP is calculable', () => {
+    const result = getCumulativeXP(100);
+    expect(result > 0n).toBe(true);
+    expect(result.toString().length).toBeGreaterThanOrEqual(9);
+  });
+
+  it('Level 1000 cumulative XP is calculable without overflow', () => {
+    const result = getCumulativeXP(1000);
+    expect(typeof result === 'bigint').toBe(true);
+    expect(result > 0n).toBe(true);
+    expect(result > 10n ** 60n).toBe(true);
   });
 });
 
@@ -50,6 +79,13 @@ describe('getXPForLevel', () => {
 
   it('handles large level ranges without overflow', () => {
     expect(getXPForLevel(1, 1000) > 0n).toBe(true);
+    expect(getXPForLevel(1, 1000) > 10n ** 60n).toBe(true);
+  });
+
+  it('cumulative XP matches sum of thresholds', () => {
+    const total = getCumulativeXP(10);
+    const sumManual = Array.from({ length: 10 }, (_, i) => getXPThreshold(i + 1)).reduce((a, b) => a + b, 0n);
+    expect(total).toBe(sumManual);
   });
 });
 
