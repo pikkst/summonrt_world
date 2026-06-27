@@ -65,64 +65,67 @@ export type {
 };
 
 export interface GameStoreState {
-  player: PlayerState | null;
-  worlds: Map<number, WorldData>;
-  currentWorldId: number;
-  log: LogEntry[];
-  screen: Screen;
-  turnCount: number;
-  initialized: boolean;
-  combat: CombatState;
-  combatTarget: string | null;
-  dungeon: DungeonState;
-  exploring: {
-    tileKey: string;
-    endTime: number;
-    totalDuration: number;
-    targetX?: number;
-    targetY?: number;
-  } | null;
-  searching: {
-    missionId: string;
-    resourceType?: string;
-    endTime: number;
-    totalDuration: number;
-  } | null;
-  capturing: {
-    missionId: string;
-    creature: {
-      key: string;
-      name: string;
-      class: CreatureClass;
-      type: CreatureType;
-      elements: Element[];
-      baseHealth: number;
-      baseAttack: number;
-      baseDefense: number;
-      baseSpeed: number;
-      baseMana: number;
-      baseExpValue: number;
-      skills: { key: string; name: string; description: string; element?: Element; power: number; cost: number }[];
-      description: string;
-      isBoss?: boolean;
-    };
-    endTime: number;
-    totalDuration: number;
-  } | null;
-  activity: {
-    type: 'creature_training' | 'physical_training' | 'rest' | 'search_tracks' | 'search_animals';
-    creatureId?: string;
-    duration: number;
-    endTime: number;
-    message: string;
-  } | null;
-  nearbyPlayers: Array<{ id: string; username: string; name?: string; level?: number; archetype?: string; x: number; y: number; currentWorld?: number; isOnline?: boolean }>;
-  community: CommunityState;
-   missions: ActiveMission[];
-   lastLogoutTimestamp?: number;
-   heartbeat: HeartbeatInstance | null;
-   levelUpNotifications: Array<{ creatureName: string; newLevel: number }>;
-  }
+   player: PlayerState | null;
+   worlds: Map<number, WorldData>;
+   currentWorldId: number;
+   log: LogEntry[];
+   screen: Screen;
+   turnCount: number;
+   lastWorldTickTime: number;
+   gameTimeMinutes: number;
+   dayCount: number;
+   initialized: boolean;
+   combat: CombatState;
+   combatTarget: string | null;
+   dungeon: DungeonState;
+   exploring: {
+     tileKey: string;
+     endTime: number;
+     totalDuration: number;
+     targetX?: number;
+     targetY?: number;
+   } | null;
+   searching: {
+     missionId: string;
+     resourceType?: string;
+     endTime: number;
+     totalDuration: number;
+   } | null;
+   capturing: {
+     missionId: string;
+     creature: {
+       key: string;
+       name: string;
+       class: CreatureClass;
+       type: CreatureType;
+       elements: Element[];
+       baseHealth: number;
+       baseAttack: number;
+       baseDefense: number;
+       baseSpeed: number;
+       baseMana: number;
+       baseExpValue: number;
+       skills: { key: string; name: string; description: string; element?: Element; power: number; cost: number }[];
+       description: string;
+       isBoss?: boolean;
+     };
+     endTime: number;
+     totalDuration: number;
+   } | null;
+   activity: {
+     type: 'creature_training' | 'physical_training' | 'rest' | 'search_tracks' | 'search_animals';
+     creatureId?: string;
+     duration: number;
+     endTime: number;
+     message: string;
+   } | null;
+   nearbyPlayers: Array<{ id: string; username: string; name?: string; level?: number; archetype?: string; x: number; y: number; currentWorld?: number; isOnline?: boolean }>;
+   community: CommunityState;
+    missions: ActiveMission[];
+    lastLogoutTimestamp?: number;
+    heartbeat: HeartbeatInstance | null;
+    levelUpNotifications: Array<{ creatureName: string; newLevel: number }>;
+   }
 
 export interface GameActions {
    initGame: (playerName: string, archetype?: string) => void;

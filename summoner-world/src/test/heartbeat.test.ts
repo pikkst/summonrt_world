@@ -7,6 +7,16 @@ const createEmptyCallbacks = (): HeartbeatCallbacks => ({
   getMissions: () => [],
   removeMission: vi.fn(),
   getMissionById: vi.fn(),
+  getLastWorldTickTime: () => Date.now(),
+  setLastWorldTickTime: vi.fn(),
+  getTurnCount: () => 0,
+  setTurnCount: vi.fn(),
+  getGameTimeMinutes: () => 360,
+  setGameTimeMinutes: vi.fn(),
+  getDayCount: () => 1,
+  setDayCount: vi.fn(),
+  onWorldTick: vi.fn(),
+  onMissionsProgress: vi.fn(),
   resolveMissionCallbacks: {
     EXPLORE_TIER_1: vi.fn(),
     SCOUT_DUNGEON: vi.fn(),
@@ -69,7 +79,17 @@ describe('createHeartbeat', () => {
     };
 
     const callbacks: HeartbeatCallbacks = {
-      getCurrentTime: () => 15000,
+       getLastWorldTickTime: () => Date.now(),
+       setLastWorldTickTime: vi.fn(),
+       getTurnCount: () => 0,
+       setTurnCount: vi.fn(),
+       getGameTimeMinutes: () => 360,
+       setGameTimeMinutes: vi.fn(),
+       getDayCount: () => 1,
+       setDayCount: vi.fn(),
+       onWorldTick: vi.fn(),
+       onMissionsProgress: vi.fn(),
+       getCurrentTime: () => 15000,
       getMissions: () => [expiredMission],
       removeMission: vi.fn(),
       getMissionById: () => expiredMission,
@@ -121,7 +141,17 @@ describe('createHeartbeat', () => {
 
     const missions = [missionA, missionB];
     const callbacks: HeartbeatCallbacks = {
-      getCurrentTime: () => 20000,
+       getLastWorldTickTime: () => Date.now(),
+       setLastWorldTickTime: vi.fn(),
+       getTurnCount: () => 0,
+       setTurnCount: vi.fn(),
+       getGameTimeMinutes: () => 360,
+       setGameTimeMinutes: vi.fn(),
+       getDayCount: () => 1,
+       setDayCount: vi.fn(),
+       onWorldTick: vi.fn(),
+       onMissionsProgress: vi.fn(),
+       getCurrentTime: () => 20000,
       getMissions: () => missions,
       removeMission: vi.fn(),
       getMissionById: (id: string) => missions.find((m) => m.mission_id === id),
@@ -176,7 +206,17 @@ describe('createHeartbeat', () => {
 
     const missions = [expired, active];
     const callbacks: HeartbeatCallbacks = {
-      getCurrentTime: () => 10000,
+       getLastWorldTickTime: () => Date.now(),
+       setLastWorldTickTime: vi.fn(),
+       getTurnCount: () => 0,
+       setTurnCount: vi.fn(),
+       getGameTimeMinutes: () => 360,
+       setGameTimeMinutes: vi.fn(),
+       getDayCount: () => 1,
+       setDayCount: vi.fn(),
+       onWorldTick: vi.fn(),
+       onMissionsProgress: vi.fn(),
+       getCurrentTime: () => 10000,
       getMissions: () => missions,
       removeMission: vi.fn(),
       getMissionById: (id: string) => missions.find((m) => m.mission_id === id),
@@ -216,7 +256,17 @@ describe('createHeartbeat', () => {
     };
 
     const callbacks: HeartbeatCallbacks = {
-      getCurrentTime: () => 15000,
+       getLastWorldTickTime: () => Date.now(),
+       setLastWorldTickTime: vi.fn(),
+       getTurnCount: () => 0,
+       setTurnCount: vi.fn(),
+       getGameTimeMinutes: () => 360,
+       setGameTimeMinutes: vi.fn(),
+       getDayCount: () => 1,
+       setDayCount: vi.fn(),
+       onWorldTick: vi.fn(),
+       onMissionsProgress: vi.fn(),
+       getCurrentTime: () => 15000,
       getMissions: () => [activeMission],
       removeMission: vi.fn(),
       getMissionById: vi.fn(),
@@ -279,7 +329,17 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
     const mission8 = createMission('future', 'TAX_EDICT', 10 * 60 * 60 * 1000);
 
     const callbacks: HeartbeatCallbacks = {
-      getCurrentTime: () => loginTimestamp,
+       getLastWorldTickTime: () => Date.now(),
+       setLastWorldTickTime: vi.fn(),
+       getTurnCount: () => 0,
+       setTurnCount: vi.fn(),
+       getGameTimeMinutes: () => 360,
+       setGameTimeMinutes: vi.fn(),
+       getDayCount: () => 1,
+       setDayCount: vi.fn(),
+       onWorldTick: vi.fn(),
+       onMissionsProgress: vi.fn(),
+       getCurrentTime: () => loginTimestamp,
       getMissions: () => [mission1, mission2, mission3, mission4, mission5, mission6, mission7, mission8],
       removeMission: vi.fn((id: string) => {
         const idx = [mission1, mission2, mission3, mission4, mission5, mission6, mission7].findIndex(m => m.mission_id === id);
@@ -339,7 +399,17 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
     const resolvedWithModifiers: ActiveMission[] = [];
 
     const callbacks: HeartbeatCallbacks = {
-      getCurrentTime: () => loginTimestamp,
+       getLastWorldTickTime: () => Date.now(),
+       setLastWorldTickTime: vi.fn(),
+       getTurnCount: () => 0,
+       setTurnCount: vi.fn(),
+       getGameTimeMinutes: () => 360,
+       setGameTimeMinutes: vi.fn(),
+       getDayCount: () => 1,
+       setDayCount: vi.fn(),
+       onWorldTick: vi.fn(),
+       onMissionsProgress: vi.fn(),
+       getCurrentTime: () => loginTimestamp,
       getMissions: () => [
         {
           mission_id: 'speed_boosted',
@@ -388,7 +458,17 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
     const totalRewards: string[] = [];
 
     const callbacks: HeartbeatCallbacks = {
-      getCurrentTime: () => loginTimestamp,
+       getLastWorldTickTime: () => Date.now(),
+       setLastWorldTickTime: vi.fn(),
+       getTurnCount: () => 0,
+       setTurnCount: vi.fn(),
+       getGameTimeMinutes: () => 360,
+       setGameTimeMinutes: vi.fn(),
+       getDayCount: () => 1,
+       setDayCount: vi.fn(),
+       onWorldTick: vi.fn(),
+       onMissionsProgress: vi.fn(),
+       getCurrentTime: () => loginTimestamp,
       getMissions: () => [
         {
           mission_id: 'combat_1',
@@ -444,7 +524,17 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
     const loginTimestamp = logoutTimestamp + 8 * 60 * 60 * 1000;
 
     const callbacks: HeartbeatCallbacks = {
-      getCurrentTime: () => loginTimestamp,
+       getLastWorldTickTime: () => Date.now(),
+       setLastWorldTickTime: vi.fn(),
+       getTurnCount: () => 0,
+       setTurnCount: vi.fn(),
+       getGameTimeMinutes: () => 360,
+       setGameTimeMinutes: vi.fn(),
+       getDayCount: () => 1,
+       setDayCount: vi.fn(),
+       onWorldTick: vi.fn(),
+       onMissionsProgress: vi.fn(),
+       getCurrentTime: () => loginTimestamp,
       getMissions: () => [
         {
           mission_id: 'expired_1',
@@ -530,7 +620,17 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
     };
 
     const callbacks: HeartbeatCallbacks = {
-      getCurrentTime: () => loginTimestamp,
+       getLastWorldTickTime: () => Date.now(),
+       setLastWorldTickTime: vi.fn(),
+       getTurnCount: () => 0,
+       setTurnCount: vi.fn(),
+       getGameTimeMinutes: () => 360,
+       setGameTimeMinutes: vi.fn(),
+       getDayCount: () => 1,
+       setDayCount: vi.fn(),
+       onWorldTick: vi.fn(),
+       onMissionsProgress: vi.fn(),
+       getCurrentTime: () => loginTimestamp,
       getMissions: () => generateMissions(),
       removeMission: vi.fn(),
       getMissionById: vi.fn(),
@@ -600,7 +700,17 @@ describe('resolveMission', () => {
     };
 
     const callbacks: HeartbeatCallbacks = {
-      getCurrentTime: () => 15000,
+       getLastWorldTickTime: () => Date.now(),
+       setLastWorldTickTime: vi.fn(),
+       getTurnCount: () => 0,
+       setTurnCount: vi.fn(),
+       getGameTimeMinutes: () => 360,
+       setGameTimeMinutes: vi.fn(),
+       getDayCount: () => 1,
+       setDayCount: vi.fn(),
+       onWorldTick: vi.fn(),
+       onMissionsProgress: vi.fn(),
+       getCurrentTime: () => 15000,
       getMissions: () => [mission],
       removeMission: vi.fn(),
       getMissionById: () => mission,
@@ -640,7 +750,17 @@ describe('resolveMission', () => {
     };
 
     const callbacks: HeartbeatCallbacks = {
-      getCurrentTime: () => 65000,
+       getLastWorldTickTime: () => Date.now(),
+       setLastWorldTickTime: vi.fn(),
+       getTurnCount: () => 0,
+       setTurnCount: vi.fn(),
+       getGameTimeMinutes: () => 360,
+       setGameTimeMinutes: vi.fn(),
+       getDayCount: () => 1,
+       setDayCount: vi.fn(),
+       onWorldTick: vi.fn(),
+       onMissionsProgress: vi.fn(),
+       getCurrentTime: () => 65000,
       getMissions: () => [mission],
       removeMission: vi.fn(),
       getMissionById: () => mission,
@@ -753,7 +873,17 @@ describe('offline catch-up scenarios', () => {
     const missions = [mission1, mission2, mission3];
     const resolvedIds: string[] = [];
     const callbacks: HeartbeatCallbacks = {
-      getCurrentTime: () => startTime + 8 * 60 * 60 * 1000,
+       getLastWorldTickTime: () => Date.now(),
+       setLastWorldTickTime: vi.fn(),
+       getTurnCount: () => 0,
+       setTurnCount: vi.fn(),
+       getGameTimeMinutes: () => 360,
+       setGameTimeMinutes: vi.fn(),
+       getDayCount: () => 1,
+       setDayCount: vi.fn(),
+       onWorldTick: vi.fn(),
+       onMissionsProgress: vi.fn(),
+       getCurrentTime: () => startTime + 8 * 60 * 60 * 1000,
       getMissions: () => missions,
       removeMission: (id: string) => {
         const idx = missions.findIndex((m) => m.mission_id === id);
@@ -799,7 +929,17 @@ describe('offline catch-up scenarios', () => {
     };
 
     const callbacks: HeartbeatCallbacks = {
-      getCurrentTime: () => 20000,
+       getLastWorldTickTime: () => Date.now(),
+       setLastWorldTickTime: vi.fn(),
+       getTurnCount: () => 0,
+       setTurnCount: vi.fn(),
+       getGameTimeMinutes: () => 360,
+       setGameTimeMinutes: vi.fn(),
+       getDayCount: () => 1,
+       setDayCount: vi.fn(),
+       onWorldTick: vi.fn(),
+       onMissionsProgress: vi.fn(),
+       getCurrentTime: () => 20000,
       getMissions: () => [completed],
       removeMission: vi.fn(),
       getMissionById: () => completed,
@@ -837,7 +977,17 @@ describe('offline catch-up scenarios', () => {
     };
 
     const callbacks: HeartbeatCallbacks = {
-      getCurrentTime: () => 300000,
+       getLastWorldTickTime: () => Date.now(),
+       setLastWorldTickTime: vi.fn(),
+       getTurnCount: () => 0,
+       setTurnCount: vi.fn(),
+       getGameTimeMinutes: () => 360,
+       setGameTimeMinutes: vi.fn(),
+       getDayCount: () => 1,
+       setDayCount: vi.fn(),
+       onWorldTick: vi.fn(),
+       onMissionsProgress: vi.fn(),
+       getCurrentTime: () => 300000,
       getMissions: () => [pending],
       removeMission: vi.fn(),
       getMissionById: () => pending,

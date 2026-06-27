@@ -1097,6 +1097,16 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
        getMissions: () => get().missions,
        removeMission: (id) => get().removeMission(id),
        getMissionById: (id) => get().missions.find((m) => m.mission_id === id),
+       getLastWorldTickTime: () => get().lastWorldTickTime,
+       setLastWorldTickTime: () => {},
+       getTurnCount: () => get().turnCount,
+       setTurnCount: () => {},
+       getGameTimeMinutes: () => get().player?.gameTimeMinutes ?? 360,
+       setGameTimeMinutes: () => {},
+       getDayCount: () => get().player?.dayCount ?? 1,
+       setDayCount: () => {},
+       onWorldTick: () => {},
+       onMissionsProgress: () => {},
        resolveMissionCallbacks: {
          EXPLORE_TIER_1: (mission) => {
            const state = get();
@@ -1186,61 +1196,75 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
       return Math.floor((baseByType[mission.type] || 10) * worldScale);
     };
 
-    const instance = createHeartbeat({
+const instance = createHeartbeat({
        getCurrentTime: Date.now,
        getMissions: () => get().missions,
        removeMission: (id) => get().removeMission(id),
        getMissionById: (id) => get().missions.find((m) => m.mission_id === id),
+       getLastWorldTickTime: () => get().lastWorldTickTime,
+       setLastWorldTickTime: (time) => set({ lastWorldTickTime: time }),
+       getTurnCount: () => get().turnCount,
+       setTurnCount: (count) => set({ turnCount: count }),
+       getGameTimeMinutes: () => get().player?.gameTimeMinutes ?? 360,
+       setGameTimeMinutes: (minutes) => set((state) => ({
+         player: state.player ? { ...state.player, gameTimeMinutes: minutes } : state.player,
+       })),
+       getDayCount: () => get().player?.dayCount ?? 1,
+       setDayCount: (count) => set((state) => ({
+         player: state.player ? { ...state.player, dayCount: count } : state.player,
+       })),
+        onWorldTick: () => {},
+        onMissionsProgress: () => {},
        resolveMissionCallbacks: {
-         EXPLORE_TIER_1: (mission) => {
-           const state = get();
-           if (state.exploring) {
-             state.finishMovement(state.exploring.targetX!, state.exploring.targetY!, state.exploring.tileKey, true);
-           }
-           get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
-         },
-         SCOUT_DUNGEON: (mission) => {
-           get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
-         },
-         SMELT_ORE: (mission) => {
-           get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
-         },
-         CRAFT_ITEM: (mission) => {
-           get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
-         },
-         STORE_VISIT: (mission) => {
-           get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
-         },
-         TAX_EDICT: (mission) => {
-           get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
-         },
-         CARAVAN_ROUTE: (mission) => {
-           get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
-         },
-         SEARCH_AREA: (mission) => {
-           const state = get();
-           if (state.searching) {
-             state.finishSearch(state.searching.resourceType!);
-           }
-           get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
-         },
-          GATHER_RESOURCE: (mission) => {
+          EXPLORE_TIER_1: (mission) => {
             const state = get();
-            const resourceType = mission.modifiers?.resource_type as string | undefined;
-            if (state.searching && resourceType) {
-              state.finishSearch(resourceType);
+            if (state.exploring) {
+              state.finishMovement(state.exploring.targetX!, state.exploring.targetY!, state.exploring.tileKey, true);
             }
             get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
           },
-          CAPTURE_CREATURE: (mission) => {
+          SCOUT_DUNGEON: (mission) => {
+            get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+          },
+          SMELT_ORE: (mission) => {
+            get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+          },
+          CRAFT_ITEM: (mission) => {
+            get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+          },
+          STORE_VISIT: (mission) => {
+            get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+          },
+          TAX_EDICT: (mission) => {
+            get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+          },
+          CARAVAN_ROUTE: (mission) => {
+            get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+          },
+          SEARCH_AREA: (mission) => {
             const state = get();
-            if (state.capturing) {
-              state.finishCapture();
+            if (state.searching) {
+              state.finishSearch(state.searching.resourceType!);
             }
             get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
           },
-        },
-      });
+           GATHER_RESOURCE: (mission) => {
+             const state = get();
+             const resourceType = mission.modifiers?.resource_type as string | undefined;
+             if (state.searching && resourceType) {
+               state.finishSearch(resourceType);
+             }
+             get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+           },
+           CAPTURE_CREATURE: (mission) => {
+             const state = get();
+             if (state.capturing) {
+               state.finishCapture();
+             }
+             get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+           },
+         },
+       });
 
     instance.start();
     set({ heartbeat: instance });
