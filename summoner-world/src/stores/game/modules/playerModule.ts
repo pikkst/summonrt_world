@@ -537,6 +537,14 @@ set({
     }));
   },
 
+  showLevelUpNotification: (notifications: Array<{ creatureName: string; newLevel: number }>) => {
+    set({ levelUpNotifications: notifications });
+  },
+
+  clearLevelUpNotifications: () => {
+    set({ levelUpNotifications: [] });
+  },
+
   closeModal: () => set({ screen: 'explore', combat: { active: false, phase: 'player_turn', log: [], enemyName: '', enemyHp: 0, enemyMaxHp: 0, enemyTemplate: null, playerCreatureId: '', turns: 0 }, dungeon: { active: false, worldId: 1, currentFloor: 0, totalFloors: 3, clearedFloors: [], bossDefeated: false, inEncounter: false, encounterType: undefined } }),
 
   openCreaturePanel: () => set({ screen: 'creatures' }),

@@ -118,10 +118,11 @@ export interface GameStoreState {
   } | null;
   nearbyPlayers: Array<{ id: string; username: string; name?: string; level?: number; archetype?: string; x: number; y: number; currentWorld?: number; isOnline?: boolean }>;
   community: CommunityState;
-  missions: ActiveMission[];
-  lastLogoutTimestamp?: number;
-  heartbeat: HeartbeatInstance | null;
-}
+   missions: ActiveMission[];
+   lastLogoutTimestamp?: number;
+   heartbeat: HeartbeatInstance | null;
+   levelUpNotifications: Array<{ creatureName: string; newLevel: number }>;
+  }
 
 export interface GameActions {
    initGame: (playerName: string, archetype?: string) => void;
@@ -211,7 +212,9 @@ export interface GameActions {
      processOfflineCatchUp: (logoutTimestamp: number) => number;
      startHeartbeat: () => void;
      stopHeartbeat: () => void;
-     grantMissionXP: (creatureIds: string[], baseXP: number) => void;
+     grantMissionXP: (creatureIds: string[], baseXP: number) => { leveledUpIds: string[] };
+    showLevelUpNotification: (notifications: Array<{ creatureName: string; newLevel: number }>) => void;
+    clearLevelUpNotifications: () => void;
   }
 
 export type GameStore = GameStoreState & GameActions;

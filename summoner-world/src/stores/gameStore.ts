@@ -46,7 +46,9 @@ const initialGameState: GameStoreState = {
     trades: [],
   },
   missions: [],
+  lastLogoutTimestamp: undefined,
   heartbeat: null,
+  levelUpNotifications: [],
   };
 
 export const useGameStore = create<GameStore>()(

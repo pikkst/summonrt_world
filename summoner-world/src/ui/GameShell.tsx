@@ -76,11 +76,22 @@ export const GameShell: React.FC = () => {
   const activity = useGameStore((s) => s.activity);
   const cancelActivity = useGameStore((s) => s.cancelActivity);
   const capturing = useGameStore((s) => s.capturing);
+  const levelUpNotifications = useGameStore((s) => s.levelUpNotifications);
+  const clearLevelUpNotifications = useGameStore((s) => s.clearLevelUpNotifications);
 
   const [input, setInput] = useState('');
   const [exploreProgress, setExploreProgress] = useState(0);
   const [captureProgress, setCaptureProgress] = useState(0);
   const logEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (levelUpNotifications.length > 0) {
+      const timer = setTimeout(() => {
+        clearLevelUpNotifications();
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [levelUpNotifications, clearLevelUpNotifications]);
 
   useEffect(() => {
     let interval: any;
@@ -364,6 +375,26 @@ export const GameShell: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-[#050505] text-[#d1d5db] font-serif overflow-hidden">
+      {levelUpNotifications.length > 0 && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
+          <div className="bg-black/90 border-2 border-emerald-500/50 rounded-3xl p-8 max-w-lg w-full mx-4 shadow-[0_0_60px_rgba(16,185,129,0.3)] animate-in fade-in zoom-in duration-500">
+            <div className="text-center mb-6">
+              <div className="text-5xl mb-3">🎉</div>
+              <h2 className="text-3xl font-black text-emerald-400 italic tracking-tighter uppercase">Level Up!</h2>
+              <p className="text-xs text-gray-500 font-bold uppercase tracking-widest mt-1">Creature Evolution</p>
+            </div>
+            <div className="space-y-3">
+              {levelUpNotifications.map((notification, i) => (
+                <div key={i} className="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3">
+                  <span className="text-sm font-bold text-white">{notification.creatureName}</span>
+                  <span className="text-lg font-black text-emerald-400">Lv. {notification.newLevel}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* LEFT SIDEBAR: Character & Status */}
       <div className="w-[280px] border-r border-gray-900 flex flex-col bg-[#080808] shrink-0">
         <div className="p-4 border-b border-gray-900">

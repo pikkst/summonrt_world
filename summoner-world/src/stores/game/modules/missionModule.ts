@@ -1256,11 +1256,27 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
 
   grantMissionXP: (creatureIds: string[], baseXP: number) => {
     const { player } = get();
-    if (!player || creatureIds.length === 0) return;
+    if (!player || creatureIds.length === 0) return { leveledUpIds: [] };
 
-    const { updatedCreatures } = grantPartyXP(player.creatures, creatureIds, baseXP);
+    const { updatedCreatures, leveledUpIds } = grantPartyXP(player.creatures, creatureIds, baseXP);
     set((state) => ({
       player: state.player ? { ...state.player, creatures: updatedCreatures } : state.player,
     }));
+
+    if (leveledUpIds.length > 0) {
+      const notifications: Array<{ creatureName: string; newLevel: number }> = [];
+      for (const id of leveledUpIds) {
+        const creature = updatedCreatures.find((c) => c.id === id);
+        if (creature) {
+          const name = creature.nickname || creature.templateKey || 'Unknown';
+          get().appendLog(`⚡ ${name} reached Level ${creature.level}!`, 'success');
+          notifications.push({ creatureName: name, newLevel: creature.level });
+        }
+      }
+      if (notifications.length > 0) {
+        get().showLevelUpNotification(notifications);
+      }
+    }
+    return { leveledUpIds };
   },
 });

@@ -63,8 +63,8 @@ Sprint goal: refine core loop to explore → gather → summon → combat → qu
 - [x] T3.6 – Implement Affinity bonus XP (1.15 same element, 0.85 opposing)
 - [x] T3.7 – Unify `GameEngine.tickCreatures()` XP granting for entire party on mission completion
 - [x] T3.8 – Fix `getLevelThreshold()` to use GDD formula
-- [ ] T3.9 – Add level-up visual feedback (log + overlay) in mission completion callback
-- [ ] T3.10 – Implement real-time `energy`/`nerve`/`happy`/`life` regeneration (offline mode)
+- [x] T3.9 – Add level-up visual feedback (log + overlay) in mission completion callback
+- [ ] T3.10 – Implement real-time `energy`/`nerve`/`happy`/`life` regeneration (offline mode) - The    names on UI may be different at the moment. Please align them.
 - [ ] T3.11 – Add turn-count based world-tick (1 turn = X minutes game-time), triggered in mission queue heartbeat
 - [ ] T3.12 – Standardize `Encounter XP` formula: `(MonsterBaseXP × MonsterLevel) × WorldMod × AffinityBonus`
 - [ ] T3.13 – Add experience display (progress bar) to ResourcePanel
