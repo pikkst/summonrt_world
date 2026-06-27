@@ -27,7 +27,7 @@ export const RESOURCES: Record<string, {name: string, icon: string}> = {
   essence: { name: 'Essence', icon: '✨' } 
 };
 export const CREATURE_CLASSES = ['common','uncommon','rare','epic','legendary','mythical'] as const;
-export const CLASS_WEIGHTS = [55,28,12,4,0.9,0.1];
+export const CLASS_WEIGHTS = [60, 25, 10, 4, 0.9, 0.1];
 export const DIRECTIONS = [{dx:0,dy:-1,name:'north',nameEn:'north'},{dx:0,dy:1,name:'south',nameEn:'south'},{dx:-1,dy:0,name:'west',nameEn:'west'},{dx:1,dy:0,name:'east',nameEn:'east'}];
 
 export function getBiomeForCoords(x: number, y: number, seed: number): string {

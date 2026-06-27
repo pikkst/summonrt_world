@@ -1,5 +1,5 @@
 import type { CreatureTemplate, Element, CreatureClass, CreatureType } from '../../types/game.ts';
-import { CREATURE_CLASSES, ELEMENTS } from '../../data/constants.ts';
+import { CREATURE_CLASSES, ELEMENTS, CLASS_WEIGHTS } from '../../data/constants.ts';
 import { SeededRandom } from '../../utils/SeededRandom.ts';
 
 export const SKILL_TEMPLATES = [
@@ -66,11 +66,11 @@ export function generateCreatureTemplate(worldTier: number, rng: SeededRandom, i
 }
 
 function weightedRandomClass(rng: SeededRandom): number {
-  const weights = [55, 28, 12, 4, 0.9, 0.1];
-  const total = weights.reduce((s, w) => s + w, 0);
+  // GDD Rarity weights: Common 60%, Uncommon 25%, Rare 10%, Epic 4%, Legendary 0.9%, Mythical 0.1%
+  const total = CLASS_WEIGHTS.reduce((s, w) => s + w, 0);
   let roll = rng.next() * total;
-  for (let i = 0; i < weights.length; i++) {
-    const w = weights[i];
+  for (let i = 0; i < CLASS_WEIGHTS.length; i++) {
+    const w = CLASS_WEIGHTS[i];
     if (w === undefined) continue;
     roll -= w;
     if (roll <= 0) return i;
