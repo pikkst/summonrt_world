@@ -957,13 +957,17 @@ level: 1,
          const creature = player.creatures.find(c => c.id === activity.creatureId);
          if (creature) {
            const creatureXp = Math.floor(activity.duration / 1000) * 0.5;
-           const xpResult = applyCreatureXP(creature, creatureXp);
-           if (xpResult.leveledUp) {
-             appendLog(`${creature.nickname || 'Creature'} reached Level ${xpResult.newLevel}! (+${xpResult.statsGained.hp} HP, +${xpResult.statsGained.attack} ATK, +${xpResult.statsGained.defense} DEF, +${xpResult.statsGained.speed} SPD)`, 'success');
-             if (xpResult.evolved) {
-               appendLog(`EVOLUTION! ${creature.nickname || 'Creature'} has evolved into ${xpResult.newClass?.toUpperCase() || 'a higher form'}!`, 'success');
-             }
-           }
+            const xpResult = applyCreatureXP(creature, creatureXp);
+            if (xpResult.leveledUp) {
+              appendLog(`${creature.nickname || 'Creature'} reached Level ${xpResult.newLevel}! (+${xpResult.statsGained.hp} HP, +${xpResult.statsGained.attack} ATK, +${xpResult.statsGained.defense} DEF, +${xpResult.statsGained.speed} SPD)`, 'success');
+              if (xpResult.evolved) {
+                appendLog(`EVOLUTION! ${creature.nickname || 'Creature'} has evolved into ${xpResult.newClass?.toUpperCase() || 'a higher form'}!`, 'success');
+              }
+              if (xpResult.mutations && xpResult.mutations.length > 0) {
+                const labels = xpResult.mutations.map(k => k.replace(/_/g, ' ')).join(', ');
+                appendLog(`🧬 ${creature.nickname || 'Creature'} mutated: ${labels}!`, 'warning');
+              }
+            }
            appendLog(`${creature.nickname || 'Creature'} gained ${creatureXp} XP from training!`, 'success');
            xpGain = creatureXp / 4;
            set((state) => ({
@@ -1298,7 +1302,7 @@ const instance = createHeartbeat({
     const { player } = get();
     if (!player || creatureIds.length === 0) return { leveledUpIds: [] };
 
-    const { updatedCreatures, leveledUpIds } = grantPartyXP(player.creatures, creatureIds, baseXP);
+    const { updatedCreatures, leveledUpIds, mutatedIds, mutationsById } = grantPartyXP(player.creatures, creatureIds, baseXP);
     set((state) => ({
       player: state.player ? { ...state.player, creatures: updatedCreatures } : state.player,
     }));
@@ -1317,6 +1321,19 @@ const instance = createHeartbeat({
         get().showLevelUpNotification(notifications);
       }
     }
+
+    if (mutatedIds.length > 0) {
+      for (const id of mutatedIds) {
+        const creature = updatedCreatures.find((c) => c.id === id);
+        if (creature) {
+          const name = creature.nickname || creature.templateKey || 'Unknown';
+          const newMutations = mutationsById[id] || [];
+          const labels = newMutations.map(k => k.replace(/_/g, ' ')).join(', ');
+          get().appendLog(`🧬 ${name} mutated: ${labels}!`, 'warning');
+        }
+      }
+    }
+
     return { leveledUpIds };
   },
 });

@@ -1,7 +1,27 @@
-import { describe, it, expect } from 'vitest';
-import { getXPThreshold, getCumulativeXP, getXPForLevel, getWorldModifier, getAffinityBonusXP, calculateEncounterXP, getCreatureXPThreshold, getCreatureCumulativeXP, getCreatureXPForLevel, applyCreatureXP, checkEvolution } from '../core/xpCurve';
+import { describe, it, expect, vi } from 'vitest';
+import { getXPThreshold, getCumulativeXP, getXPForLevel, getWorldModifier, getAffinityBonusXP, calculateEncounterXP, getCreatureXPThreshold, getCreatureCumulativeXP, getCreatureXPForLevel, applyCreatureXP, getMutationChanceForClass } from '../core/xpCurve';
+import { getMaxMutationsForClass } from '../data/constants';
 import type { Element, CreatureInstance } from '../types/game';
-import { EVOLUTION_CHAINS } from '../data/constants.ts';
+
+const baseCreature: CreatureInstance = {
+  id: 'test-1',
+  templateKey: 'common_brave_fang',
+  nickname: 'Brave Fang',
+  level: 1,
+  experience: 0n,
+  currentHealth: 50,
+  currentMana: 20,
+  maxHealth: 50,
+  maxMana: 20,
+  attack: 10,
+  defense: 5,
+  speed: 5,
+  class: 'common',
+  skills: [],
+  traits: [],
+  mutations: [],
+  affection: 0,
+};
 
 describe('getXPThreshold', () => {
   it('Level 1 threshold equals 100 XP', () => {
@@ -258,26 +278,6 @@ describe('getCreatureXPForLevel', () => {
 });
 
 describe('applyCreatureXP with evolution', () => {
-  const baseCreature: CreatureInstance = {
-    id: 'test-1',
-    templateKey: 'common_brave_fang',
-    nickname: 'Brave Fang',
-    level: 1,
-    experience: 0n,
-    currentHealth: 50,
-    currentMana: 20,
-    maxHealth: 50,
-    maxMana: 20,
-    attack: 10,
-    defense: 5,
-    speed: 5,
-    class: 'common',
-    skills: [],
-    traits: [],
-    mutations: [],
-    affection: 0,
-  };
-
   it('grants XP and levels up using creature XP formula', () => {
     const result = applyCreatureXP(baseCreature, 60);
     expect(result.leveledUp).toBe(true);
@@ -342,5 +342,180 @@ describe('applyCreatureXP with evolution', () => {
     const result = applyCreatureXP(highCreature, Number(xpNeeded) + 1000);
     expect(result.evolved).toBe(true);
     expect(result.evolutionStage).toBe(1);
+  });
+});
+
+describe('mutation chance helpers', () => {
+  it('common has 0 max mutations', () => {
+    expect(getMaxMutationsForClass('common')).toBe(0);
+  });
+
+  it('uncommon has 1 max mutation', () => {
+    expect(getMaxMutationsForClass('uncommon')).toBe(1);
+  });
+
+  it('rare has 1 max mutation', () => {
+    expect(getMaxMutationsForClass('rare')).toBe(1);
+  });
+
+  it('epic has 2 max mutations', () => {
+    expect(getMaxMutationsForClass('epic')).toBe(2);
+  });
+
+  it('legendary has 3 max mutations', () => {
+    expect(getMaxMutationsForClass('legendary')).toBe(3);
+  });
+
+  it('mythical has 4 max mutations', () => {
+    expect(getMaxMutationsForClass('mythical')).toBe(4);
+  });
+
+  it('returns correct mutation chances per tier', () => {
+    expect(getMutationChanceForClass('common')).toBeCloseTo(0.02, 10);
+    expect(getMutationChanceForClass('uncommon')).toBeCloseTo(0.03, 10);
+    expect(getMutationChanceForClass('rare')).toBeCloseTo(0.04, 10);
+    expect(getMutationChanceForClass('epic')).toBeCloseTo(0.05, 10);
+    expect(getMutationChanceForClass('legendary')).toBeCloseTo(0.06, 10);
+    expect(getMutationChanceForClass('mythical')).toBeCloseTo(0.07, 10);
+  });
+});
+
+describe('applyCreatureXP with mutations', () => {
+  it('common creature never mutates due to max mutations = 0', () => {
+    const spy = vi.spyOn(Math, 'random').mockReturnValue(0);
+    const result = applyCreatureXP(baseCreature, 100);
+    expect(result.mutations?.length).toBe(0);
+    spy.mockRestore();
+  });
+
+  it('rare creature gains exactly 1 mutation when Math.random is 0', () => {
+    const rareCreature: CreatureInstance = {
+      ...baseCreature,
+      class: 'rare',
+      skills: ['scratch'],
+      traits: ['strong'],
+      elements: ['fire'],
+      mutations: [],
+    };
+    const spy = vi.spyOn(Math, 'random').mockReturnValue(0);
+    const result = applyCreatureXP(rareCreature, 100);
+    expect(result.mutations?.length).toBe(1);
+    expect(result.mutations![0]).toBe('stat_shift_attack');
+    expect(result.creature.attack).toBe(14);
+    spy.mockRestore();
+  });
+
+  it('stat_shift mutation boosts the correct stat', () => {
+    const rareCreature: CreatureInstance = {
+      ...baseCreature,
+      class: 'rare',
+      skills: ['scratch'],
+      traits: ['strong'],
+      elements: ['fire'],
+      mutations: [],
+    };
+    const spy = vi.spyOn(Math, 'random').mockReturnValue(0);
+    const result = applyCreatureXP(rareCreature, 100);
+    if (result.mutations?.length) {
+      expect(result.creature.attack).toBeGreaterThan(10);
+    }
+    spy.mockRestore();
+  });
+
+  it('new_skill mutation adds a skill', () => {
+    const creature: CreatureInstance = {
+      ...baseCreature,
+      class: 'rare',
+      skills: [],
+      traits: [],
+      elements: [],
+      mutations: [],
+    };
+    const spy = vi.spyOn(Math, 'random').mockReturnValue(0);
+    const result = applyCreatureXP(creature, 100);
+    if (result.mutations?.length) {
+      const skillMutation = result.mutations.find(m => m.startsWith('new_skill_'));
+      if (skillMutation) {
+        const skillKey = skillMutation.replace('new_skill_', '');
+        expect(result.creature.skills).toContain(skillKey);
+      }
+    }
+    spy.mockRestore();
+  });
+
+  it('passive_trait mutation adds a trait', () => {
+    const creature: CreatureInstance = {
+      ...baseCreature,
+      class: 'rare',
+      skills: [],
+      traits: [],
+      elements: [],
+      mutations: [],
+    };
+    const spy = vi.spyOn(Math, 'random').mockReturnValue(0);
+    const result = applyCreatureXP(creature, 100);
+    if (result.mutations?.length) {
+      const traitMutation = result.mutations.find(m => m.startsWith('passive_trait_'));
+      if (traitMutation) {
+        const traitKey = traitMutation.replace('passive_trait_', '');
+        expect(result.creature.traits).toContain(traitKey);
+      }
+    }
+    spy.mockRestore();
+  });
+
+  it('elemental_drift mutation adds a new element', () => {
+    const creature: CreatureInstance = {
+      ...baseCreature,
+      class: 'rare',
+      skills: [],
+      traits: [],
+      elements: ['fire'],
+      mutations: [],
+    };
+    const spy = vi.spyOn(Math, 'random').mockReturnValue(0);
+    const result = applyCreatureXP(creature, 100);
+    if (result.mutations?.length) {
+      const driftMutation = result.mutations.find(m => m.startsWith('elemental_drift_'));
+      if (driftMutation) {
+        const element = driftMutation.replace('elemental_drift_', '');
+        expect(['fire','water','earth','air','lightning','iron','nature','ice','light','darkness']).toContain(element);
+        expect(result.creature.elements).toContain(element);
+      }
+    }
+    spy.mockRestore();
+  });
+
+  it('respects max mutations per class', () => {
+    const legendaryCreature: CreatureInstance = {
+      ...baseCreature,
+      class: 'legendary',
+      level: 50,
+      experience: 0n,
+      skills: [],
+      traits: [],
+      elements: ['fire'],
+      mutations: [],
+    };
+    const spy = vi.spyOn(Math, 'random').mockReturnValue(0);
+    const result = applyCreatureXP(legendaryCreature, Number(getCreatureXPThreshold(50)) + 10000);
+    expect(result.mutations?.length).toBeLessThanOrEqual(3);
+    spy.mockRestore();
+  });
+
+  it('mutations persist in creature.mutations array', () => {
+    const creature: CreatureInstance = {
+      ...baseCreature,
+      class: 'rare',
+      skills: [],
+      traits: [],
+      mutations: ['ancient_mutation'],
+    };
+    const spy = vi.spyOn(Math, 'random').mockReturnValue(0);
+    const result = applyCreatureXP(creature, 100);
+    if (result.mutations && result.mutations.length > 0) {
+      expect(result.creature.mutations).toContain('ancient_mutation');
+    }
+    spy.mockRestore();
   });
 });

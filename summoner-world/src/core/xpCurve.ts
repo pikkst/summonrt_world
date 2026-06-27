@@ -1,7 +1,7 @@
 import type { CreatureInstance } from '../types/game';
 import type { Element } from '../types/game';
 import type { EvolutionStage } from '../data/constants.ts';
-import { EVOLUTION_CHAINS } from '../data/constants.ts';
+import { EVOLUTION_CHAINS, getClassTier, getMutationChance, getMaxMutationsForClass, MUTATION_TYPES, MUTATION_SKILL_POOL, MUTATION_TRAIT_POOL, ELEMENTS, type MutationType } from '../data/constants.ts';
 
 export function getXPThreshold(level: number): bigint {
   if (level < 1) throw new Error('Level must be at least 1');
@@ -118,6 +118,7 @@ export interface CreatureXPResult {
   evolutionStage?: number;
   newClass?: string;
   evolutionStats?: { hp: number; attack: number; defense: number; speed: number };
+  mutations?: string[];
 }
 
 export function checkEvolution(creature: CreatureInstance): { stage: EvolutionStage; newClass: string; statMultiplier: number } | null {
@@ -137,6 +138,66 @@ export function checkEvolution(creature: CreatureInstance): { stage: EvolutionSt
   return null;
 }
 
+export function getMutationChanceForClass(creatureClass: string): number {
+  const tier = getClassTier(creatureClass);
+  return getMutationChance(tier);
+}
+
+function rollMutationType(): MutationType {
+  const idx = Math.floor(Math.random() * MUTATION_TYPES.length);
+  return MUTATION_TYPES[idx] as MutationType;
+}
+
+interface MutationResult {
+  mutationKey: string;
+  statsDelta?: { hp: number; attack: number; defense: number; speed: number };
+  newSkill?: string;
+  newTrait?: string;
+  newElement?: Element;
+}
+
+function rollAndApplyMutation(
+  creature: CreatureInstance,
+  currentSkills: string[],
+  currentTraits: string[],
+  currentElements: Element[]
+): MutationResult {
+  const type = rollMutationType();
+
+  switch (type) {
+    case 'stat_shift': {
+      const statKeys = ['attack', 'defense', 'speed'] as const;
+      const stat = statKeys[Math.floor(Math.random() * statKeys.length)];
+      const boost = 2;
+      const delta: { hp: number; attack: number; defense: number; speed: number } = { hp: 0, attack: 0, defense: 0, speed: 0 };
+      if (stat === 'attack') delta.attack = boost;
+      else if (stat === 'defense') delta.defense = boost;
+      else delta.speed = boost;
+      return { mutationKey: `stat_shift_${stat}`, statsDelta: delta };
+    }
+    case 'new_skill': {
+      const available = MUTATION_SKILL_POOL.filter(s => !currentSkills.includes(s));
+      if (available.length === 0) return { mutationKey: '' };
+      const skill = available[Math.floor(Math.random() * available.length)];
+      return { mutationKey: `new_skill_${skill}`, newSkill: skill };
+    }
+    case 'passive_trait': {
+      const available = MUTATION_TRAIT_POOL.filter(t => !currentTraits.includes(t));
+      if (available.length === 0) return { mutationKey: '' };
+      const trait = available[Math.floor(Math.random() * available.length)];
+      return { mutationKey: `passive_trait_${trait}`, newTrait: trait };
+    }
+    case 'elemental_drift': {
+      const available = ELEMENTS.filter(e => !currentElements.includes(e));
+      if (available.length === 0) return { mutationKey: '' };
+      const element = available[Math.floor(Math.random() * available.length)] as Element;
+      return { mutationKey: `elemental_drift_${element}`, newElement: element };
+    }
+    default:
+      return { mutationKey: '' };
+  }
+}
+
 export function applyCreatureXP(
   creature: CreatureInstance,
   xp: bigint | number,
@@ -150,6 +211,12 @@ export function applyCreatureXP(
   let evolutionStage = creature.evolutionStage || 0;
   let newClass = creature.class || 'common';
   let evolutionStats = { hp: 0, attack: 0, defense: 0, speed: 0 };
+  const mutations: string[] = [];
+
+  const mutationSkills = [...(creature.skills || [])];
+  const mutationTraits = [...(creature.traits || [])];
+  const mutationElements = [...(creature.elements || [])];
+  const maxMutations = getMaxMutationsForClass(newClass);
 
   while (newLevel < maxLevel) {
     const threshold = getCreatureXPThreshold(newLevel);
@@ -181,6 +248,25 @@ export function applyCreatureXP(
       statsGained.defense += evolutionStats.defense;
       statsGained.speed += evolutionStats.speed;
     }
+
+    if (mutations.length < maxMutations) {
+      const chance = getMutationChanceForClass(newClass);
+      if (Math.random() < chance) {
+        const mutationResult = rollAndApplyMutation(creature, mutationSkills, mutationTraits, mutationElements);
+        if (mutationResult.mutationKey) {
+          mutations.push(mutationResult.mutationKey);
+          if (mutationResult.statsDelta) {
+            statsGained.hp += mutationResult.statsDelta.hp || 0;
+            statsGained.attack += mutationResult.statsDelta.attack || 0;
+            statsGained.defense += mutationResult.statsDelta.defense || 0;
+            statsGained.speed += mutationResult.statsDelta.speed || 0;
+          }
+          if (mutationResult.newSkill) mutationSkills.push(mutationResult.newSkill);
+          if (mutationResult.newTrait) mutationTraits.push(mutationResult.newTrait);
+          if (mutationResult.newElement) mutationElements.push(mutationResult.newElement);
+        }
+      }
+    }
   }
 
   const newMaxHp = (creature.maxHealth || 50) + statsGained.hp;
@@ -196,6 +282,10 @@ export function applyCreatureXP(
     attack: (creature.attack || 10) + statsGained.attack,
     defense: (creature.defense || 5) + statsGained.defense,
     speed: (creature.speed || 5) + statsGained.speed,
+    skills: mutationSkills,
+    traits: mutationTraits,
+    elements: mutationElements,
+    mutations: [...(creature.mutations || []), ...mutations],
     evolutionStage,
   };
 
@@ -213,6 +303,7 @@ export function applyCreatureXP(
     evolutionStage,
     newClass: evolved ? newClass : undefined,
     evolutionStats: evolved ? evolutionStats : undefined,
+    mutations,
   };
 }
 
@@ -221,17 +312,35 @@ export function grantPartyXP(
   creatureIds: string[],
   baseXP: number,
   maxLevel: number = 1000
-): { updatedCreatures: CreatureInstance[]; leveledUpIds: string[] } {
-  if (creatureIds.length === 0) return { updatedCreatures: creatures, leveledUpIds: [] };
+): { updatedCreatures: CreatureInstance[]; leveledUpIds: string[]; mutatedIds: string[]; mutationsById: Record<string, string[]> } {
+  if (creatureIds.length === 0) return { updatedCreatures: creatures, leveledUpIds: [], mutatedIds: [], mutationsById: {} };
 
   const xpPerCreature = Math.max(1, Math.floor(baseXP / creatureIds.length));
-  const updatedCreatures = creatures.map((c) =>
-    creatureIds.includes(c.id) ? applyCreatureXP(c, xpPerCreature, maxLevel).creature : c
-  );
+  const xpResults = new Map<string, CreatureXPResult>();
+  const updatedCreatures = creatures.map((c) => {
+    if (creatureIds.includes(c.id)) {
+      const result = applyCreatureXP(c, xpPerCreature, maxLevel);
+      xpResults.set(c.id, result);
+      return result.creature;
+    }
+    return c;
+  });
 
   const leveledUpIds = updatedCreatures
     .filter((c) => creatureIds.includes(c.id) && c.level > creatures.find((orig) => orig.id === c.id)!.level)
     .map((c) => c.id);
 
-  return { updatedCreatures, leveledUpIds };
+  const mutatedIds: string[] = [];
+  const mutationsById: Record<string, string[]> = {};
+  for (const c of updatedCreatures) {
+    if (creatureIds.includes(c.id)) {
+      const result = xpResults.get(c.id);
+      if (result?.mutations && result.mutations.length > 0) {
+        mutatedIds.push(c.id);
+        mutationsById[c.id] = result.mutations;
+      }
+    }
+  }
+
+  return { updatedCreatures, leveledUpIds, mutatedIds, mutationsById };
 }

@@ -723,6 +723,10 @@ const newCreature: any = {
             if (xpResult.evolved) {
               appendLog(`EVOLUTION! ${creature.nickname || 'Creature'} has evolved into ${xpResult.newClass?.toUpperCase() || 'a higher form'}!`, 'success');
             }
+            if (xpResult.mutations && xpResult.mutations.length > 0) {
+              const labels = xpResult.mutations.map(k => k.replace(/_/g, ' ')).join(', ');
+              appendLog(`🧬 ${creature.nickname || 'Creature'} mutated: ${labels}!`, 'warning');
+            }
           }
           appendLog(`${creature.nickname || 'Creature'} gained ${creatureXp} XP from training!`, 'success');
           xpGain = creatureXp / 4;

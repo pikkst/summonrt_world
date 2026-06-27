@@ -341,16 +341,21 @@ const eff = getElementalEffectiveness(skill.element, enemyElements);
         if (xpResult.evolved) {
           appendLog(`EVOLUTION! ${c.nickname || 'Creature'} has evolved into ${xpResult.newClass?.toUpperCase() || 'a higher form'}!`, 'success');
         }
+        if (xpResult.mutations && xpResult.mutations.length > 0) {
+          const labels = xpResult.mutations.map(k => k.replace(/_/g, ' ')).join(', ');
+          appendLog(`🧬 ${c.nickname || 'Creature'} mutated: ${labels}!`, 'warning');
+        }
 
-        const newSkills = [...c.skills];
+        const newSkills = [...xpResult.creature.skills];
         const availableSkills = SKILL_TEMPLATES.filter(s => {
           if (newSkills.includes(s.key)) return false;
           if (!s.element) return xpResult.newLevel >= 5;
-          return (c.elements || []).includes(s.element);
+          return (xpResult.creature.elements || []).includes(s.element);
         });
         if (availableSkills.length > 0) {
           availableSkills.sort((a, b) => a.power - b.power);
-          const maxSkills = c.class === 'common' ? 2 : c.class === 'uncommon' ? 3 : c.class === 'rare' ? 4 : c.class === 'epic' ? 5 : c.class === 'legendary' ? 6 : 8;
+          const effectiveClass = xpResult.newClass || c.class || 'common';
+          const maxSkills = effectiveClass === 'common' ? 2 : effectiveClass === 'uncommon' ? 3 : effectiveClass === 'rare' ? 4 : effectiveClass === 'epic' ? 5 : effectiveClass === 'legendary' ? 6 : 8;
           if (newSkills.length < maxSkills) {
             const skillToLearn = xpResult.newLevel >= 10 ? availableSkills[availableSkills.length - 1]?.key : xpResult.newLevel >= 5 && availableSkills.length > 1 ? availableSkills[availableSkills.length - 2]?.key || availableSkills[0]?.key : availableSkills[0]?.key;
             if (skillToLearn) {

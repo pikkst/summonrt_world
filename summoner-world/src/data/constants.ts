@@ -59,6 +59,47 @@ export const EVOLUTION_CHAINS: Record<string, EvolutionStage[]> = {
   ],
 };
 
+export const MUTATION_TYPES = ['stat_shift', 'new_skill', 'passive_trait', 'elemental_drift'] as const;
+export type MutationType = typeof MUTATION_TYPES[number];
+
+export const MUTATION_SKILL_POOL = [
+  'scratch', 'fire_blast', 'water_spray', 'stone_throw', 'wind_slash',
+  'spark', 'iron_fist', 'vine_whip', 'ice_shard', 'holy_light', 'shadow_bolt',
+] as const;
+
+export const MUTATION_TRAIT_POOL = [
+  'regeneration', 'strong', 'tough', 'swift', 'magic_affinity',
+] as const;
+
+export const MAX_MUTATIONS_PER_CLASS: Record<string, number> = {
+  common: 0,
+  uncommon: 1,
+  rare: 1,
+  epic: 2,
+  legendary: 3,
+  mythical: 4,
+};
+
+export function getClassTier(creatureClass: string): number {
+  const tiers: Record<string, number> = {
+    common: 0,
+    uncommon: 1,
+    rare: 2,
+    epic: 3,
+    legendary: 4,
+    mythical: 5,
+  };
+  return tiers[creatureClass] || 0;
+}
+
+export function getMutationChance(tier: number): number {
+  return 0.02 + tier * 0.01;
+}
+
+export function getMaxMutationsForClass(creatureClass: string): number {
+  return MAX_MUTATIONS_PER_CLASS[creatureClass] || 0;
+}
+
 export function getBiomeForCoords(x: number, y: number, seed: number): string {
   // Natural gradient: Edge (0,0 or 2000,2000) is Water/Coast, moving towards center (1000,1000)
   const centerX = 1000;
