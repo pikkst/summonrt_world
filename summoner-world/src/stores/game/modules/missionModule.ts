@@ -1,7 +1,7 @@
 import type { GameStore, GameStoreState, PlayerState, WorldData, LogEntry, QuestInstance, Element, CreatureInstance, SetState } from '../types.ts';
 import { createLog, calculateMovementModifiers, processTileDiscovery, getPlayerElements, addPlayerXP, getWorldModifier } from '../helpers.ts';
 import { generateTile } from '../../../core/worldGenerator.ts';
-import { getTileKey, getNeighbors, RARITY_PENALTY, AFFINITY_WEIGHT, getAffinityWeight, calculateBaseCaptureProbability } from '../../../data/constants.ts';
+import { getTileKey, getAffinityWeight, calculateBaseCaptureProbability } from '../../../data/constants.ts';
 import { QUEST_TEMPLATES } from '../../../data/quests.ts';
 import { generateCreatureTemplate } from '../../../modules/creatures/creatureFactory.ts';
 import { SeededRandom } from '../../../utils/SeededRandom.ts';

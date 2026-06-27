@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   calculateCompressedDuration,
   getCreatureAgilityMod,
@@ -479,7 +479,7 @@ describe('Capture Formula (T4.10)', () => {
     it('penalties decrease with rarity', () => {
       const penalties = [RARITY_PENALTY.common, RARITY_PENALTY.uncommon, RARITY_PENALTY.rare, RARITY_PENALTY.epic, RARITY_PENALTY.mythical];
       for (let i = 0; i < penalties.length - 1; i++) {
-        expect(penalties[i]).toBeGreaterThanOrEqual(penalties[i + 1]);
+        expect(penalties[i]!).toBeGreaterThanOrEqual(penalties[i + 1]!);
       }
     });
   });
