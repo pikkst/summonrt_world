@@ -129,7 +129,7 @@ export interface CombatTeamMember {
 export function resolveAutomatedCombat(
   teamA: CreatureInstance[],
   teamB: CreatureInstance[],
-  options?: { rngSeed?: number; worldLayer?: number; atkElements?: Element[] }
+  options?: { rngSeed?: number; worldLayer?: number; atkElements?: Element[]; primordialPct?: number }
 ): MissionResult {
   const log: string[] = [];
   const rewards: InventoryStack[] = [];
@@ -165,14 +165,15 @@ export function resolveAutomatedCombat(
     log.push(`\n--- Turn ${turn} ---`);
 
 for (const atkr of aAlive) {
-       const target = pick(bAlive)!;
-       if (!target.isAlive) continue;
+        const target = pick(bAlive)!;
+        if (!target.isAlive) continue;
 
       const atkElem = atkr.creature.elements?.[0];
       const defElems = target.creature.elements;
       const eff = getElementalFactor(atkElem, defElems);
+      const primordialMult = (atkElem && options?.primordialPct) ? 1 + (options.primordialPct / 100) : 1;
 
-      const dmg = Math.max(1, Math.floor((atkr.creature.attack - target.creature.defense * 0.5) * eff + Math.floor(random() * 5) - 2));
+      const dmg = Math.max(1, Math.floor((atkr.creature.attack - target.creature.defense * 0.5) * eff * primordialMult + Math.floor(random() * 5) - 2));
       target.creature.currentHealth = Math.max(0, target.creature.currentHealth - dmg);
 
       if (target.creature.currentHealth <= 0) {

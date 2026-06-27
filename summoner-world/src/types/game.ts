@@ -21,6 +21,7 @@ export interface ElementalAffinity {
   secondary?: Element;
   tertiary?: Element;
   learned?: Element[];
+  traits?: string[];
 }
 
 export type CreatureClass = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythical';

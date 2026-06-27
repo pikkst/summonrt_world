@@ -13,7 +13,7 @@ export function rollAffinity(): ElementalAffinity {
     const secondary = pickWeightedElement(primary, remaining);
     const remaining2 = remaining.filter(e => e !== secondary);
     const tertiary = pickWeightedElement(primary, remaining2);
-    return { primary, secondary, tertiary };
+    return { primary, secondary, tertiary, traits: ['primordial'] };
   } else if (rand < 0.001) {
     const remaining = elements.filter(e => e !== primary);
     const secondary = pickWeightedElement(primary, remaining);
@@ -27,10 +27,10 @@ function pickWeightedElement(primary: Element, candidates: Element[]): Element {
   const total = weights.reduce((s, w) => s + w, 0);
   let roll = Math.random() * total;
   for (let i = 0; i < candidates.length; i++) {
-    roll -= weights[i];
-    if (roll <= 0) return candidates[i];
+    roll -= weights[i]!;
+    if (roll <= 0) return candidates[i]!;
   }
-  return candidates[candidates.length - 1];
+  return candidates[candidates.length - 1]!;
 }
 
 function getElementPairWeight(primary: Element, secondary: Element): number {
