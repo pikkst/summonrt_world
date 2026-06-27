@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { getXPThreshold, getCumulativeXP, getXPForLevel, getWorldModifier, getAffinityBonusXP, calculateEncounterXP, type Element } from '../core/xpCurve';
+import { getXPThreshold, getCumulativeXP, getXPForLevel, getWorldModifier, getAffinityBonusXP, calculateEncounterXP } from '../core/xpCurve';
+import type { Element } from '../types/game';
 
 describe('getXPThreshold', () => {
   it('Level 1 threshold equals 100 XP', () => {

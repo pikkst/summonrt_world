@@ -1,5 +1,5 @@
 export const ELEMENTS = ['fire','water','earth','air','lightning','iron','nature','ice','light','darkness'] as const;
-export const ALL_ELEMENTS = ['fire','water','earth','air','lightning','iron','nature','ice','light','darkness','void','starlight','chaos'] as const;
+export const ALL_ELEMENTS = ['fire','water','earth','air','lightning','iron','nature','ice','light','darkness','void','starlight','chaos','omni'] as const;
 export type AllElement = typeof ALL_ELEMENTS[number];
 export const BIOME_TYPES = ['forest','plains','mountains','swamp','desert','tundra','coast','volcanic','crystal_caves','sky_islands'] as const;
 

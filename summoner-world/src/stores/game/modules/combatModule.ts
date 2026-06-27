@@ -1,5 +1,5 @@
 import type { GameStore, GameStoreState, CombatState, CreatureTemplate, CreatureInstance, DungeonState, LogEntry, PlayerState, QuestInstance, Element, SetState } from '../types.ts';
-import { createLog, addPlayerXP, getWorldModifier } from '../helpers.ts';
+import { createLog, addPlayerXP, getWorldModifier, getPlayerElements } from '../helpers.ts';
 import { generateCreatureTemplate } from '../../../modules/creatures/creatureFactory.ts';
 import { SKILL_TEMPLATES } from '../../../modules/creatures/creatureFactory.ts';
 import { applyCreatureXP, calculateEncounterXP } from '../../../core/xpCurve.ts';
@@ -7,6 +7,17 @@ import { SeededRandom } from '../../../utils/SeededRandom.ts';
 
 const getPrimordialDamageMultiplier = (player: PlayerState): number => {
   return player.affinity.traits?.includes('primordial') ? 1.2 : 1;
+};
+
+const getOmniDamageMultiplier = (player: PlayerState): number => {
+  const elements = getPlayerElements(player);
+  return elements.includes('omni') ? 1.3 : 1;
+};
+
+const getElementDamageMultiplier = (player: PlayerState): number => {
+  const primordialMult = getPrimordialDamageMultiplier(player);
+  const omniMult = getOmniDamageMultiplier(player);
+  return primordialMult * omniMult;
 };
 
 const ELEMENTAL_ADVANTAGES: Record<string, string[]> = {
@@ -137,10 +148,10 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
     const creatureElement = creature.elements?.[0];
     const enemyElements = enemyTemplate.elements || [];
 
-    const eff = getElementalEffectiveness(creatureElement, enemyElements);
-    const damageRaw = (creature.attack || 10) - (enemyTemplate.baseDefense || 5) + Math.floor(Math.random() * 5);
-    const primordialMult = creatureElement ? getPrimordialDamageMultiplier(player) : 1;
-    const playerDamage = Math.max(1, Math.floor(damageRaw * eff.factor * primordialMult));
+const eff = getElementalEffectiveness(creatureElement, enemyElements);
+     const damageRaw = (creature.attack || 10) - (enemyTemplate.baseDefense || 5) + Math.floor(Math.random() * 5);
+     const damageMult = creatureElement ? getElementDamageMultiplier(player) : 1;
+     const playerDamage = Math.max(1, Math.floor(damageRaw * eff.factor * damageMult));
     const newEnemyHp = Math.max(0, (combat.enemyHp || 50) - playerDamage);
 
     let combatLog = [...combat.log, `${creature.nickname || 'Your creature'} attacks for ${playerDamage} damage!${eff.msg}`];
@@ -177,12 +188,12 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
     const enemyTemplate = combat.enemyTemplate || generateCreatureTemplate(player.currentWorldId, new SeededRandom(Date.now()));
     const enemyElements = enemyTemplate.elements || [];
 
-    const eff = getElementalEffectiveness(skill.element, enemyElements);
-    const baseAtk = creature.attack || 10;
-    const skillMult = skill.power / 10;
-    const damageRaw = (baseAtk * skillMult) - (enemyTemplate.baseDefense || 5) + Math.floor(Math.random() * 5);
-    const primordialMult = skill.element ? getPrimordialDamageMultiplier(player) : 1;
-    const skillDamage = Math.max(1, Math.floor(damageRaw * eff.factor * primordialMult));
+const eff = getElementalEffectiveness(skill.element, enemyElements);
+     const baseAtk = creature.attack || 10;
+     const skillMult = skill.power / 10;
+     const damageRaw = (baseAtk * skillMult) - (enemyTemplate.baseDefense || 5) + Math.floor(Math.random() * 5);
+     const damageMult = skill.element ? getElementDamageMultiplier(player) : 1;
+     const skillDamage = Math.max(1, Math.floor(damageRaw * eff.factor * damageMult));
 
     const newEnemyHp = Math.max(0, (combat.enemyHp || 50) - skillDamage);
     const newMana = Math.max(0, creature.currentMana - skill.cost);

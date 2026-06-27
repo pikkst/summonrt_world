@@ -1,4 +1,5 @@
 import type { CreatureInstance } from '../types/game';
+import type { Element } from '../types/game';
 
 export function getXPThreshold(level: number): bigint {
   if (level < 1) throw new Error('Level must be at least 1');
@@ -30,21 +31,6 @@ export function getWorldModifier(worldIndex: number): number {
   return 1 + (worldIndex * 0.05);
 }
 
-export type Element =
-  | 'fire'
-  | 'water'
-  | 'earth'
-  | 'air'
-  | 'lightning'
-  | 'iron'
-  | 'nature'
-  | 'ice'
-  | 'light'
-  | 'darkness'
-  | 'void'
-  | 'starlight'
-  | 'chaos';
-
 const SAME_ELEMENT_BONUS = 1.15;
 const OPPOSING_ELEMENT_PENALTY = 0.85;
 
@@ -62,6 +48,7 @@ const ELEMENTAL_OPPOSITIONS: Record<string, string[]> = {
   void: ['light', 'starlight'],
   starlight: ['darkness', 'chaos'],
   chaos: ['light', 'void', 'starlight'],
+  omni: [],
 };
 
 export function getAffinityBonusXP(atkElement: Element | undefined, defElements: Element[] | undefined): number {

@@ -14,7 +14,8 @@ export type Element =
   | 'darkness'
   | 'void'
   | 'starlight'
-  | 'chaos';
+  | 'chaos'
+  | 'omni';
 
 export interface ElementalAffinity {
   primary: Element;

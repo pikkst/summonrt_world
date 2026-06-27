@@ -123,5 +123,42 @@ export const QUEST_TEMPLATES: Record<string, QuestTemplate> = {
       exp: 2000,
       items: [{ templateKey: 'boss_egg', quantity: 1 }]
     }
+  },
+  convergence_part1: {
+    key: 'convergence_part1',
+    title: 'The Celestial Forge',
+    description: 'Acquire the Primordial Shard from the Ancient Spire Floor 10 boss.',
+    type: 'combat',
+    target: 'dungeon_floor',
+    amount: 10,
+    rewards: {
+      money: 2000,
+      exp: 1000
+    }
+  },
+  convergence_part2: {
+    key: 'convergence_part2',
+    title: 'Elemental Resonance',
+    description: 'Collect all 10 base elemental essences and bring them to the Convergence Altar.',
+    type: 'gather',
+    target: 'element_essences',
+    amount: 10,
+    rewards: {
+      money: 5000,
+      exp: 2000
+    }
+  },
+  convergence_part3: {
+    key: 'convergence_part3',
+    title: 'The Great Convergence',
+    description: 'Merge the essences at the Convergence Altar to awaken the Omni element.',
+    type: 'summon',
+    target: 'fusion',
+    amount: 1,
+    rewards: {
+      money: 10000,
+      exp: 5000,
+      element: 'omni'
+    }
   }
 };

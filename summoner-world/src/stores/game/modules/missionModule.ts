@@ -495,6 +495,19 @@ level: 1,
 
     if ((quest.progress || 0) < quest.targetProgress) return;
 
+    const baseElements = ['fire','water','earth','air','lightning','iron','nature','ice','light','darkness'];
+    
+    if (template.rewards?.element === 'omni') {
+      const currentElements = getPlayerElements(player);
+      const hasAllBaseElements = baseElements.every(el => currentElements.includes(el as Element));
+      if (!hasAllBaseElements) {
+        set((state) => ({
+          log: [...state.log.slice(-499), createLog('To unlock Omni, you must first master all 10 base elements. The convergence fails.', 'warning', state.turnCount)]
+        }));
+        return;
+      }
+    }
+
     const updatedQuests = [...player.activeQuests];
     updatedQuests.splice(qIdx, 1);
 
@@ -1020,21 +1033,21 @@ level: 1,
     );
     const creatureAgilityMod = getCreatureAgilityMod(creatureInstances);
 
-    const modifiers: MissionModifiers = {
-      ...careerModifiers,
-      creature_agility_mod: creatureAgilityMod,
-      ...params.extraModifiers,
-    };
+const modifiers: MissionModifiers = {
+       ...careerModifiers,
+       creature_agility_mod: creatureAgilityMod,
+       ...params.extraModifiers,
+     };
 
-    const mission = createActiveMission({
-      type: params.type,
-      assigned_creatures: params.assigned_creatures,
-      world_layer: params.world_layer,
-      duration_seconds: params.duration_seconds,
-      modifiers,
-    });
+     const mission = createActiveMission({
+       type: params.type,
+       assigned_creatures: params.assigned_creatures,
+       world_layer: params.world_layer,
+       duration_seconds: params.duration_seconds,
+       modifiers,
+     });
 
-    const inProgressMission = { ...mission, status: 'IN_PROGRESS' as MissionStatus };
+     const inProgressMission = { ...mission, status: 'IN_PROGRESS' as MissionStatus };
 
     set((state) => ({
       missions: [...state.missions, inProgressMission]
