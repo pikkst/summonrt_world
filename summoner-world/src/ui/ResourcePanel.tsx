@@ -29,10 +29,10 @@ export const ResourcePanel: React.FC = () => {
 
   return (
     <div className="flex gap-1 w-full bg-black/40 p-1 border-t border-gray-800">
-      {renderBar('Health', player.life.current, player.life.max, 'bg-[#cc0000]')}
-      {renderBar('Mana', player.energy.current, player.energy.max, 'bg-[#0044cc]')}
-      {renderBar('Endurance', player.happy.current, player.happy.max, 'bg-[#990099]')}
-      {renderBar('Willpower', player.nerve.current, player.nerve.max, 'bg-[#cccc00]')}
+      {renderBar('Life', player.life.current, player.life.max, 'bg-[#cc0000]')}
+      {renderBar('Energy', player.energy.current, player.energy.max, 'bg-[#0044cc]')}
+      {renderBar('Happy', player.happy.current, player.happy.max, 'bg-[#990099]')}
+      {renderBar('Nerve', player.nerve.current, player.nerve.max, 'bg-[#cccc00]')}
     </div>
   );
 };

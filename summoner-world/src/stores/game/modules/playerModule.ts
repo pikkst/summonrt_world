@@ -1,5 +1,5 @@
 import type { GameStore, GameStoreState, LogEntry, ElementalAffinity, Element, InventoryStack, PlayerState, WorldData, QuestInstance, CreatureInstance, CommunityState, SetState } from '../types.ts';
-import { createLog, rollAffinity, getPlayerElements, addPlayerXP, calculateMovementModifiers, processTileDiscovery, getWorldModifier } from '../helpers.ts';
+import { createLog, rollAffinity, getPlayerElements, addPlayerXP, calculateMovementModifiers, processTileDiscovery, getWorldModifier, applyResourceRegeneration } from '../helpers.ts';
 import { generateWorld, generateTile } from '../../../core/worldGenerator.ts';
 import { getTileKey, getNeighbors } from '../../../data/constants.ts';
 import { SeededRandom } from '../../../utils/SeededRandom.ts';
@@ -219,33 +219,36 @@ set({
           });
         }
 
-set({
-           player: {
-             ...serverPlayer,
-             id: serverPlayer._id,
-             affinity,
-             isOnline: true,
-             skillPoints: serverPlayer.skillPoints ?? 0,
-             skillsUnlocked: serverPlayer.skillsUnlocked ?? {},
-             unspent_passive_points: serverPlayer.unspent_passive_points ?? 0,
-             unlocked_node_ids: serverPlayer.unlocked_node_ids ?? ['root_hub'],
-             currentWorldId: serverPlayer.currentWorld || 1,
-             tileX: typeof serverPlayer.posX === 'number' && !isNaN(serverPlayer.posX) ? serverPlayer.posX : startWorld.startTile.x,
-             tileY: typeof serverPlayer.posY === 'number' && !isNaN(serverPlayer.posY) ? serverPlayer.posY : startWorld.startTile.y,
-             gameTimeMinutes: typeof serverPlayer.gameTimeMinutes === 'number' && !isNaN(serverPlayer.gameTimeMinutes) ? serverPlayer.gameTimeMinutes : 420,
-             creatures: serverPlayer.creatures || [],
-             inventory: serverPlayer.inventory || [],
-             activeQuests: serverPlayer.activeQuests || [],
-             completedQuests: serverPlayer.completedQuests || [],
-             discoveredTiles: discoveredTilesSet,
-             activity: serverPlayer.activity || null,
-             settings: serverPlayer.settings || { musicVolume: 0.5, sfxVolume: 0.5, showLogTimestamps: true }
-           },
-           worlds,
-           currentWorldId: serverPlayer.currentWorld || 1,
-            initialized: true,
-            log: [createLog(`Welcome back, ${serverPlayer.username}!`, 'system', 0)],
-          });
+        const loggedInPlayer: PlayerState = {
+          ...serverPlayer,
+          id: serverPlayer._id,
+          affinity,
+          isOnline: true,
+          skillPoints: serverPlayer.skillPoints ?? 0,
+          skillsUnlocked: serverPlayer.skillsUnlocked ?? {},
+          unspent_passive_points: serverPlayer.unspent_passive_points ?? 0,
+          unlocked_node_ids: serverPlayer.unlocked_node_ids ?? ['root_hub'],
+          currentWorldId: serverPlayer.currentWorld || 1,
+          tileX: typeof serverPlayer.posX === 'number' && !isNaN(serverPlayer.posX) ? serverPlayer.posX : startWorld.startTile.x,
+          tileY: typeof serverPlayer.posY === 'number' && !isNaN(serverPlayer.posY) ? serverPlayer.posY : startWorld.startTile.y,
+          gameTimeMinutes: typeof serverPlayer.gameTimeMinutes === 'number' && !isNaN(serverPlayer.gameTimeMinutes) ? serverPlayer.gameTimeMinutes : 420,
+          creatures: serverPlayer.creatures || [],
+          inventory: serverPlayer.inventory || [],
+          activeQuests: serverPlayer.activeQuests || [],
+          completedQuests: serverPlayer.completedQuests || [],
+          discoveredTiles: discoveredTilesSet,
+          activity: serverPlayer.activity || null,
+          settings: serverPlayer.settings || { musicVolume: 0.5, sfxVolume: 0.5, showLogTimestamps: true }
+        };
+        const regeneratedPlayer = applyResourceRegeneration(loggedInPlayer, Date.now());
+
+        set({
+          player: regeneratedPlayer,
+          worlds,
+          currentWorldId: serverPlayer.currentWorld || 1,
+          initialized: true,
+          log: [createLog(`Welcome back, ${serverPlayer.username}!`, 'system', 0)],
+        });
           get().startHeartbeat();
         set({
           nearbyPlayers: res.data.nearby?.areaPlayers || res.data.nearby || [],
@@ -496,8 +499,10 @@ set({
       const logoutTimestamp = data.lastLogoutTimestamp ?? (parsedLogout > 0 ? parsedLogout : undefined);
       if (parsedLogout > 0) localStorage.removeItem('summonerworld-last-logout');
 
+      const regeneratedPlayer = applyResourceRegeneration(player, Date.now());
+
       set({
-        player,
+        player: regeneratedPlayer,
         worlds,
         currentWorldId: data.currentWorldId || 1,
         turnCount: data.turnCount || 0,

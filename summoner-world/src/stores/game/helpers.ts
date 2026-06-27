@@ -101,3 +101,37 @@ export function processTileDiscovery(x: number, y: number, currentWorldId: numbe
     world.tiles.get(nk)!.discovered = true;
   });
 }
+
+export function applyResourceRegeneration(player: PlayerState, now: number): PlayerState {
+  const updatedPlayer = { ...player };
+  const regenTimestamp = new Date(now).toISOString();
+
+  const updateResource = <K extends keyof Pick<PlayerState, 'energy' | 'nerve' | 'happy' | 'life'>>(
+    resource: K,
+    rate: number,
+  ): void => {
+    const res = player[resource];
+    const lastUpdateTime = res.lastUpdate ? new Date(res.lastUpdate).getTime() : NaN;
+    if (isNaN(lastUpdateTime)) return;
+
+    const elapsedMs = Math.max(0, now - lastUpdateTime);
+    const elapsedMinutes = elapsedMs / (1000 * 60);
+    if (elapsedMinutes < 1) return;
+
+    const gain = Math.floor(elapsedMinutes * rate);
+    if (gain <= 0) return;
+
+    updatedPlayer[resource] = {
+      ...res,
+      current: Math.min(res.max, Math.max(0, res.current + gain)),
+      lastUpdate: regenTimestamp,
+    };
+  };
+
+  updateResource('energy', 1);
+  updateResource('nerve', 1 / 3);
+  updateResource('happy', 1 / 2);
+  updateResource('life', 1 / 5);
+
+  return updatedPlayer;
+}
