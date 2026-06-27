@@ -76,7 +76,7 @@ Sprint goal: refine elemental system, creature generation, mutations and capture
 - [x] T4.1 – **Update Element constants**: Consolidate `ELEMENTS` to 10 elements only (remove void/starlight/chaos from starter pool; they are quest-only unlocks)
 - [x] T4.2 – Remove duplicate `getTileKey`/`getNeighbors` functions (consolidate to constants.ts) if they haven't been fixed already.
 - [x] T4.3 – Remove `void`, `starlight`, `chaos` from starter element roll pool (available via quests only)
-- [ ] T4.4 – Implement dual-element roll: 1/1000 probability, weighted synergistic/neutral/opposing pairs
+- [x] T4.4 – Implement dual-element roll: 1/1000 probability, weighted synergistic/neutral/opposing pairs
 - [ ] T4.5 – Implement triple-element roll: 1/1,000,000, "Primordial" trait (+20% all elemental damage)
 - [ ] T4.6 – Add "All Element" (Omni) quest-chain lock — not rollable, only via Convergence quest
 - [ ] T4.7 – Fix `generateCreatureTemplate()` to use GDD rarity weights (Common 60%, Uncommon 25%, Rare 10%, Epic 4%, Legendary 0.9%, Mythical 0.1%)

@@ -8,18 +8,59 @@ export function rollAffinity(): ElementalAffinity {
   const elements: Element[] = ['fire','water','earth','air','lightning','iron','nature','ice','light','darkness'];
   const primary = elements[Math.floor(Math.random() * elements.length)] as Element;
   const rand = Math.random();
-  if (rand < 0.001) {
+  if (rand < 0.000001) {
     const remaining = elements.filter(e => e !== primary);
-    const secondary = remaining[Math.floor(Math.random() * remaining.length)] as Element;
+    const secondary = pickWeightedElement(primary, remaining);
     const remaining2 = remaining.filter(e => e !== secondary);
-    const tertiary = remaining2[Math.floor(Math.random() * remaining2.length)] as Element;
+    const tertiary = pickWeightedElement(primary, remaining2);
     return { primary, secondary, tertiary };
-  } else if (rand < 0.011) {
+  } else if (rand < 0.001) {
     const remaining = elements.filter(e => e !== primary);
-    const secondary = remaining[Math.floor(Math.random() * remaining.length)] as Element;
+    const secondary = pickWeightedElement(primary, remaining);
     return { primary, secondary };
   }
   return { primary };
+}
+
+function pickWeightedElement(primary: Element, candidates: Element[]): Element {
+  const weights = candidates.map(e => getElementPairWeight(primary, e));
+  const total = weights.reduce((s, w) => s + w, 0);
+  let roll = Math.random() * total;
+  for (let i = 0; i < candidates.length; i++) {
+    roll -= weights[i];
+    if (roll <= 0) return candidates[i];
+  }
+  return candidates[candidates.length - 1];
+}
+
+function getElementPairWeight(primary: Element, secondary: Element): number {
+  const synergisticPairs: [Element, Element][] = [
+    ['fire', 'air'],
+    ['water', 'ice'],
+    ['earth', 'nature'],
+    ['air', 'lightning'],
+    ['lightning', 'iron'],
+  ];
+  
+  const opposingPairs: [Element, Element][] = [
+    ['fire', 'ice'],
+    ['fire', 'water'],
+    ['light', 'darkness'],
+    ['nature', 'fire'],
+    ['ice', 'fire'],
+    ['water', 'fire'],
+  ];
+  
+  const isSynergistic = synergisticPairs.some(
+    ([a, b]) => (a === primary && b === secondary) || (a === secondary && b === primary)
+  );
+  const isOpposing = opposingPairs.some(
+    ([a, b]) => (a === primary && b === secondary) || (a === secondary && b === primary)
+  );
+  
+  if (isSynergistic) return 2;
+  if (isOpposing) return 0.5;
+  return 1;
 }
 
 export function createLog(text: string, type: LogEntry['type'], turnCount: number): LogEntry {
