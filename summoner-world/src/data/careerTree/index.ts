@@ -76,30 +76,6 @@ export function respecAllNodes(playerState: PlayerState): PlayerState {
   };
 }
 
-import type { MissionModifiers } from '../../core/missionQueue';
-
-export function getCareerModifiers(
-  aggregatedStats: Record<string, number>
-): MissionModifiers {
-  const modifiers: MissionModifiers = {};
-
-  if (aggregatedStats.exploration_speed_pct) {
-    modifiers.tree_speed_pct = aggregatedStats.exploration_speed_pct;
-  }
-  if (aggregatedStats.caravan_speed_pct) {
-    modifiers.caravan_speed_pct = aggregatedStats.caravan_speed_pct;
-  }
-  if (aggregatedStats.store_traffic_pct) {
-    modifiers.store_traffic_pct = aggregatedStats.store_traffic_pct;
-  }
-  if (aggregatedStats.crafting_speed_pct) {
-    modifiers.crafting_speed_pct = aggregatedStats.crafting_speed_pct;
-  }
-  if (aggregatedStats.yield_bonus_pct) {
-    modifiers.yield_bonus_pct = aggregatedStats.yield_bonus_pct;
-  }
-
-  return modifiers;
-}
+export { getCareerModifiers } from '../careerTreeIntegration';
 
 export type { CareerTree, CareerNode, CareerNodeType, CareerCategory } from './types';

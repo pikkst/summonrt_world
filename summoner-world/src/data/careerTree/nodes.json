@@ -18,6 +18,26 @@
     }
   },
   {
+    "id": "blacksmith_minor_2",
+    "name": "Forge Tender",
+    "type": "minor",
+    "career_category": "Blacksmith",
+    "connections": ["root_hub"],
+    "stats": {
+      "material_retention_chance": 3
+    }
+  },
+  {
+    "id": "blacksmith_minor_3",
+    "name": "Ore Handler",
+    "type": "minor",
+    "career_category": "Blacksmith",
+    "connections": ["blacksmith_minor_2"],
+    "stats": {
+      "smelting_speed_pct": 3
+    }
+  },
+  {
     "id": "blacksmith_notable_1",
     "name": "Journeyman Smith",
     "type": "notable",
@@ -29,14 +49,91 @@
     }
   },
   {
+    "id": "blacksmith_notable_2",
+    "name": "Steelweaver",
+    "type": "notable",
+    "career_category": "Blacksmith",
+    "connections": ["blacksmith_minor_3"],
+    "stats": {
+      "smelting_speed_pct": 10,
+      "crafting_speed_pct": 5
+    }
+  },
+  {
     "id": "blacksmith_keystone_1",
     "name": "Master Smith",
     "type": "keystone",
     "career_category": "Blacksmith",
-    "connections": ["blacksmith_notable_1"],
+    "connections": ["blacksmith_notable_1", "blacksmith_notable_2"],
     "stats": {
       "crafting_mastery": 1,
       "unlocks_recipe_set": "advanced_weapons"
+    }
+  },
+  {
+    "id": "blacksmith_elite_1",
+    "name": "Guild Artificer",
+    "type": "notable",
+    "career_category": "Blacksmith",
+    "connections": ["blacksmith_keystone_1"],
+    "stats": {
+      "caravan_speed_pct": 5,
+      "tariff_discount_pct": 3
+    }
+  },
+  {
+    "id": "blacksmith_elite_2",
+    "name": "Grand Artificer",
+    "type": "notable",
+    "career_category": "Blacksmith",
+    "connections": ["blacksmith_keystone_1"],
+    "stats": {
+      "crafting_speed_pct": 15,
+      "material_retention_chance": 10
+    }
+  },
+  {
+    "id": "blacksmith_elite_3",
+    "name": "War Engineer",
+    "type": "notable",
+    "career_category": "Blacksmith",
+    "connections": ["blacksmith_keystone_1"],
+    "stats": {
+      "damage_dealt_pct": 5,
+      "fusion_timer_reduction_pct": 5
+    }
+  },
+  {
+    "id": "blacksmith_elite_4",
+    "name": "Supply Chain Master",
+    "type": "notable",
+    "career_category": "Blacksmith",
+    "connections": ["blacksmith_elite_1"],
+    "stats": {
+      "yield_bonus_pct": 8,
+      "exploration_speed_pct": 3
+    }
+  },
+  {
+    "id": "blacksmith_legend_1",
+    "name": "Legendary Forgemaster",
+    "type": "keystone",
+    "career_category": "Blacksmith",
+    "connections": ["blacksmith_elite_2"],
+    "stats": {
+      "fusion_success_chance": 5,
+      "crafting_mastery": 1
+    }
+  },
+  {
+    "id": "blacksmith_legend_2",
+    "name": "Master of Alloys",
+    "type": "keystone",
+    "career_category": "Blacksmith",
+    "connections": ["blacksmith_notable_2"],
+    "stats": {
+      "damage_taken_pct": -5,
+      "smelting_speed_pct": 15
     }
   },
   {
@@ -47,6 +144,26 @@
     "connections": ["root_hub"],
     "stats": {
       "exploration_speed_pct": 5
+    }
+  },
+  {
+    "id": "explorer_minor_2",
+    "name": "Trail Scout",
+    "type": "minor",
+    "career_category": "Explorer",
+    "connections": ["root_hub"],
+    "stats": {
+      "encounter_avoidance_chance": 5
+    }
+  },
+  {
+    "id": "explorer_minor_3",
+    "name": "Pathfinder Recruit",
+    "type": "minor",
+    "career_category": "Explorer",
+    "connections": ["explorer_minor_2"],
+    "stats": {
+      "exploration_speed_pct": 3
     }
   },
   {
@@ -61,14 +178,92 @@
     }
   },
   {
+    "id": "explorer_notable_2",
+    "name": "Cartographer's Aid",
+    "type": "notable",
+    "career_category": "Explorer",
+    "connections": ["explorer_minor_3"],
+    "stats": {
+      "map_reveal_radius": 1,
+      "secret_discovery_chance": 5
+    }
+  },
+  {
     "id": "explorer_keystone_1",
     "name": "Cartographer",
     "type": "keystone",
     "career_category": "Explorer",
-    "connections": ["explorer_notable_1"],
+    "connections": ["explorer_notable_1", "explorer_notable_2"],
     "stats": {
       "map_reveal_radius": 2,
       "secret_discovery_chance": 10
+    }
+  },
+  {
+    "id": "explorer_elite_1",
+    "name": "Trade Route Scout",
+    "type": "notable",
+    "career_category": "Explorer",
+    "connections": ["explorer_keystone_1"],
+    "stats": {
+      "caravan_speed_pct": 8,
+      "arbitrage_opportunity_chance": 5
+    }
+  },
+  {
+    "id": "explorer_elite_2",
+    "name": "Beast Guide",
+    "type": "notable",
+    "career_category": "Explorer",
+    "connections": ["explorer_keystone_1"],
+    "stats": {
+      "capture_rate_pct": 5,
+      "creature_affection_gain_pct": 5
+    }
+  },
+  {
+    "id": "explorer_elite_3",
+    "name": "Master Cartographer",
+    "type": "notable",
+    "career_category": "Explorer",
+    "connections": ["explorer_keystone_1"],
+    "stats": {
+      "map_reveal_radius": 3,
+      "secret_discovery_chance": 15
+    }
+  },
+  {
+    "id": "explorer_elite_4",
+    "name": "Miner's Path",
+    "type": "notable",
+    "career_category": "Explorer",
+    "connections": ["explorer_elite_1"],
+    "stats": {
+      "yield_bonus_pct": 8,
+      "smelting_speed_pct": 5
+    }
+  },
+  {
+    "id": "explorer_legend_1",
+    "name": "Realm Walker",
+    "type": "keystone",
+    "career_category": "Explorer",
+    "connections": ["explorer_elite_3"],
+    "stats": {
+      "exploration_speed_pct": 15,
+      "encounter_avoidance_chance": 10,
+      "dungeon_speed_pct": 5
+    }
+  },
+  {
+    "id": "explorer_legend_2",
+    "name": "Pathfinder Legend",
+    "type": "keystone",
+    "career_category": "Explorer",
+    "connections": ["explorer_elite_2"],
+    "stats": {
+      "xp_gain_pct": 5,
+      "exploration_speed_pct": 10
     }
   },
   {
@@ -79,6 +274,27 @@
     "connections": ["root_hub"],
     "stats": {
       "tax_revenue_pct": 1
+    }
+  },
+  {
+    "id": "official_minor_2",
+    "name": "Census Taker",
+    "type": "minor",
+    "career_category": "Official",
+    "connections": ["root_hub"],
+    "stats": {
+      "public_order_pct": 3
+    }
+  },
+  {
+    "id": "official_minor_3",
+    "name": "Record Keeper",
+    "type": "minor",
+    "career_category": "Official",
+    "connections": ["official_minor_2"],
+    "stats": {
+      "tax_revenue_pct": 1,
+      "settlement_upgrade_cost_pct": -3
     }
   },
   {
@@ -93,14 +309,91 @@
     }
   },
   {
+    "id": "official_notable_2",
+    "name": "City Planner",
+    "type": "notable",
+    "career_category": "Official",
+    "connections": ["official_minor_3"],
+    "stats": {
+      "settlement_upgrade_cost_pct": -5,
+      "store_traffic_pct": 3
+    }
+  },
+  {
     "id": "official_keystone_1",
     "name": "Governor",
     "type": "keystone",
     "career_category": "Official",
-    "connections": ["official_notable_1"],
+    "connections": ["official_notable_1", "official_notable_2"],
     "stats": {
       "settlement_upgrade_cost_pct": -15,
       "unlocks_policy_making": 1
+    }
+  },
+  {
+    "id": "official_elite_1",
+    "name": "Market Regulator",
+    "type": "notable",
+    "career_category": "Official",
+    "connections": ["official_keystone_1"],
+    "stats": {
+      "selling_price_pct": 3,
+      "tax_revenue_pct": 3
+    }
+  },
+  {
+    "id": "official_elite_2",
+    "name": "Trade Diplomat",
+    "type": "notable",
+    "career_category": "Official",
+    "connections": ["official_keystone_1"],
+    "stats": {
+      "tariff_discount_pct": 5,
+      "caravan_speed_pct": 3
+    }
+  },
+  {
+    "id": "official_elite_3",
+    "name": "War Marshal",
+    "type": "notable",
+    "career_category": "Official",
+    "connections": ["official_keystone_1"],
+    "stats": {
+      "damage_dealt_pct": 3,
+      "damage_taken_pct": -3
+    }
+  },
+  {
+    "id": "official_elite_4",
+    "name": "Infrastructure Minister",
+    "type": "notable",
+    "career_category": "Official",
+    "connections": ["official_elite_1"],
+    "stats": {
+      "crafting_speed_pct": 5,
+      "settlement_upgrade_cost_pct": -8
+    }
+  },
+  {
+    "id": "official_legend_1",
+    "name": "Supreme Magistrate",
+    "type": "keystone",
+    "career_category": "Official",
+    "connections": ["official_elite_2"],
+    "stats": {
+      "tax_revenue_pct": 5,
+      "public_order_pct": 10
+    }
+  },
+  {
+    "id": "official_legend_2",
+    "name": "Legendary Governor",
+    "type": "keystone",
+    "career_category": "Official",
+    "connections": ["official_elite_3"],
+    "stats": {
+      "unlocks_policy_making": 1,
+      "dungeon_reward_pct": 5
     }
   },
   {
@@ -111,6 +404,26 @@
     "connections": ["root_hub"],
     "stats": {
       "selling_price_pct": 2
+    }
+  },
+  {
+    "id": "shopkeeper_minor_2",
+    "name": "Haggler",
+    "type": "minor",
+    "career_category": "Shopkeeper",
+    "connections": ["root_hub"],
+    "stats": {
+      "store_traffic_pct": 3
+    }
+  },
+  {
+    "id": "shopkeeper_minor_3",
+    "name": "Appraiser",
+    "type": "minor",
+    "career_category": "Shopkeeper",
+    "connections": ["shopkeeper_minor_2"],
+    "stats": {
+      "rare_item_sourcing_chance": 3
     }
   },
   {
@@ -125,14 +438,92 @@
     }
   },
   {
+    "id": "shopkeeper_notable_2",
+    "name": "Market Analyst",
+    "type": "notable",
+    "career_category": "Shopkeeper",
+    "connections": ["shopkeeper_minor_3"],
+    "stats": {
+      "store_traffic_pct": 5,
+      "arbitrage_opportunity_chance": 5
+    }
+  },
+  {
     "id": "shopkeeper_keystone_1",
     "name": "Tycoon",
     "type": "keystone",
     "career_category": "Shopkeeper",
-    "connections": ["shopkeeper_notable_1"],
+    "connections": ["shopkeeper_notable_1", "shopkeeper_notable_2"],
     "stats": {
       "unlocks_global_market": 1,
       "rare_item_sourcing_chance": 5
+    }
+  },
+  {
+    "id": "shopkeeper_elite_1",
+    "name": "Tax Auditor",
+    "type": "notable",
+    "career_category": "Shopkeeper",
+    "connections": ["shopkeeper_keystone_1"],
+    "stats": {
+      "tax_revenue_pct": 3,
+      "public_order_pct": 3
+    }
+  },
+  {
+    "id": "shopkeeper_elite_2",
+    "name": "Caravan Master",
+    "type": "notable",
+    "career_category": "Shopkeeper",
+    "connections": ["shopkeeper_keystone_1"],
+    "stats": {
+      "caravan_speed_pct": 10,
+      "yield_bonus_pct": 5
+    }
+  },
+  {
+    "id": "shopkeeper_elite_3",
+    "name": "Bulk Trader",
+    "type": "notable",
+    "career_category": "Shopkeeper",
+    "connections": ["shopkeeper_keystone_1"],
+    "stats": {
+      "selling_price_pct": 8,
+      "store_traffic_pct": 8
+    }
+  },
+  {
+    "id": "shopkeeper_elite_4",
+    "name": "Creature Merchant",
+    "type": "notable",
+    "career_category": "Shopkeeper",
+    "connections": ["shopkeeper_elite_1"],
+    "stats": {
+      "rare_item_sourcing_chance": 8,
+      "store_traffic_pct": 5
+    }
+  },
+  {
+    "id": "shopkeeper_legend_1",
+    "name": "Market Overlord",
+    "type": "keystone",
+    "career_category": "Shopkeeper",
+    "connections": ["shopkeeper_elite_3"],
+    "stats": {
+      "unlocks_global_market": 1,
+      "selling_price_pct": 10,
+      "store_traffic_pct": 10
+    }
+  },
+  {
+    "id": "shopkeeper_legend_2",
+    "name": "Trade Baron",
+    "type": "keystone",
+    "career_category": "Shopkeeper",
+    "connections": ["shopkeeper_elite_2"],
+    "stats": {
+      "arbitrage_opportunity_chance": 10,
+      "caravan_speed_pct": 10
     }
   },
   {
@@ -143,6 +534,27 @@
     "connections": ["root_hub"],
     "stats": {
       "caravan_speed_pct": 5
+    }
+  },
+  {
+    "id": "broker_minor_2",
+    "name": "Ledger Keeper",
+    "type": "minor",
+    "career_category": "Broker",
+    "connections": ["root_hub"],
+    "stats": {
+      "tariff_discount_pct": 3
+    }
+  },
+  {
+    "id": "broker_minor_3",
+    "name": "Route Planner",
+    "type": "minor",
+    "career_category": "Broker",
+    "connections": ["broker_minor_2"],
+    "stats": {
+      "caravan_speed_pct": 3,
+      "arbitrage_opportunity_chance": 3
     }
   },
   {
@@ -157,14 +569,91 @@
     }
   },
   {
+    "id": "broker_notable_2",
+    "name": "Arbitrageur",
+    "type": "notable",
+    "career_category": "Broker",
+    "connections": ["broker_minor_3"],
+    "stats": {
+      "arbitrage_opportunity_chance": 10,
+      "yield_bonus_pct": 5
+    }
+  },
+  {
     "id": "broker_keystone_1",
     "name": "Guildmaster",
     "type": "keystone",
     "career_category": "Broker",
-    "connections": ["broker_notable_1"],
+    "connections": ["broker_notable_1", "broker_notable_2"],
     "stats": {
       "unlocks_trade_routes": 1,
       "arbitrage_opportunity_chance": 10
+    }
+  },
+  {
+    "id": "broker_elite_1",
+    "name": "Supply Chain Broker",
+    "type": "notable",
+    "career_category": "Broker",
+    "connections": ["broker_keystone_1"],
+    "stats": {
+      "smelting_speed_pct": 5,
+      "crafting_speed_pct": 5
+    }
+  },
+  {
+    "id": "broker_elite_2",
+    "name": "Dungeon Lobbyist",
+    "type": "notable",
+    "career_category": "Broker",
+    "connections": ["broker_keystone_1"],
+    "stats": {
+      "dungeon_speed_pct": 5,
+      "dungeon_reward_pct": 5
+    }
+  },
+  {
+    "id": "broker_elite_3",
+    "name": "Combat Quartermaster",
+    "type": "notable",
+    "career_category": "Broker",
+    "connections": ["broker_keystone_1"],
+    "stats": {
+      "damage_dealt_pct": 5,
+      "damage_taken_pct": -3
+    }
+  },
+  {
+    "id": "broker_elite_4",
+    "name": "Market Tycoon",
+    "type": "notable",
+    "career_category": "Broker",
+    "connections": ["broker_elite_1"],
+    "stats": {
+      "selling_price_pct": 5,
+      "store_traffic_pct": 8
+    }
+  },
+  {
+    "id": "broker_legend_1",
+    "name": "Grand Merchant Prince",
+    "type": "keystone",
+    "career_category": "Broker",
+    "connections": ["broker_elite_2"],
+    "stats": {
+      "caravan_speed_pct": 15,
+      "tariff_discount_pct": 10
+    }
+  },
+  {
+    "id": "broker_legend_2",
+    "name": "Legendary Guildmaster",
+    "type": "keystone",
+    "career_category": "Broker",
+    "connections": ["broker_elite_3"],
+    "stats": {
+      "unlocks_trade_routes": 1,
+      "arbitrage_opportunity_chance": 15
     }
   },
   {
@@ -175,6 +664,26 @@
     "connections": ["root_hub"],
     "stats": {
       "capture_bonus_pct": 1
+    }
+  },
+  {
+    "id": "summoner_minor_2",
+    "name": "Soul Scribe",
+    "type": "minor",
+    "career_category": "Summoner",
+    "connections": ["root_hub"],
+    "stats": {
+      "fusion_success_chance": 2
+    }
+  },
+  {
+    "id": "summoner_minor_3",
+    "name": "Spirit Tamer",
+    "type": "minor",
+    "career_category": "Summoner",
+    "connections": ["summoner_minor_2"],
+    "stats": {
+      "creature_affection_gain_pct": 5
     }
   },
   {
@@ -189,14 +698,91 @@
     }
   },
   {
+    "id": "summoner_notable_2",
+    "name": "Soulsmith",
+    "type": "notable",
+    "career_category": "Summoner",
+    "connections": ["summoner_minor_3"],
+    "stats": {
+      "fusion_timer_reduction_pct": 5,
+      "unlocks_primal_fusion": 1
+    }
+  },
+  {
     "id": "summoner_keystone_1",
     "name": "Arch-Summoner",
     "type": "keystone",
     "career_category": "Summoner",
-    "connections": ["summoner_notable_1"],
+    "connections": ["summoner_notable_1", "summoner_notable_2"],
     "stats": {
       "unlocks_primal_fusion": 1,
       "dual_element_chance": 1
+    }
+  },
+  {
+    "id": "summoner_elite_1",
+    "name": "Fusion Master",
+    "type": "notable",
+    "career_category": "Summoner",
+    "connections": ["summoner_keystone_1"],
+    "stats": {
+      "fusion_success_chance": 10,
+      "fusion_timer_reduction_pct": 10
+    }
+  },
+  {
+    "id": "summoner_elite_2",
+    "name": "Creature Warden",
+    "type": "notable",
+    "career_category": "Summoner",
+    "connections": ["summoner_keystone_1"],
+    "stats": {
+      "damage_dealt_pct": 5,
+      "damage_taken_pct": -5
+    }
+  },
+  {
+    "id": "summoner_elite_3",
+    "name": "Wilderness Tamer",
+    "type": "notable",
+    "career_category": "Summoner",
+    "connections": ["summoner_keystone_1"],
+    "stats": {
+      "capture_rate_pct": 8,
+      "encounter_avoidance_chance": 5
+    }
+  },
+  {
+    "id": "summoner_elite_4",
+    "name": "Soul Forger",
+    "type": "notable",
+    "career_category": "Summoner",
+    "connections": ["summoner_elite_1"],
+    "stats": {
+      "crafting_speed_pct": 10,
+      "fusion_success_chance": 5
+    }
+  },
+  {
+    "id": "summoner_legend_1",
+    "name": "Primal Conduit",
+    "type": "keystone",
+    "career_category": "Summoner",
+    "connections": ["summoner_elite_2"],
+    "stats": {
+      "dual_element_chance": 2,
+      "unlocks_primal_fusion": 1
+    }
+  },
+  {
+    "id": "summoner_legend_2",
+    "name": "Legendary Arch-Summoner",
+    "type": "keystone",
+    "career_category": "Summoner",
+    "connections": ["summoner_elite_3"],
+    "stats": {
+      "capture_rate_pct": 10,
+      "creature_xp_gain_pct": 10
     }
   }
 ]

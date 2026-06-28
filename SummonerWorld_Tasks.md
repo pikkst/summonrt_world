@@ -102,7 +102,7 @@ Sprint goal: implement complete fusion system, trait synergies, procedural ident
 - [x] T5.8 – Add `capturePool` and `fusionRecipe` auto-generation for new creatures
 - [x] T5.9 – Test 1000+ random pairings in fusionMatrix (property-based)
 - [x] T5.10 – Add fusion feedback UI: show parent stats, expected child properties
-- [ ] T5.11 – Integreiri kõik career passiived fusion'i ja kogu game loop'isse: loo 6 karjääri jaoks 50+ node'it koos cross-career synergy'dega, mappi iga node `stats{}` modifier konkreetsetele game system'idele (fusion timer, crafting speed, capture rate, dungeon timer, store traffic jne), Lisa `careerTreeIntegration.ts` mis sisaldab kõiki node->system mapping'uid ja käivitab `getAggregateStats()` tagastatud boonuseid igal game tick'il
+- [x] T5.11 – Integrate all career passives into fusion and the entire game loop: create 50+ nodes for 6 careers with cross-career synergies, map each node `stats{}` modifier to specific game systems (fusion timer, crafting speed, capture rate, dungeon timer, store traffic etc), add `careerTreeIntegration.ts` which contains all node->system mappings and executes `getAggregateStats()` returned bonuses on every game tick
 
 ## Sprint 6 – Combat & Dungeon System (Month 6)
 Sprint goal: refine combat system, dungeon generation, boss mechanics and automated combat integration.
@@ -113,7 +113,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 - [ ] T6.4 – Create dungeon layout generator: recursive backtracking maze, ≥3 shortest paths, ≥1 treasure per 10 floors
 - [ ] T6.5 – Add dungeon room types: combat, trap, puzzle, treasure, rest, elite encounter, vendor (rare)
 - [ ] T6.6 – Implement dungeon boss scaling: `BossHP = BaseBossHP × (1 + (WorldIndex−1) × 0.25)`
-- [ ] T6.7 – Add boss signature ability every 1 worlds (World 1-99  100 is a deamonlord)
+- [ ] T6.7 – Add boss signature ability every 1 worlds (World 1-99 100 is a demonlord/ ai or a player who defeat demonlord)
 - [ ] T6.8 – Implement dungeon floor count: `BaseFloors + WorldIndex` (W1=3+1 boss, W100=102+1 boss)
 - [ ] T6.9 – Add "ascending requires defeating floor guardian" rule (or rare teleport item)
 - [ ] T6.10 – Verify dungeon exit scales player to minimum viable level

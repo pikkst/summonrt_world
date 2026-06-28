@@ -13,6 +13,7 @@ import { applyAffectionGain } from '../../../core/affection.ts';
 import type { GameEngineState } from '../../../core/gameEngine.ts';
 import { createHeartbeat } from '../../../core/heartbeat.ts';
 import { getAggregateStats, getAllNodes, getCareerModifiers } from '../../../data/careerTree/index';
+import { applyCaptureRateBonus, applyXPBoost, getCareerSystemBonuses } from '../../../data/careerTreeIntegration';
 import { getFusionResult, calculateFusionRarityWithSpecial } from '../../../data/fusionMatrix.ts';
 import { inheritSkills } from '../../../data/fusionUtils.ts';
 import { getSoulCrystalTierForClass } from '../../../data/constants.ts';
@@ -402,23 +403,27 @@ finishCapture: () => {
     const currentHp = creature.currentHealth ?? creature.baseHealth;
     const maxHp = creature.baseHealth;
     
-    let pCapture = calculateBaseCaptureProbability(
-      currentHp,
-      maxHp,
-      playerElements,
-      creature.elements,
-      creature.class,
-      player.level,
-      creatureLevel
-    );
+     let pCapture = calculateBaseCaptureProbability(
+       currentHp,
+       maxHp,
+       playerElements,
+       creature.elements,
+       creature.class,
+       player.level,
+       creatureLevel
+     );
 
-    const hasWildWhisper = player.skillsUnlocked?.['wild_whisper'] === true;
-    const hasBeastmaster = player.skillsUnlocked?.['beastmaster'] === true;
-    const hasSummonerMinor = player.unlocked_node_ids?.includes('summoner_minor_1');
-    const hasSummonerNotable = player.unlocked_node_ids?.includes('summoner_notable_1');
+     const treeData = getAllNodes();
+     const aggregatedStats = getAggregateStats(player, treeData);
+     const careerBonuses = getCareerSystemBonuses(aggregatedStats);
 
-    const careerBonus = (player.skillPoints * 0.01) + (hasWildWhisper ? 0.15 : 0) + (hasBeastmaster ? 0.3 : 0) + (hasSummonerMinor ? 0.01 : 0) + (hasSummonerNotable ? 0.02 : 0);
-    pCapture = Math.min(0.95, pCapture + careerBonus);
+     const hasWildWhisper = player.skillsUnlocked?.['wild_whisper'] === true;
+     const hasBeastmaster = player.skillsUnlocked?.['beastmaster'] === true;
+
+     const skillBonus = (player.skillPoints * 0.01) + (hasWildWhisper ? 0.15 : 0) + (hasBeastmaster ? 0.3 : 0);
+     const careerCaptureBonus = applyCaptureRateBonus(0, careerBonuses);
+
+     pCapture = Math.min(0.95, pCapture + skillBonus + careerCaptureBonus);
 
     const roll = Math.random();
     if (roll < pCapture) {
@@ -665,7 +670,12 @@ finishCapture: () => {
     const isVoid = rng.next() < 0.03;
     const isStellar = rng.next() < 0.02;
 
-    const bonus = 1.15 + (rng.next() * 0.15) + (isAncient ? 0.25 : 0);
+    const treeData = getAllNodes();
+    const aggregatedStats = getAggregateStats(player, treeData);
+    const careerBonuses = getCareerSystemBonuses(aggregatedStats);
+
+    const fusionBonusBoost = 1 + ((careerBonuses.fusion_success_chance || 0) / 100);
+    const bonus = (1.15 + (rng.next() * 0.15) + (isAncient ? 0.25 : 0)) * fusionBonusBoost;
     const newAttack = Math.floor(Math.max(c1.attack || 10, c2.attack || 10) * bonus);
     const newDefense = Math.floor(Math.max(c1.defense || 5, c2.defense || 5) * bonus);
     const newSpeed = Math.floor(Math.max(c1.speed || 5, c2.speed || 5) * bonus);
@@ -1184,7 +1194,7 @@ case 'creature_training': {
 
     const treeData = getAllNodes();
     const aggregatedStats = getAggregateStats(player, treeData);
-    const careerModifiers = getCareerModifiers(aggregatedStats);
+    const careerModifiers = getCareerModifiers(aggregatedStats, player);
     
     const creatureInstances = player.creatures.filter(c => 
       params.assigned_creatures.includes(c.id)
@@ -1346,46 +1356,89 @@ const modifiers: MissionModifiers = {
     return resolvedCount;
   },
 
-  startHeartbeat: () => {
-    const { heartbeat } = get();
-    if (heartbeat) return;
+   startHeartbeat: () => {
+     const { heartbeat } = get();
+     if (heartbeat) return;
 
-    const getBaseXP = (mission: ActiveMission): number => {
-      const worldScale = 1 + (mission.world_layer - 1) * 0.05;
-      const baseByType: Record<string, number> = {
-        EXPLORE_TIER_1: 15,
-        SCOUT_DUNGEON: 30,
-        SMELT_ORE: 20,
-        CRAFT_ITEM: 30,
-        STORE_VISIT: 15,
-        TAX_EDICT: 40,
-        CARAVAN_ROUTE: 35,
-        SEARCH_AREA: 15,
-        GATHER_RESOURCE: 20,
-        CAPTURE_CREATURE: 25,
-      };
-      return Math.floor((baseByType[mission.type] || 10) * worldScale);
-    };
+     const getBaseXP = (mission: ActiveMission): number => {
+       const worldScale = 1 + (mission.world_layer - 1) * 0.05;
+       const baseByType: Record<string, number> = {
+         EXPLORE_TIER_1: 15,
+         SCOUT_DUNGEON: 30,
+         SMELT_ORE: 20,
+         CRAFT_ITEM: 30,
+         STORE_VISIT: 15,
+         TAX_EDICT: 40,
+         CARAVAN_ROUTE: 35,
+         SEARCH_AREA: 15,
+         GATHER_RESOURCE: 20,
+         CAPTURE_CREATURE: 25,
+       };
+       return Math.floor((baseByType[mission.type] || 10) * worldScale);
+     };
 
-const instance = createHeartbeat({
-       getCurrentTime: Date.now,
-       getMissions: () => get().missions,
-       removeMission: (id) => get().removeMission(id),
-       getMissionById: (id) => get().missions.find((m) => m.mission_id === id),
-       getLastWorldTickTime: () => get().lastWorldTickTime,
-       setLastWorldTickTime: (time) => set({ lastWorldTickTime: time }),
-       getTurnCount: () => get().turnCount,
-       setTurnCount: (count) => set({ turnCount: count }),
-       getGameTimeMinutes: () => get().player?.gameTimeMinutes ?? 360,
-       setGameTimeMinutes: (minutes) => set((state) => ({
-         player: state.player ? { ...state.player, gameTimeMinutes: minutes } : state.player,
-       })),
-       getDayCount: () => get().player?.dayCount ?? 1,
-       setDayCount: (count) => set((state) => ({
-         player: state.player ? { ...state.player, dayCount: count } : state.player,
-       })),
-        onWorldTick: () => {},
-        onMissionsProgress: () => {},
+     const applyWorldTickCareerBonuses = (): void => {
+       const state = get();
+       if (!state.player) return;
+       const treeData = getAllNodes();
+       const aggregatedStats = getAggregateStats(state.player, treeData);
+        const bonuses = getCareerSystemBonuses(aggregatedStats);
+
+        const energyRegenBoost = 1 + ((bonuses.energy_regen_pct || 0) / 100);
+       const nerveRegenBoost = 1 + ((bonuses.nerve_regen_pct || 0) / 100);
+       const happyRegenBoost = 1 + ((bonuses.happy_regen_pct || 0) / 100);
+       const lifeRegenBoost = 1 + ((bonuses.life_regen_pct || 0) / 100);
+
+       if (energyRegenBoost > 1 || nerveRegenBoost > 1 || happyRegenBoost > 1 || lifeRegenBoost > 1) {
+         set((s) => {
+           const p = s.player;
+           if (!p) return {};
+           return {
+             player: {
+               ...p,
+               energy: {
+                 ...p.energy,
+                 current: Math.min(p.energy.max, Math.floor(p.energy.current * Math.max(1, energyRegenBoost * 0.01))),
+               },
+               nerve: {
+                 ...p.nerve,
+                 current: Math.min(p.nerve.max, Math.floor(p.nerve.current * Math.max(1, nerveRegenBoost * 0.01))),
+               },
+               happy: {
+                 ...p.happy,
+                 current: Math.min(p.happy.max, Math.floor(p.happy.current * Math.max(1, happyRegenBoost * 0.01))),
+               },
+               life: {
+                 ...p.life,
+                 current: Math.min(p.life.max, Math.floor(p.life.current * Math.max(1, lifeRegenBoost * 0.01))),
+               },
+             },
+           };
+         });
+       }
+     };
+
+ const instance = createHeartbeat({
+        getCurrentTime: Date.now,
+        getMissions: () => get().missions,
+        removeMission: (id) => get().removeMission(id),
+        getMissionById: (id) => get().missions.find((m) => m.mission_id === id),
+        getLastWorldTickTime: () => get().lastWorldTickTime,
+        setLastWorldTickTime: (time) => set({ lastWorldTickTime: time }),
+        getTurnCount: () => get().turnCount,
+        setTurnCount: (count) => set({ turnCount: count }),
+        getGameTimeMinutes: () => get().player?.gameTimeMinutes ?? 360,
+        setGameTimeMinutes: (minutes) => set((state) => ({
+          player: state.player ? { ...state.player, gameTimeMinutes: minutes } : state.player,
+        })),
+        getDayCount: () => get().player?.dayCount ?? 1,
+        setDayCount: (count) => set((state) => ({
+          player: state.player ? { ...state.player, dayCount: count } : state.player,
+        })),
+         onWorldTick: () => {
+           applyWorldTickCareerBonuses();
+         },
+         onMissionsProgress: () => {},
        resolveMissionCallbacks: {
           EXPLORE_TIER_1: (mission) => {
             const state = get();
@@ -1453,7 +1506,12 @@ const instance = createHeartbeat({
     const { player } = get();
     if (!player || creatureIds.length === 0) return { leveledUpIds: [] };
 
-    const { updatedCreatures, leveledUpIds, mutatedIds, mutationsById } = grantPartyXP(player.creatures, creatureIds, baseXP);
+    const treeData = getAllNodes();
+    const aggregatedStats = getAggregateStats(player, treeData);
+    const careerBonuses = getCareerSystemBonuses(aggregatedStats);
+    const boostedXP = applyXPBoost(baseXP, careerBonuses);
+
+    const { updatedCreatures, leveledUpIds, mutatedIds, mutationsById } = grantPartyXP(player.creatures, creatureIds, boostedXP);
     set((state) => ({
       player: state.player ? { ...state.player, creatures: updatedCreatures } : state.player,
     }));

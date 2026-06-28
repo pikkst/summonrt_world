@@ -5,6 +5,8 @@ import { SKILL_TEMPLATES } from '../../../modules/creatures/creatureFactory.ts';
 import { applyCreatureXP, calculateEncounterXP } from '../../../core/xpCurve.ts';
 import { applyAffectionGain, getAffectionDamageMultiplier } from '../../../core/affection.ts';
 import { SeededRandom } from '../../../utils/SeededRandom.ts';
+import { getAggregateStats, getAllNodes } from '../../../data/careerTree/index';
+import { applyCombatCareerBonuses, applyDamageTakenReduction, getCareerSystemBonuses } from '../../../data/careerTreeIntegration';
 
 const getPrimordialDamageMultiplier = (player: PlayerState): number => {
   return player.affinity.traits?.includes('primordial') ? 1.2 : 1;
@@ -166,11 +168,17 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
     const creatureElement = creature.elements?.[0];
     const enemyElements = enemyTemplate.elements || [];
 
-const eff = getElementalEffectiveness(creatureElement, enemyElements);
-     const affectionMult = getAffectionDamageMultiplier(creature);
-     const damageRaw = (creature.attack || 10) - (enemyTemplate.baseDefense || 5) + Math.floor(Math.random() * 5);
-     const damageMult = creatureElement ? getElementDamageMultiplier(player) : 1;
-     const playerDamage = Math.max(1, Math.floor(damageRaw * eff.factor * damageMult * affectionMult));
+    const eff = getElementalEffectiveness(creatureElement, enemyElements);
+    const affectionMult = getAffectionDamageMultiplier(creature);
+    const treeData = getAllNodes();
+    const aggregatedStats = getAggregateStats(player, treeData);
+    const careerBonuses = getCareerSystemBonuses(aggregatedStats);
+
+    let damageRaw = (creature.attack || 10) - (enemyTemplate.baseDefense || 5) + Math.floor(Math.random() * 5);
+    const damageMult = creatureElement ? getElementDamageMultiplier(player) : 1;
+    let playerDamage = Math.max(1, Math.floor(damageRaw * eff.factor * damageMult * affectionMult));
+    playerDamage = applyCombatCareerBonuses(playerDamage, careerBonuses);
+
     const newEnemyHp = Math.max(0, (combat.enemyHp || 50) - playerDamage);
 
     let combatLog = [...combat.log, `${creature.nickname || 'Your creature'} attacks for ${playerDamage} damage!${eff.msg}`];
@@ -207,13 +215,18 @@ const eff = getElementalEffectiveness(creatureElement, enemyElements);
     const enemyTemplate = combat.enemyTemplate || generateCreatureTemplate(player.currentWorldId, new SeededRandom(Date.now()));
     const enemyElements = enemyTemplate.elements || [];
 
-const eff = getElementalEffectiveness(skill.element, enemyElements);
-     const affectionMult = getAffectionDamageMultiplier(creature);
-     const baseAtk = creature.attack || 10;
-     const skillMult = skill.power / 10;
-     const damageRaw = (baseAtk * skillMult) - (enemyTemplate.baseDefense || 5) + Math.floor(Math.random() * 5);
-     const damageMult = skill.element ? getElementDamageMultiplier(player) : 1;
-     const skillDamage = Math.max(1, Math.floor(damageRaw * eff.factor * damageMult * affectionMult));
+    const eff = getElementalEffectiveness(skill.element, enemyElements);
+    const affectionMult = getAffectionDamageMultiplier(creature);
+    const baseAtk = creature.attack || 10;
+    const skillMult = skill.power / 10;
+    const treeData = getAllNodes();
+    const aggregatedStats = getAggregateStats(player, treeData);
+    const careerBonuses = getCareerSystemBonuses(aggregatedStats);
+
+    let damageRaw = (baseAtk * skillMult) - (enemyTemplate.baseDefense || 5) + Math.floor(Math.random() * 5);
+    const damageMult = skill.element ? getElementDamageMultiplier(player) : 1;
+    let skillDamage = Math.max(1, Math.floor(damageRaw * eff.factor * damageMult * affectionMult));
+    skillDamage = applyCombatCareerBonuses(skillDamage, careerBonuses);
 
     const newEnemyHp = Math.max(0, (combat.enemyHp || 50) - skillDamage);
     const newMana = Math.max(0, creature.currentMana - skill.cost);
@@ -264,22 +277,27 @@ const eff = getElementalEffectiveness(skill.element, enemyElements);
       let actionName = 'attacks';
       let effMsg = '';
 
-      if (useSkillObj) {
-        actionName = `uses ${useSkillObj.name}`;
-        const eff = getElementalEffectiveness(useSkillObj.element, activeCreature.elements);
-        effMsg = eff.msg;
-        const skillMult = (useSkillObj.power || 10) / 10;
-        const baseAtk = enemyTemplate?.baseAttack || 8;
-        enemyDamage = Math.max(1, Math.floor((baseAtk * skillMult - (activeCreature.defense || 5) + Math.floor(rng.next() * 4)) * eff.factor));
-      } else {
-        const enemyElement = enemyTemplate?.elements?.[0];
-        const eff = getElementalEffectiveness(enemyElement, activeCreature.elements);
-        effMsg = eff.msg;
-        enemyDamage = Math.max(1, Math.floor(((enemyTemplate?.baseAttack || 8) - (activeCreature.defense || 5) + Math.floor(rng.next() * 4)) * eff.factor));
-      }
+       if (useSkillObj) {
+         actionName = `uses ${useSkillObj.name}`;
+         const eff = getElementalEffectiveness(useSkillObj.element, activeCreature.elements);
+         effMsg = eff.msg;
+         const skillMult = (useSkillObj.power || 10) / 10;
+         const baseAtk = enemyTemplate?.baseAttack || 8;
+         enemyDamage = Math.max(1, Math.floor((baseAtk * skillMult - (activeCreature.defense || 5) + Math.floor(rng.next() * 4)) * eff.factor));
+       } else {
+         const enemyElement = enemyTemplate?.elements?.[0];
+         const eff = getElementalEffectiveness(enemyElement, activeCreature.elements);
+         effMsg = eff.msg;
+         enemyDamage = Math.max(1, Math.floor(((enemyTemplate?.baseAttack || 8) - (activeCreature.defense || 5) + Math.floor(rng.next() * 4)) * eff.factor));
+       }
 
-      const newPlayerHp = Math.max(0, (activeCreature.currentHealth || 100) - enemyDamage);
-      const enemyLog = [...currentLog, `The ${combat.enemyName} ${actionName} and deals ${enemyDamage} damage!${effMsg}`];
+       const treeData = getAllNodes();
+       const aggregatedStats = getAggregateStats(player, treeData);
+    const careerBonuses = getCareerSystemBonuses(aggregatedStats);
+       const finalPlayerDamage = applyDamageTakenReduction(enemyDamage, careerBonuses);
+
+       const newPlayerHp = Math.max(0, (activeCreature.currentHealth || 100) - finalPlayerDamage);
+       const enemyLog = [...currentLog, `The ${combat.enemyName} ${actionName} and deals ${finalPlayerDamage} damage!${effMsg}`];
 
       if (newPlayerHp <= 0) {
         const hasHealthySummon = player.creatures.some((c: any) => c.currentHealth > 0 && c.id !== activeCreature.id);
