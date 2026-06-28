@@ -1,6 +1,67 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useGameStore } from '../stores/gameStore';
-import { CreatureInstance } from '../types/game';
+import type { CreatureInstance } from '../types/game';
+import { getFusionResult, calculateFusionRarity } from '../data/fusionMatrix';
+import { inheritSkills } from '../data/fusionUtils';
+import { calculateSynergyEffects, getSynergyNames } from '../data/traitSynergy';
+import { BASE_COLORS } from '../data/proceduralIdentity';
+
+interface FusionPreview {
+  predictedElement: string | undefined;
+  predictedClass: string;
+  predictedStats: {
+    attack: number;
+    defense: number;
+    speed: number;
+    maxHealth: number;
+    maxMana: number;
+  };
+  inheritedSkills: string[];
+  activatedSynergies: string[];
+  synergyBonuses: Record<string, number>;
+  specialEffects: string[];
+}
+
+function calculateFusionPreview(
+  c1: CreatureInstance,
+  c2: CreatureInstance,
+  selectedSkills: string[]
+): FusionPreview {
+  const elementA = c1.elements?.[0] || 'fire';
+  const elementB = c2.elements?.[0] || 'fire';
+  const predictedElement = getFusionResult(elementA, elementB);
+  
+  const predictedClass = calculateFusionRarity(c1.class || 'common', c2.class || 'common');
+  
+  const bonus = 1.15 + 0.075;
+  const predictedStats = {
+    attack: Math.floor(Math.max(c1.attack || 10, c2.attack || 10) * bonus),
+    defense: Math.floor(Math.max(c1.defense || 5, c2.defense || 5) * bonus),
+    speed: Math.floor(Math.max(c1.speed || 5, c2.speed || 5) * bonus),
+    maxHealth: Math.floor(Math.max(c1.maxHealth || 50, c2.maxHealth || 50) * bonus),
+    maxMana: Math.floor(Math.max(c1.maxMana || 20, c2.maxMana || 20) * bonus),
+  };
+  
+  const inheritedSkills = inheritSkills(c1.skills || [], c2.skills || [], selectedSkills);
+  
+  const parentTraits = Array.from(new Set([...(c1.traits || []), ...(c2.traits || [])]));
+  const { statBonuses, specialEffects } = calculateSynergyEffects(parentTraits);
+  const activatedSynergies = getSynergyNames(parentTraits);
+  
+  return {
+    predictedElement,
+    predictedClass,
+    predictedStats,
+    inheritedSkills,
+    activatedSynergies,
+    synergyBonuses: statBonuses,
+    specialEffects,
+  };
+}
+
+function getElementColor(element: string): string {
+  return BASE_COLORS[element as keyof typeof BASE_COLORS] || '#888888';
+}
 
 export const FusionPanel: React.FC = () => {
   const { player, breedCreatures, closeModal } = useGameStore();
@@ -8,12 +69,23 @@ export const FusionPanel: React.FC = () => {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [isFusing, setIsFusing] = useState(false);
 
+  const parents = player?.creatures.filter(c => selectedIds.includes(c.id)) ?? [];
+  const availableSkills = Array.from(new Set(parents.flatMap(c => c.skills)));
+  const essenceCount = player?.inventory.find(i => i.templateKey === 'essence')?.quantity || 0;
+
+  const preview = useMemo(() => {
+    if (!player || selectedIds.length !== 2) return null;
+    const c1 = player.creatures.find(c => c.id === selectedIds[0]);
+    const c2 = player.creatures.find(c => c.id === selectedIds[1]);
+    if (!c1 || !c2) return null;
+    return calculateFusionPreview(c1, c2, selectedSkills);
+  }, [player, selectedIds, selectedSkills]);
+
   if (!player) return null;
 
   const handleSelect = (id: string) => {
     if (selectedIds.includes(id)) {
       setSelectedId(selectedIds.filter((i) => i !== id));
-      // Also remove skills associated with this creature
       const creature = player.creatures.find(c => c.id === id);
       if (creature) {
          setSelectedSkills(selectedSkills.filter(s => !creature.skills.includes(s)));
@@ -39,10 +111,6 @@ export const FusionPanel: React.FC = () => {
     }, 3000);
   };
 
-  const parents = player.creatures.filter(c => selectedIds.includes(c.id));
-  const availableSkills = Array.from(new Set(parents.flatMap(c => c.skills)));
-  const essenceCount = player.inventory.find(i => i.templateKey === 'essence')?.quantity || 0;
-
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-500">
       <div className="text-center">
@@ -60,8 +128,8 @@ export const FusionPanel: React.FC = () => {
               </div>
            </div>
            <div className="space-y-2">
-             <h3 className="text-2xl font-black text-white italic tracking-tighter animate-pulse uppercase">Stabilizing Soul Link...</h3>
-             <p className="text-xs text-gray-500 font-mono tracking-widest">Expect unexpected mutations in the dimensional rift</p>
+              <h3 className="text-2xl font-black text-white italic tracking-tighter animate-pulse uppercase">Stabilizing Soul Link...</h3>
+              <p className="text-xs text-gray-500 font-mono tracking-widest">Expect unexpected mutations in the dimensional rift</p>
            </div>
         </div>
       ) : (
@@ -106,21 +174,62 @@ export const FusionPanel: React.FC = () => {
                      <p className="text-xs font-black uppercase tracking-widest">Select two souls to view available skills</p>
                    </div>
                  ) : (
-                    <div className="grid grid-cols-1 gap-2">
-                      {availableSkills.map(skill => {
-                        const isSelected = selectedSkills.includes(skill);
-                        return (
-                          <div 
-                            key={skill} 
-                            onClick={() => toggleSkill(skill)}
-                            className={`px-4 py-3 rounded-xl border transition-all cursor-pointer text-xs font-black uppercase tracking-widest flex justify-between items-center ${isSelected ? 'bg-indigo-500/20 border-indigo-500 text-indigo-400' : 'bg-black/40 border-gray-800 text-gray-500 hover:border-indigo-500/30'}`}
-                          >
-                            {skill.replace(/_/g, ' ')}
-                            {isSelected && <span className="text-[8px]">ACTIVE</span>}
+                    <>
+                      <div className="grid grid-cols-1 gap-2">
+                        {availableSkills.map(skill => {
+                          const isSelected = selectedSkills.includes(skill);
+                          return (
+                            <div 
+                              key={skill} 
+                              onClick={() => toggleSkill(skill)}
+                              className={`px-4 py-3 rounded-xl border transition-all cursor-pointer text-xs font-black uppercase tracking-widest flex justify-between items-center ${isSelected ? 'bg-indigo-500/20 border-indigo-500 text-indigo-400' : 'bg-black/40 border-gray-800 text-gray-500 hover:border-indigo-500/30'}`}
+                            >
+                              {skill.replace(/_/g, ' ')}
+                              {isSelected && <span className="text-[8px]">ACTIVE</span>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {preview && (
+                        <div className="mt-4 space-y-3">
+                          <div className="border-t border-gray-800 pt-3">
+                            <span className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">Fusion Prediction</span>
                           </div>
-                        );
-                      })}
-                    </div>
+                          <div className="grid grid-cols-2 gap-2 text-[10px]">
+                            <div>
+                              <span className="text-gray-500">Element:</span>
+                              <span className="ml-2 font-bold" style={{ color: getElementColor(preview.predictedElement || 'fire') }}>
+                                {preview.predictedElement?.toUpperCase() || 'UNKNOWN'}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Class:</span>
+                              <span className="ml-2 font-bold text-amber-400">{preview.predictedClass.toUpperCase()}</span>
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-3 gap-1 text-[9px]">
+                            <div className="text-center"><span className="text-gray-500">ATK</span><div className="font-bold text-red-400">{preview.predictedStats.attack}</div></div>
+                            <div className="text-center"><span className="text-gray-500">DEF</span><div className="font-bold text-blue-400">{preview.predictedStats.defense}</div></div>
+                            <div className="text-center"><span className="text-gray-500">SPD</span><div className="font-bold text-green-400">{preview.predictedStats.speed}</div></div>
+                          </div>
+                          {preview.activatedSynergies.length > 0 && (
+                            <div className="border-t border-gray-800 pt-2">
+                              <span className="text-[9px] font-black text-yellow-400 uppercase">Synergies: {preview.activatedSynergies.join(', ')}</span>
+                            </div>
+                          )}
+                          {preview.inheritedSkills.length > 0 && (
+                            <div>
+                              <span className="text-[9px] font-black text-gray-400 uppercase">Skills ({preview.inheritedSkills.length}):</span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {preview.inheritedSkills.map((s, i) => (
+                                  <span key={i} className="px-2 py-0.5 bg-indigo-500/20 border border-indigo-500/30 rounded text-[8px] font-bold">{s.replace(/_/g, ' ')}</span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
                  )}
                </div>
             </div>
