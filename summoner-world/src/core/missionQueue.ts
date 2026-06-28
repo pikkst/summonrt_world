@@ -14,7 +14,8 @@ export type MissionType =
   | 'CARAVAN_ROUTE'
   | 'SEARCH_AREA'
   | 'GATHER_RESOURCE'
-  | 'CAPTURE_CREATURE';
+  | 'CAPTURE_CREATURE'
+  | 'DEMONLORD_ENCOUNTER';
 
 export type MissionStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 

@@ -3,37 +3,37 @@ import { StoreApi } from 'zustand';
 export type SetState<T> = StoreApi<T>['setState'];
 
 import type {
-  PlayerState,
-  WorldData,
-  LogEntry,
-  ElementalAffinity,
-  Screen,
-  CombatState,
-  DungeonState,
-  DemonlordState,
-  DemonlordSkill,
-  CreatureInstance,
-  CreatureTemplate,
-  Skill,
-  QuestInstance,
-  Element,
-  InventoryStack,
-  CommunityState,
-  CommunityPlayer,
-  Resource,
-  CreatureType,
-  CreatureClass,
-  ItemType,
-  ItemSubType,
-  BiomeType,
-  QuestStatus,
-  CombatPhase,
-  CommunityTab,
-} from '../../types/game.ts';
-
-import type { ActiveMission } from '../../core/missionQueue.ts';
-import type { MissionType, MissionModifiers } from '../../core/missionQueue.ts';
-import type { HeartbeatInstance } from '../../core/heartbeat.ts';
+   PlayerState,
+   WorldData,
+   LogEntry,
+   ElementalAffinity,
+   Screen,
+   CombatState,
+   DungeonState,
+   DemonlordState,
+   DemonlordSkill,
+   CreatureInstance,
+   CreatureTemplate,
+   Skill,
+   QuestInstance,
+   Element,
+   InventoryStack,
+   CommunityState,
+   CommunityPlayer,
+   Resource,
+   CreatureType,
+   CreatureClass,
+   ItemType,
+   ItemSubType,
+   BiomeType,
+   QuestStatus,
+   CombatPhase,
+   CommunityTab,
+ } from '../../types/game.ts';
+ import type { ActiveMission } from '../../core/missionQueue.ts';
+ import type { MissionType, MissionModifiers } from '../../core/missionQueue.ts';
+ import type { HeartbeatInstance } from '../../core/heartbeat.ts';
+ import type { FloorActivity } from '../../core/demonlord';
 
 export type {
   PlayerState,
@@ -62,11 +62,12 @@ export type {
   QuestStatus,
   CombatPhase,
   CommunityTab,
-  ActiveMission,
-  MissionType,
-  MissionModifiers,
-  HeartbeatInstance,
-};
+ActiveMission,
+   MissionType,
+   MissionModifiers,
+   HeartbeatInstance,
+   FloorActivity,
+ };
 
 export interface GameStoreState {
    player: PlayerState | null;
@@ -126,11 +127,13 @@ capturing: {
    } | null;
    nearbyPlayers: Array<{ id: string; username: string; name?: string; level?: number; archetype?: string; x: number; y: number; currentWorld?: number; isOnline?: boolean }>;
    community: CommunityState;
-    missions: ActiveMission[];
+missions: ActiveMission[];
     lastLogoutTimestamp?: number;
     heartbeat: HeartbeatInstance | null;
     levelUpNotifications: Array<{ creatureName: string; newLevel: number }>;
-   }
+    demonlordState?: DemonlordState;
+    demonlordFloorActivity?: FloorActivity;
+    }
 
 export interface GameActions {
    initGame: (playerName: string, archetype?: string) => void;
@@ -221,9 +224,19 @@ export interface GameActions {
      startHeartbeat: () => void;
      stopHeartbeat: () => void;
      grantMissionXP: (creatureIds: string[], baseXP: number) => { leveledUpIds: string[] };
-    showLevelUpNotification: (notifications: Array<{ creatureName: string; newLevel: number }>) => void;
-    clearLevelUpNotifications: () => void;
-  }
+showLevelUpNotification: (notifications: Array<{ creatureName: string; newLevel: number }>) => void;
+     clearLevelUpNotifications: () => void;
+     initDemonlord: () => void;
+     challengeDemonlord: () => void;
+     acceptDemonlordChallenge: () => void;
+     resolveDemonlordCombat: (victorId: string) => void;
+     isOnDemonlordFloor: () => boolean;
+     updateDemonlordInfluence: (playerCountDelta: number) => void;
+     getDemonlordInfluenceForCombat: () => number;
+     applyDemonlordCombatBonuses: (baseDamage: number, baseDefense: number) => { damage: number; defense: number };
+     setDemonlordFloorActivity: (activity: FloorActivity) => void;
+     getDemonlordFloorActivity: () => FloorActivity;
+   }
 
 export type GameStore = GameStoreState & GameActions;
 

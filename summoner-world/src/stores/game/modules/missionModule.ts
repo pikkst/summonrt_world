@@ -1194,7 +1194,7 @@ case 'creature_training': {
 
     const treeData = getAllNodes();
     const aggregatedStats = getAggregateStats(player, treeData);
-    const careerModifiers = getCareerModifiers(aggregatedStats, player);
+    const careerModifiers = getCareerModifiers(aggregatedStats);
     
     const creatureInstances = player.creatures.filter(c => 
       params.assigned_creatures.includes(c.id)
@@ -1329,14 +1329,21 @@ const modifiers: MissionModifiers = {
             }
             get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
           },
-          CAPTURE_CREATURE: (mission) => {
-            const state = get();
-            if (state.capturing) {
-              state.finishCapture();
-            }
-            get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
-          },
-        },
+CAPTURE_CREATURE: (mission) => {
+             const state = get();
+             if (state.capturing) {
+               state.finishCapture();
+             }
+             get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+           },
+           DEMONLORD_ENCOUNTER: (mission) => {
+             const state = get();
+             if (state.demonlordState?.activeChallenge) {
+               state.appendLog('A Demonlord encounter mission requires direct combat resolution.', 'info');
+             }
+             get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+           },
+         },
       });
 
     const beforeCount = get().missions.length;
@@ -1486,6 +1493,9 @@ const modifiers: MissionModifiers = {
                state.finishCapture();
              }
              get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+           },
+           DEMONLORD_ENCOUNTER: (_mission) => {
+             get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], 0);
            },
          },
        });

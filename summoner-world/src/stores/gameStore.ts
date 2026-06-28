@@ -14,6 +14,7 @@ import { combatActions } from './game/modules/combatModule.ts';
 import { careerActions } from './game/modules/careerModule.ts';
 import { missionActions } from './game/modules/missionModule.ts';
 import { economyActions } from './game/modules/economyModule.ts';
+import { demonlordActions } from './game/modules/demonlordModule.ts';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -62,5 +63,6 @@ export const useGameStore = create<GameStore>()(
     ...careerActions(set, get),
     ...missionActions(set, get),
     ...economyActions(set, get),
+    ...demonlordActions(set, get),
   }))
 );

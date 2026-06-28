@@ -25,11 +25,12 @@ const createEmptyCallbacks = (): HeartbeatCallbacks => ({
     STORE_VISIT: vi.fn(),
     TAX_EDICT: vi.fn(),
     CARAVAN_ROUTE: vi.fn(),
-      SEARCH_AREA: vi.fn(),
-      GATHER_RESOURCE: vi.fn(),
-      CAPTURE_CREATURE: vi.fn(),
-    },
-  });
+    SEARCH_AREA: vi.fn(),
+    GATHER_RESOURCE: vi.fn(),
+    CAPTURE_CREATURE: vi.fn(),
+    DEMONLORD_ENCOUNTER: vi.fn(),
+  },
+});
 
 describe('createHeartbeat', () => {
   beforeEach(() => {
@@ -79,20 +80,20 @@ describe('createHeartbeat', () => {
     };
 
     const callbacks: HeartbeatCallbacks = {
-       getLastWorldTickTime: () => Date.now(),
-       setLastWorldTickTime: vi.fn(),
-       getTurnCount: () => 0,
-       setTurnCount: vi.fn(),
-       getGameTimeMinutes: () => 360,
-       setGameTimeMinutes: vi.fn(),
-       getDayCount: () => 1,
-       setDayCount: vi.fn(),
-       onWorldTick: vi.fn(),
-       onMissionsProgress: vi.fn(),
-       getCurrentTime: () => 15000,
+      getCurrentTime: () => 15000,
       getMissions: () => [expiredMission],
       removeMission: vi.fn(),
       getMissionById: () => expiredMission,
+      getLastWorldTickTime: () => Date.now(),
+      setLastWorldTickTime: vi.fn(),
+      getTurnCount: () => 0,
+      setTurnCount: vi.fn(),
+      getGameTimeMinutes: () => 360,
+      setGameTimeMinutes: vi.fn(),
+      getDayCount: () => 1,
+      setDayCount: vi.fn(),
+      onWorldTick: vi.fn(),
+      onMissionsProgress: vi.fn(),
       resolveMissionCallbacks: {
         EXPLORE_TIER_1: vi.fn(),
         SCOUT_DUNGEON: vi.fn(),
@@ -104,6 +105,7 @@ describe('createHeartbeat', () => {
         SEARCH_AREA: vi.fn(),
         GATHER_RESOURCE: vi.fn(),
         CAPTURE_CREATURE: vi.fn(),
+        DEMONLORD_ENCOUNTER: vi.fn(),
       },
     };
 
@@ -141,20 +143,20 @@ describe('createHeartbeat', () => {
 
     const missions = [missionA, missionB];
     const callbacks: HeartbeatCallbacks = {
-       getLastWorldTickTime: () => Date.now(),
-       setLastWorldTickTime: vi.fn(),
-       getTurnCount: () => 0,
-       setTurnCount: vi.fn(),
-       getGameTimeMinutes: () => 360,
-       setGameTimeMinutes: vi.fn(),
-       getDayCount: () => 1,
-       setDayCount: vi.fn(),
-       onWorldTick: vi.fn(),
-       onMissionsProgress: vi.fn(),
-       getCurrentTime: () => 20000,
+      getCurrentTime: () => 20000,
       getMissions: () => missions,
       removeMission: vi.fn(),
       getMissionById: (id: string) => missions.find((m) => m.mission_id === id),
+      getLastWorldTickTime: () => Date.now(),
+      setLastWorldTickTime: vi.fn(),
+      getTurnCount: () => 0,
+      setTurnCount: vi.fn(),
+      getGameTimeMinutes: () => 360,
+      setGameTimeMinutes: vi.fn(),
+      getDayCount: () => 1,
+      setDayCount: vi.fn(),
+      onWorldTick: vi.fn(),
+      onMissionsProgress: vi.fn(),
       resolveMissionCallbacks: {
         EXPLORE_TIER_1: vi.fn(),
         SCOUT_DUNGEON: vi.fn(),
@@ -166,6 +168,7 @@ describe('createHeartbeat', () => {
         SEARCH_AREA: vi.fn(),
         GATHER_RESOURCE: vi.fn(),
         CAPTURE_CREATURE: vi.fn(),
+        DEMONLORD_ENCOUNTER: vi.fn(),
       },
     };
 
@@ -206,20 +209,20 @@ describe('createHeartbeat', () => {
 
     const missions = [expired, active];
     const callbacks: HeartbeatCallbacks = {
-       getLastWorldTickTime: () => Date.now(),
-       setLastWorldTickTime: vi.fn(),
-       getTurnCount: () => 0,
-       setTurnCount: vi.fn(),
-       getGameTimeMinutes: () => 360,
-       setGameTimeMinutes: vi.fn(),
-       getDayCount: () => 1,
-       setDayCount: vi.fn(),
-       onWorldTick: vi.fn(),
-       onMissionsProgress: vi.fn(),
-       getCurrentTime: () => 10000,
+      getCurrentTime: () => 10000,
       getMissions: () => missions,
       removeMission: vi.fn(),
       getMissionById: (id: string) => missions.find((m) => m.mission_id === id),
+      getLastWorldTickTime: () => Date.now(),
+      setLastWorldTickTime: vi.fn(),
+      getTurnCount: () => 0,
+      setTurnCount: vi.fn(),
+      getGameTimeMinutes: () => 360,
+      setGameTimeMinutes: vi.fn(),
+      getDayCount: () => 1,
+      setDayCount: vi.fn(),
+      onWorldTick: vi.fn(),
+      onMissionsProgress: vi.fn(),
       resolveMissionCallbacks: {
         EXPLORE_TIER_1: vi.fn(),
         SCOUT_DUNGEON: vi.fn(),
@@ -231,6 +234,7 @@ describe('createHeartbeat', () => {
         SEARCH_AREA: vi.fn(),
         GATHER_RESOURCE: vi.fn(),
         CAPTURE_CREATURE: vi.fn(),
+        DEMONLORD_ENCOUNTER: vi.fn(),
       },
     };
 
@@ -256,20 +260,20 @@ describe('createHeartbeat', () => {
     };
 
     const callbacks: HeartbeatCallbacks = {
-       getLastWorldTickTime: () => Date.now(),
-       setLastWorldTickTime: vi.fn(),
-       getTurnCount: () => 0,
-       setTurnCount: vi.fn(),
-       getGameTimeMinutes: () => 360,
-       setGameTimeMinutes: vi.fn(),
-       getDayCount: () => 1,
-       setDayCount: vi.fn(),
-       onWorldTick: vi.fn(),
-       onMissionsProgress: vi.fn(),
-       getCurrentTime: () => 15000,
+      getCurrentTime: () => 15000,
       getMissions: () => [activeMission],
       removeMission: vi.fn(),
       getMissionById: vi.fn(),
+      getLastWorldTickTime: () => Date.now(),
+      setLastWorldTickTime: vi.fn(),
+      getTurnCount: () => 0,
+      setTurnCount: vi.fn(),
+      getGameTimeMinutes: () => 360,
+      setGameTimeMinutes: vi.fn(),
+      getDayCount: () => 1,
+      setDayCount: vi.fn(),
+      onWorldTick: vi.fn(),
+      onMissionsProgress: vi.fn(),
       resolveMissionCallbacks: {
         EXPLORE_TIER_1: vi.fn(),
         SCOUT_DUNGEON: vi.fn(),
@@ -281,6 +285,7 @@ describe('createHeartbeat', () => {
         SEARCH_AREA: vi.fn(),
         GATHER_RESOURCE: vi.fn(),
         CAPTURE_CREATURE: vi.fn(),
+        DEMONLORD_ENCOUNTER: vi.fn(),
       },
     };
     const heartbeat = createHeartbeat(callbacks);
@@ -305,7 +310,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
 
     const resolvedMissions: ActiveMission[] = [];
     const accumulatedRewards: { templateKey: string; quantity: number }[] = [];
-    const accumulatedXP = { player: 0, creature: 0 };
+    const accumulatedXP = { player: 0 };
 
     const createMission = (id: string, type: ActiveMission['type'], endOffset: number): ActiveMission => ({
       mission_id: id,
@@ -329,17 +334,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
     const mission8 = createMission('future', 'TAX_EDICT', 10 * 60 * 60 * 1000);
 
     const callbacks: HeartbeatCallbacks = {
-       getLastWorldTickTime: () => Date.now(),
-       setLastWorldTickTime: vi.fn(),
-       getTurnCount: () => 0,
-       setTurnCount: vi.fn(),
-       getGameTimeMinutes: () => 360,
-       setGameTimeMinutes: vi.fn(),
-       getDayCount: () => 1,
-       setDayCount: vi.fn(),
-       onWorldTick: vi.fn(),
-       onMissionsProgress: vi.fn(),
-       getCurrentTime: () => loginTimestamp,
+      getCurrentTime: () => loginTimestamp,
       getMissions: () => [mission1, mission2, mission3, mission4, mission5, mission6, mission7, mission8],
       removeMission: vi.fn((id: string) => {
         const idx = [mission1, mission2, mission3, mission4, mission5, mission6, mission7].findIndex(m => m.mission_id === id);
@@ -349,6 +344,16 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
         }
       }),
       getMissionById: vi.fn(),
+      getLastWorldTickTime: () => Date.now(),
+      setLastWorldTickTime: vi.fn(),
+      getTurnCount: () => 0,
+      setTurnCount: vi.fn(),
+      getGameTimeMinutes: () => 360,
+      setGameTimeMinutes: vi.fn(),
+      getDayCount: () => 1,
+      setDayCount: vi.fn(),
+      onWorldTick: vi.fn(),
+      onMissionsProgress: vi.fn(),
       resolveMissionCallbacks: {
         EXPLORE_TIER_1: (mission: ActiveMission) => {
           accumulatedRewards.push({ templateKey: 'exploration_loot', quantity: 1 });
@@ -375,6 +380,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
         SEARCH_AREA: () => {},
         GATHER_RESOURCE: () => {},
         CAPTURE_CREATURE: () => {},
+        DEMONLORD_ENCOUNTER: () => {},
       },
     };
 
@@ -399,17 +405,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
     const resolvedWithModifiers: ActiveMission[] = [];
 
     const callbacks: HeartbeatCallbacks = {
-       getLastWorldTickTime: () => Date.now(),
-       setLastWorldTickTime: vi.fn(),
-       getTurnCount: () => 0,
-       setTurnCount: vi.fn(),
-       getGameTimeMinutes: () => 360,
-       setGameTimeMinutes: vi.fn(),
-       getDayCount: () => 1,
-       setDayCount: vi.fn(),
-       onWorldTick: vi.fn(),
-       onMissionsProgress: vi.fn(),
-       getCurrentTime: () => loginTimestamp,
+      getCurrentTime: () => loginTimestamp,
       getMissions: () => [
         {
           mission_id: 'speed_boosted',
@@ -428,6 +424,16 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
         if (m) resolvedWithModifiers.push(m);
       }),
       getMissionById: vi.fn(),
+      getLastWorldTickTime: () => Date.now(),
+      setLastWorldTickTime: vi.fn(),
+      getTurnCount: () => 0,
+      setTurnCount: vi.fn(),
+      getGameTimeMinutes: () => 360,
+      setGameTimeMinutes: vi.fn(),
+      getDayCount: () => 1,
+      setDayCount: vi.fn(),
+      onWorldTick: vi.fn(),
+      onMissionsProgress: vi.fn(),
       resolveMissionCallbacks: {
         EXPLORE_TIER_1: () => {},
         SCOUT_DUNGEON: () => {},
@@ -439,6 +445,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
         SEARCH_AREA: () => {},
         GATHER_RESOURCE: () => {},
         CAPTURE_CREATURE: () => {},
+        DEMONLORD_ENCOUNTER: () => {},
       },
     };
 
@@ -458,17 +465,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
     const totalRewards: string[] = [];
 
     const callbacks: HeartbeatCallbacks = {
-       getLastWorldTickTime: () => Date.now(),
-       setLastWorldTickTime: vi.fn(),
-       getTurnCount: () => 0,
-       setTurnCount: vi.fn(),
-       getGameTimeMinutes: () => 360,
-       setGameTimeMinutes: vi.fn(),
-       getDayCount: () => 1,
-       setDayCount: vi.fn(),
-       onWorldTick: vi.fn(),
-       onMissionsProgress: vi.fn(),
-       getCurrentTime: () => loginTimestamp,
+      getCurrentTime: () => loginTimestamp,
       getMissions: () => [
         {
           mission_id: 'combat_1',
@@ -495,6 +492,16 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
       ],
       removeMission: vi.fn(),
       getMissionById: vi.fn(),
+      getLastWorldTickTime: () => Date.now(),
+      setLastWorldTickTime: vi.fn(),
+      getTurnCount: () => 0,
+      setTurnCount: vi.fn(),
+      getGameTimeMinutes: () => 360,
+      setGameTimeMinutes: vi.fn(),
+      getDayCount: () => 1,
+      setDayCount: vi.fn(),
+      onWorldTick: vi.fn(),
+      onMissionsProgress: vi.fn(),
       resolveMissionCallbacks: {
         EXPLORE_TIER_1: () => {},
         SCOUT_DUNGEON: (mission: ActiveMission) => {
@@ -509,6 +516,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
         SEARCH_AREA: () => {},
         GATHER_RESOURCE: () => {},
         CAPTURE_CREATURE: () => {},
+        DEMONLORD_ENCOUNTER: () => {},
       },
     };
 
@@ -524,17 +532,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
     const loginTimestamp = logoutTimestamp + 8 * 60 * 60 * 1000;
 
     const callbacks: HeartbeatCallbacks = {
-       getLastWorldTickTime: () => Date.now(),
-       setLastWorldTickTime: vi.fn(),
-       getTurnCount: () => 0,
-       setTurnCount: vi.fn(),
-       getGameTimeMinutes: () => 360,
-       setGameTimeMinutes: vi.fn(),
-       getDayCount: () => 1,
-       setDayCount: vi.fn(),
-       onWorldTick: vi.fn(),
-       onMissionsProgress: vi.fn(),
-       getCurrentTime: () => loginTimestamp,
+      getCurrentTime: () => loginTimestamp,
       getMissions: () => [
         {
           mission_id: 'expired_1',
@@ -561,6 +559,16 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
       ],
       removeMission: vi.fn(),
       getMissionById: vi.fn(),
+      getLastWorldTickTime: () => Date.now(),
+      setLastWorldTickTime: vi.fn(),
+      getTurnCount: () => 0,
+      setTurnCount: vi.fn(),
+      getGameTimeMinutes: () => 360,
+      setGameTimeMinutes: vi.fn(),
+      getDayCount: () => 1,
+      setDayCount: vi.fn(),
+      onWorldTick: vi.fn(),
+      onMissionsProgress: vi.fn(),
       resolveMissionCallbacks: {
         EXPLORE_TIER_1: () => {},
         SCOUT_DUNGEON: () => {},
@@ -572,6 +580,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
         SEARCH_AREA: () => {},
         GATHER_RESOURCE: () => {},
         CAPTURE_CREATURE: () => {},
+        DEMONLORD_ENCOUNTER: () => {},
       },
     };
 
@@ -620,20 +629,20 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
     };
 
     const callbacks: HeartbeatCallbacks = {
-       getLastWorldTickTime: () => Date.now(),
-       setLastWorldTickTime: vi.fn(),
-       getTurnCount: () => 0,
-       setTurnCount: vi.fn(),
-       getGameTimeMinutes: () => 360,
-       setGameTimeMinutes: vi.fn(),
-       getDayCount: () => 1,
-       setDayCount: vi.fn(),
-       onWorldTick: vi.fn(),
-       onMissionsProgress: vi.fn(),
-       getCurrentTime: () => loginTimestamp,
+      getCurrentTime: () => loginTimestamp,
       getMissions: () => generateMissions(),
       removeMission: vi.fn(),
       getMissionById: vi.fn(),
+      getLastWorldTickTime: () => Date.now(),
+      setLastWorldTickTime: vi.fn(),
+      getTurnCount: () => 0,
+      setTurnCount: vi.fn(),
+      getGameTimeMinutes: () => 360,
+      setGameTimeMinutes: vi.fn(),
+      getDayCount: () => 1,
+      setDayCount: vi.fn(),
+      onWorldTick: vi.fn(),
+      onMissionsProgress: vi.fn(),
       resolveMissionCallbacks: {
         EXPLORE_TIER_1: () => {
           missionCount.resolved++;
@@ -673,6 +682,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
         SEARCH_AREA: () => {},
         GATHER_RESOURCE: () => {},
         CAPTURE_CREATURE: () => {},
+        DEMONLORD_ENCOUNTER: () => {},
       },
     };
 
@@ -700,20 +710,20 @@ describe('resolveMission', () => {
     };
 
     const callbacks: HeartbeatCallbacks = {
-       getLastWorldTickTime: () => Date.now(),
-       setLastWorldTickTime: vi.fn(),
-       getTurnCount: () => 0,
-       setTurnCount: vi.fn(),
-       getGameTimeMinutes: () => 360,
-       setGameTimeMinutes: vi.fn(),
-       getDayCount: () => 1,
-       setDayCount: vi.fn(),
-       onWorldTick: vi.fn(),
-       onMissionsProgress: vi.fn(),
-       getCurrentTime: () => 15000,
+      getCurrentTime: () => 15000,
       getMissions: () => [mission],
       removeMission: vi.fn(),
       getMissionById: () => mission,
+      getLastWorldTickTime: () => Date.now(),
+      setLastWorldTickTime: vi.fn(),
+      getTurnCount: () => 0,
+      setTurnCount: vi.fn(),
+      getGameTimeMinutes: () => 360,
+      setGameTimeMinutes: vi.fn(),
+      getDayCount: () => 1,
+      setDayCount: vi.fn(),
+      onWorldTick: vi.fn(),
+      onMissionsProgress: vi.fn(),
       resolveMissionCallbacks: {
         EXPLORE_TIER_1: vi.fn(),
         SCOUT_DUNGEON: vi.fn(),
@@ -725,6 +735,7 @@ describe('resolveMission', () => {
         SEARCH_AREA: vi.fn(),
         GATHER_RESOURCE: vi.fn(),
         CAPTURE_CREATURE: vi.fn(),
+        DEMONLORD_ENCOUNTER: vi.fn(),
       },
     };
     
@@ -750,20 +761,20 @@ describe('resolveMission', () => {
     };
 
     const callbacks: HeartbeatCallbacks = {
-       getLastWorldTickTime: () => Date.now(),
-       setLastWorldTickTime: vi.fn(),
-       getTurnCount: () => 0,
-       setTurnCount: vi.fn(),
-       getGameTimeMinutes: () => 360,
-       setGameTimeMinutes: vi.fn(),
-       getDayCount: () => 1,
-       setDayCount: vi.fn(),
-       onWorldTick: vi.fn(),
-       onMissionsProgress: vi.fn(),
-       getCurrentTime: () => 65000,
+      getCurrentTime: () => 65000,
       getMissions: () => [mission],
       removeMission: vi.fn(),
       getMissionById: () => mission,
+      getLastWorldTickTime: () => Date.now(),
+      setLastWorldTickTime: vi.fn(),
+      getTurnCount: () => 0,
+      setTurnCount: vi.fn(),
+      getGameTimeMinutes: () => 360,
+      setGameTimeMinutes: vi.fn(),
+      getDayCount: () => 1,
+      setDayCount: vi.fn(),
+      onWorldTick: vi.fn(),
+      onMissionsProgress: vi.fn(),
       resolveMissionCallbacks: {
         EXPLORE_TIER_1: vi.fn(),
         SCOUT_DUNGEON: vi.fn(),
@@ -775,6 +786,7 @@ describe('resolveMission', () => {
         SEARCH_AREA: vi.fn(),
         GATHER_RESOURCE: vi.fn(),
         CAPTURE_CREATURE: vi.fn(),
+        DEMONLORD_ENCOUNTER: vi.fn(),
       },
     };
 
@@ -873,17 +885,7 @@ describe('offline catch-up scenarios', () => {
     const missions = [mission1, mission2, mission3];
     const resolvedIds: string[] = [];
     const callbacks: HeartbeatCallbacks = {
-       getLastWorldTickTime: () => Date.now(),
-       setLastWorldTickTime: vi.fn(),
-       getTurnCount: () => 0,
-       setTurnCount: vi.fn(),
-       getGameTimeMinutes: () => 360,
-       setGameTimeMinutes: vi.fn(),
-       getDayCount: () => 1,
-       setDayCount: vi.fn(),
-       onWorldTick: vi.fn(),
-       onMissionsProgress: vi.fn(),
-       getCurrentTime: () => startTime + 8 * 60 * 60 * 1000,
+      getCurrentTime: () => startTime + 8 * 60 * 60 * 1000,
       getMissions: () => missions,
       removeMission: (id: string) => {
         const idx = missions.findIndex((m) => m.mission_id === id);
@@ -891,6 +893,16 @@ describe('offline catch-up scenarios', () => {
         resolvedIds.push(id);
       },
       getMissionById: (id: string) => missions.find((m) => m.mission_id === id),
+      getLastWorldTickTime: () => Date.now(),
+      setLastWorldTickTime: vi.fn(),
+      getTurnCount: () => 0,
+      setTurnCount: vi.fn(),
+      getGameTimeMinutes: () => 360,
+      setGameTimeMinutes: vi.fn(),
+      getDayCount: () => 1,
+      setDayCount: vi.fn(),
+      onWorldTick: vi.fn(),
+      onMissionsProgress: vi.fn(),
       resolveMissionCallbacks: {
         EXPLORE_TIER_1: vi.fn(),
         SCOUT_DUNGEON: vi.fn(),
@@ -902,6 +914,7 @@ describe('offline catch-up scenarios', () => {
         SEARCH_AREA: vi.fn(),
         GATHER_RESOURCE: vi.fn(),
         CAPTURE_CREATURE: vi.fn(),
+        DEMONLORD_ENCOUNTER: vi.fn(),
       },
     };
 
@@ -929,20 +942,20 @@ describe('offline catch-up scenarios', () => {
     };
 
     const callbacks: HeartbeatCallbacks = {
-       getLastWorldTickTime: () => Date.now(),
-       setLastWorldTickTime: vi.fn(),
-       getTurnCount: () => 0,
-       setTurnCount: vi.fn(),
-       getGameTimeMinutes: () => 360,
-       setGameTimeMinutes: vi.fn(),
-       getDayCount: () => 1,
-       setDayCount: vi.fn(),
-       onWorldTick: vi.fn(),
-       onMissionsProgress: vi.fn(),
-       getCurrentTime: () => 20000,
+      getCurrentTime: () => 20000,
       getMissions: () => [completed],
       removeMission: vi.fn(),
       getMissionById: () => completed,
+      getLastWorldTickTime: () => Date.now(),
+      setLastWorldTickTime: vi.fn(),
+      getTurnCount: () => 0,
+      setTurnCount: vi.fn(),
+      getGameTimeMinutes: () => 360,
+      setGameTimeMinutes: vi.fn(),
+      getDayCount: () => 1,
+      setDayCount: vi.fn(),
+      onWorldTick: vi.fn(),
+      onMissionsProgress: vi.fn(),
       resolveMissionCallbacks: {
         EXPLORE_TIER_1: vi.fn(),
         SCOUT_DUNGEON: vi.fn(),
@@ -954,6 +967,7 @@ describe('offline catch-up scenarios', () => {
         SEARCH_AREA: vi.fn(),
         GATHER_RESOURCE: vi.fn(),
         CAPTURE_CREATURE: vi.fn(),
+        DEMONLORD_ENCOUNTER: vi.fn(),
       },
     };
 
@@ -977,20 +991,20 @@ describe('offline catch-up scenarios', () => {
     };
 
     const callbacks: HeartbeatCallbacks = {
-       getLastWorldTickTime: () => Date.now(),
-       setLastWorldTickTime: vi.fn(),
-       getTurnCount: () => 0,
-       setTurnCount: vi.fn(),
-       getGameTimeMinutes: () => 360,
-       setGameTimeMinutes: vi.fn(),
-       getDayCount: () => 1,
-       setDayCount: vi.fn(),
-       onWorldTick: vi.fn(),
-       onMissionsProgress: vi.fn(),
-       getCurrentTime: () => 300000,
+      getCurrentTime: () => 300000,
       getMissions: () => [pending],
       removeMission: vi.fn(),
       getMissionById: () => pending,
+      getLastWorldTickTime: () => Date.now(),
+      setLastWorldTickTime: vi.fn(),
+      getTurnCount: () => 0,
+      setTurnCount: vi.fn(),
+      getGameTimeMinutes: () => 360,
+      setGameTimeMinutes: vi.fn(),
+      getDayCount: () => 1,
+      setDayCount: vi.fn(),
+      onWorldTick: vi.fn(),
+      onMissionsProgress: vi.fn(),
       resolveMissionCallbacks: {
         EXPLORE_TIER_1: vi.fn(),
         SCOUT_DUNGEON: vi.fn(),
@@ -1002,6 +1016,7 @@ describe('offline catch-up scenarios', () => {
         SEARCH_AREA: vi.fn(),
         GATHER_RESOURCE: vi.fn(),
         CAPTURE_CREATURE: vi.fn(),
+        DEMONLORD_ENCOUNTER: vi.fn(),
       },
     };
 
