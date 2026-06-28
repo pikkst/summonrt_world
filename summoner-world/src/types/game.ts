@@ -61,6 +61,9 @@ export interface CreatureTemplate {
   isBoss?: boolean;
   evolutionLevel?: number;
   evolvesIntoKey?: string;
+  capturePool?: {
+    compatibleElements: Element[];
+  };
 }
 
 export interface TerritorialHostilityEntry {
@@ -97,33 +100,37 @@ export interface ProceduralIdentity {
    };
  }
 
- export interface CreatureInstance {
-   id: string;
-   templateKey: string;
-   nickname?: string;
-   type?: CreatureType;
-   baseExpValue?: number;
-   elements?: Element[];
-   level: number;
-   experience: bigint;
-   currentHealth: number;
-   currentMana: number;
-   maxHealth: number;
-   maxMana: number;
-   attack: number;
-   defense: number;
-   speed: number;
-   class?: string;
-   skills: string[];
-   traits: string[];
-   mutations: string[];
-   affection: number;
-   isBossSummon?: boolean;
-   evolutionStage?: number;
-   evolvedFromKey?: string;
-   synergyEffects?: string[];
-   proceduralIdentity?: ProceduralIdentity;
- }
+export interface CreatureInstance {
+  id: string;
+  templateKey: string;
+  nickname?: string;
+  type?: CreatureType;
+  baseExpValue?: number;
+  elements?: Element[];
+  level: number;
+  experience: bigint;
+  currentHealth: number;
+  currentMana: number;
+  maxHealth: number;
+  maxMana: number;
+  attack: number;
+  defense: number;
+  speed: number;
+  class?: string;
+  skills: string[];
+  traits: string[];
+  mutations: string[];
+  affection: number;
+  isBossSummon?: boolean;
+  evolutionStage?: number;
+  evolvedFromKey?: string;
+  synergyEffects?: string[];
+  proceduralIdentity?: ProceduralIdentity;
+  fusionRecipe?: {
+    parentAKey: string;
+    parentBKey: string;
+  };
+}
 
 export type ItemType = 'material' | 'equipment' | 'consumable' | 'special' | 'egg';
 export type ItemSubType = 'weapon' | 'armor' | 'accessory' | 'herb' | 'crystal' | 'essence' | 'fragment';

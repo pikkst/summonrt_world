@@ -746,6 +746,10 @@ finishCapture: () => {
       traits: inheritedTraits,
       mutations: mutations,
       affection: 5,
+      fusionRecipe: {
+        parentAKey: c1.templateKey,
+        parentBKey: c2.templateKey,
+      },
       class: newClass,
       elements: newElements,
       type: specialFusionOccurred && fusionResultElement === 'unstable_void' ? 'demon' : c1.type || 'spirit',

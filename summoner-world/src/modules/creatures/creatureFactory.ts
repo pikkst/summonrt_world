@@ -126,6 +126,9 @@ function generateSpeciesTemplate(
     description: `A ${creatureClass} ${creatureType} from the ${speciesKey.replace('_line', '')} evolution line.`,
     evolutionLevel: stageDef.minEvolutionLevel,
     evolvesIntoKey,
+    capturePool: {
+      compatibleElements: [...new Set(elements)],
+    },
   };
 
   return template;
@@ -195,6 +198,10 @@ function createRandomTemplate(worldTier: number, rng: SeededRandom, isBoss: bool
     baseExpValue: Math.floor(20 * baseMult),
     skills: skillPool,
     description: isBoss ? `The Floor ${worldTier} Guardian. A formidable soul.` : `A Tier ${worldTier} manifestation.`,
+    isBoss,
+    capturePool: {
+      compatibleElements: [...new Set(elements)],
+    },
   };
 
   registerTemplate(template);

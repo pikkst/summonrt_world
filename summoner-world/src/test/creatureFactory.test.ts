@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { generateCreatureTemplate } from '../modules/creatures/creatureFactory';
+import { generateCreatureTemplate, getTemplateByKey, registerSpeciesLine, clearTemplateRegistry } from '../modules/creatures/creatureFactory';
 import { SeededRandom } from '../utils/SeededRandom';
 import type { CreatureClass } from '../types/game';
 
@@ -89,5 +89,36 @@ describe('generateCreatureTemplate rarity weights', () => {
     template.elements.forEach(element => {
       expect(validElements).toContain(element);
     });
+  });
+
+  it('auto-generates capturePool for random templates', () => {
+    const rng = new SeededRandom(42);
+    const template = generateCreatureTemplate(1, rng);
+
+    expect(template.capturePool).toBeDefined();
+    expect(template.capturePool?.compatibleElements).toBeDefined();
+    expect(template.capturePool!.compatibleElements.length).toBeGreaterThan(0);
+  });
+
+  it('capturePool.compatibleElements matches template elements (deduplicated)', () => {
+    const rng = new SeededRandom(999);
+    const template = generateCreatureTemplate(1, rng);
+
+    const expected = [...new Set(template.elements)];
+    expect(template.capturePool!.compatibleElements).toEqual(expected);
+  });
+
+  it('species line templates also have capturePool', () => {
+    clearTemplateRegistry();
+    const rng = new SeededRandom(1);
+    registerSpeciesLine('fang_line', 1);
+
+    const template1 = getTemplateByKey('fang_line_stage0_brave_fang');
+    const template2 = getTemplateByKey('fang_line_stage1_mighty_lion');
+
+    expect(template1?.capturePool).toBeDefined();
+    expect(template1?.capturePool?.compatibleElements.length).toBeGreaterThan(0);
+    expect(template2?.capturePool).toBeDefined();
+    expect(template2?.capturePool?.compatibleElements.length).toBeGreaterThan(0);
   });
 });
