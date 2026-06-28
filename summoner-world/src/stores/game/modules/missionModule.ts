@@ -15,6 +15,7 @@ import { createHeartbeat } from '../../../core/heartbeat.ts';
 import { getAggregateStats, getAllNodes, getCareerModifiers } from '../../../data/careerTree/index';
 import { getFusionResult } from '../../../data/fusionMatrix.ts';
 import { inheritSkills } from '../../../data/fusionUtils.ts';
+import { getSoulCrystalTierForClass } from '../../../data/constants.ts';
 import { getSynergyNames, calculateSynergyEffects } from '../../../data/traitSynergy.ts';
 import { generateProceduralIdentity } from '../../../data/proceduralIdentity';
 import axios from 'axios';
@@ -627,6 +628,14 @@ finishCapture: () => {
       return;
     }
 
+    const c1 = player.creatures.find(c => c.id === id1);
+    const c2 = player.creatures.find(c => c.id === id2);
+
+    if (!c1 || !c2 || player.creatures.length >= 6) {
+      appendLog('Invalid selection or party full.', 'error');
+      return;
+    }
+
     const essenceIdx = player.inventory.findIndex(i => i.templateKey === 'essence');
     const essenceStack = player.inventory[essenceIdx];
     if (!essenceStack || essenceStack.quantity < 5) {
@@ -634,11 +643,20 @@ finishCapture: () => {
       return;
     }
 
-    const c1 = player.creatures.find(c => c.id === id1);
-    const c2 = player.creatures.find(c => c.id === id2);
+    const baseClass = (c1.class || 'common') === (c2.class || 'common')
+      ? c1.class
+      : (getSoulCrystalTierForClass(c1.class || 'common') >= getSoulCrystalTierForClass(c2.class || 'common')
+        ? c1.class
+        : c2.class) || 'common';
 
-    if (!c1 || !c2 || player.creatures.length >= 6) {
-      appendLog('Invalid selection or party full.', 'error');
+    const effectiveBaseClass = baseClass || 'common';
+    const requiredSoulCrystalTier = getSoulCrystalTierForClass(effectiveBaseClass);
+    const soulCrystalKey = `soul_crystal_${requiredSoulCrystalTier}` as const;
+
+    const crystalIdx = player.inventory.findIndex(i => i.templateKey === soulCrystalKey);
+    const crystalStack = player.inventory[crystalIdx];
+    if (!crystalStack || crystalStack.quantity < 1) {
+      appendLog(`Soul Fusion for ${effectiveBaseClass.toUpperCase()} creatures requires a Soul Crystal (${requiredSoulCrystalTier.charAt(0).toUpperCase() + requiredSoulCrystalTier.slice(1)}).`, 'warning');
       return;
     }
 
@@ -696,13 +714,8 @@ finishCapture: () => {
 
     const synergyNicknames = getSynergyNames(inheritedTraits);
 
-    const baseClass = (c1.class || 'common') === (c2.class || 'common')
-      ? c1.class
-      : ['common','uncommon','rare','epic','legendary','mythical'].includes(c1.class || 'common')
-        ? c1.class
-        : c2.class || 'common';
+    let newClass = effectiveBaseClass;
 
-    let newClass = baseClass;
     if (isAncient) newClass = 'epic';
     if (isVoid || isStellar) newClass = newClass === 'common' ? 'rare' : newClass === 'uncommon' ? 'rare' : newClass === 'rare' ? 'epic' : newClass;
     if (specialFusionOccurred && fusionResultElement === 'aether') {
@@ -748,6 +761,12 @@ finishCapture: () => {
     if (essenceStackItem) {
       essenceStackItem.quantity -= 5;
       if (essenceStackItem.quantity <= 0) updatedInventory.splice(essenceIdx, 1);
+    }
+
+    const crystalStackItem = updatedInventory[crystalIdx];
+    if (crystalStackItem) {
+      crystalStackItem.quantity -= 1;
+      if (crystalStackItem.quantity <= 0) updatedInventory.splice(crystalIdx, 1);
     }
 
     const updatedCreatures = player.creatures.filter(c => c.id !== id1 && c.id !== id2);
