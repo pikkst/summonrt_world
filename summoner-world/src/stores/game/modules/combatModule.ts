@@ -7,6 +7,7 @@ import { applyAffectionGain, getAffectionDamageMultiplier } from '../../../core/
 import { SeededRandom } from '../../../utils/SeededRandom.ts';
 import { getAggregateStats, getAllNodes } from '../../../data/careerTree/index';
 import { applyCombatCareerBonuses, applyDamageTakenReduction, getCareerSystemBonuses } from '../../../data/careerTreeIntegration';
+import { createDemonlordState, getDemonlordForFloor } from '../../../core/demonlord';
 
 const getPrimordialDamageMultiplier = (player: PlayerState): number => {
   return player.affinity.traits?.includes('primordial') ? 1.2 : 1;
@@ -315,8 +316,31 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
               creatures: s.player.creatures.map((c: any) => c.id === activeCreature.id ? { ...c, currentHealth: 0 } : c),
             }
           }));
+      } else {
+        enemyLog.push(`${activeCreature.nickname || 'Creature'} has fainted! All your summons have fainted!`);
+
+        const onDemonlordFloor = getDemonlordForFloor((get().currentWorldId));
+        const demonlordState = get().demonlordState;
+        const alreadyLord = demonlordState?.currentLordPlayerId === player.id;
+
+        if (onDemonlordFloor && !alreadyLord) {
+          const newDemonlordState = createDemonlordState();
+          newDemonlordState.currentLordPlayerId = player.id;
+          newDemonlordState.currentLordPlayerName = player.name;
+          newDemonlordState.influence = 100;
+          enemyLog.push(`🔥 You have been defeated, but your will burned brighter than the flames! You have claimed the Demonlord title for Floor ${get().currentWorldId}!`, 'system');
+          set((s: any) => ({
+            combat: { ...s.combat, log: enemyLog, phase: 'defeat', enemyHp: 0 },
+            player: {
+              ...s.player,
+              creatures: s.player.creatures.map((c: any) => c.id === activeCreature.id ? { ...c, currentHealth: 0 } : c),
+            },
+            demonlordState: newDemonlordState,
+          }));
         } else {
-          enemyLog.push(`${activeCreature.nickname || 'Creature'} has fainted! All your summons have fainted!`);
+          enemyLog.push(alreadyLord
+            ? 'The Demonlord shall not be dethroned! Your title is preserved, but you shall try again.'
+            : `You have been defeated! You lose 15 Life points.`);
           set((s: any) => ({
             combat: { ...s.combat, log: enemyLog, phase: 'defeat' },
             player: {
@@ -326,6 +350,7 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
             },
           }));
         }
+      }
       } else {
         set((s: any) => ({
           combat: { ...s.combat, log: enemyLog, phase: 'player_turn' },
