@@ -114,7 +114,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
     - [x] T6.0.4 – Create src/stores/game/modules/demonlordModule.ts with store actions
     - [x] T6.0.5 – Implement demonlordFloor range (50-100) in dungeon system
     - [x] T6.0.6 – Add player defeat transition to Demonlord status in combatModule.ts
-    - [ ] T6.0.7 – Implement challenge issuance and acceptance system
+    - [x] T6.0.7 – Implement challenge issuance and acceptance system
     - [x] T6.0.8 – Add Demonlord skillset (signature abilities, elemental shifts)
     - [x] T6.0.9 – Add career tree bonuses for Demonlord-related combat stats
     - [x] T6.0.10 – Create demonlord.test.ts with unit tests
