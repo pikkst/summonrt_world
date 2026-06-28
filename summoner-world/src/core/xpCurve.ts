@@ -2,6 +2,7 @@ import type { CreatureInstance } from '../types/game';
 import type { Element } from '../types/game';
 import type { EvolutionStage } from '../data/constants.ts';
 import { EVOLUTION_CHAINS, getClassTier, getMutationChance, getMaxMutationsForClass, MUTATION_TYPES, MUTATION_SKILL_POOL, MUTATION_TRAIT_POOL, ELEMENTS, type MutationType } from '../data/constants.ts';
+import { getAffectionXPBonus } from './affection.ts';
 
 export function getXPThreshold(level: number): bigint {
   if (level < 1) throw new Error('Level must be at least 1');
@@ -319,7 +320,9 @@ export function grantPartyXP(
   const xpResults = new Map<string, CreatureXPResult>();
   const updatedCreatures = creatures.map((c) => {
     if (creatureIds.includes(c.id)) {
-      const result = applyCreatureXP(c, xpPerCreature, maxLevel);
+      const affectionBonus = getAffectionXPBonus(c);
+      const adjustedXP = Math.floor(xpPerCreature * affectionBonus);
+      const result = applyCreatureXP(c, adjustedXP, maxLevel);
       xpResults.set(c.id, result);
       return result.creature;
     }

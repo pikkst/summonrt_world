@@ -3,6 +3,7 @@ import { createLog, addPlayerXP, getWorldModifier, getPlayerElements } from '../
 import { generateCreatureTemplate } from '../../../modules/creatures/creatureFactory.ts';
 import { SKILL_TEMPLATES } from '../../../modules/creatures/creatureFactory.ts';
 import { applyCreatureXP, calculateEncounterXP } from '../../../core/xpCurve.ts';
+import { applyAffectionGain, getAffectionDamageMultiplier } from '../../../core/affection.ts';
 import { SeededRandom } from '../../../utils/SeededRandom.ts';
 
 const getPrimordialDamageMultiplier = (player: PlayerState): number => {
@@ -166,9 +167,10 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
     const enemyElements = enemyTemplate.elements || [];
 
 const eff = getElementalEffectiveness(creatureElement, enemyElements);
+     const affectionMult = getAffectionDamageMultiplier(creature);
      const damageRaw = (creature.attack || 10) - (enemyTemplate.baseDefense || 5) + Math.floor(Math.random() * 5);
      const damageMult = creatureElement ? getElementDamageMultiplier(player) : 1;
-     const playerDamage = Math.max(1, Math.floor(damageRaw * eff.factor * damageMult));
+     const playerDamage = Math.max(1, Math.floor(damageRaw * eff.factor * damageMult * affectionMult));
     const newEnemyHp = Math.max(0, (combat.enemyHp || 50) - playerDamage);
 
     let combatLog = [...combat.log, `${creature.nickname || 'Your creature'} attacks for ${playerDamage} damage!${eff.msg}`];
@@ -206,11 +208,12 @@ const eff = getElementalEffectiveness(creatureElement, enemyElements);
     const enemyElements = enemyTemplate.elements || [];
 
 const eff = getElementalEffectiveness(skill.element, enemyElements);
+     const affectionMult = getAffectionDamageMultiplier(creature);
      const baseAtk = creature.attack || 10;
      const skillMult = skill.power / 10;
      const damageRaw = (baseAtk * skillMult) - (enemyTemplate.baseDefense || 5) + Math.floor(Math.random() * 5);
      const damageMult = skill.element ? getElementDamageMultiplier(player) : 1;
-     const skillDamage = Math.max(1, Math.floor(damageRaw * eff.factor * damageMult));
+     const skillDamage = Math.max(1, Math.floor(damageRaw * eff.factor * damageMult * affectionMult));
 
     const newEnemyHp = Math.max(0, (combat.enemyHp || 50) - skillDamage);
     const newMana = Math.max(0, creature.currentMana - skill.cost);
@@ -355,10 +358,12 @@ const eff = getElementalEffectiveness(skill.element, enemyElements);
       if (c.id !== creatureId) return c;
 
       if (c.level >= MAX_LEVEL) {
-        return { ...c, experience: 0n };
+        const withAffection = applyAffectionGain(c, 'victory');
+        return { ...withAffection, experience: 0n };
       }
 
       const xpResult = applyCreatureXP(c, encounterXP, MAX_LEVEL);
+      const updatedWithAffection = applyAffectionGain(xpResult.creature, 'victory');
 
       if (xpResult.leveledUp) {
         const newMaxHp = xpResult.creature.maxHealth;
@@ -396,12 +401,12 @@ const eff = getElementalEffectiveness(skill.element, enemyElements);
         }
 
         return {
-          ...xpResult.creature,
+          ...updatedWithAffection,
           skills: newSkills,
         };
       }
 
-      return xpResult.creature;
+      return updatedWithAffection;
     });
 
     const finalPlayerState = addPlayerXP(player, Math.floor(encounterXP / 4), appendLog, 1);

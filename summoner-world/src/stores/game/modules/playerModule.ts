@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import { QUEST_TEMPLATES } from '../../../data/quests.ts';
 import { applyCreatureXP } from '../../../core/xpCurve.ts';
+import { applyAffectionGain } from '../../../core/affection.ts';
 
 export const playerActions = (set: SetState<GameStore>, get: () => GameStore) => ({
   initGame: (playerName: string, archetype: string = 'fighter') => {
@@ -715,32 +716,33 @@ const newCreature: any = {
     let message = `Your ${activity.type.replace(/_/g, ' ')} is complete!`;
 
     switch (activity.type) {
-       case 'creature_training': {
-        const creature = player.creatures.find(c => c.id === activity.creatureId);
-        if (creature) {
-          const creatureXp = Math.floor(activity.duration / 1000) * 0.5;
-          const xpResult = applyCreatureXP(creature, creatureXp);
-          if (xpResult.leveledUp) {
-            appendLog(`${creature.nickname || 'Creature'} reached Level ${xpResult.newLevel}! (+${xpResult.statsGained.hp} HP, +${xpResult.statsGained.attack} ATK, +${xpResult.statsGained.defense} DEF, +${xpResult.statsGained.speed} SPD)`, 'success');
-            if (xpResult.evolved) {
-              appendLog(`EVOLUTION! ${creature.nickname || 'Creature'} has evolved into ${xpResult.newClass?.toUpperCase() || 'a higher form'}!`, 'success');
-            }
-            if (xpResult.mutations && xpResult.mutations.length > 0) {
-              const labels = xpResult.mutations.map(k => k.replace(/_/g, ' ')).join(', ');
-              appendLog(`🧬 ${creature.nickname || 'Creature'} mutated: ${labels}!`, 'warning');
-            }
-          }
-          appendLog(`${creature.nickname || 'Creature'} gained ${creatureXp} XP from training!`, 'success');
-          xpGain = creatureXp / 4;
-          set((state) => ({
-            player: state.player ? {
-              ...state.player,
-              creatures: state.player.creatures.map((c: any) => c.id === creature.id ? xpResult.creature : c),
-            } : state.player,
-          }));
-        }
-        break;
-      }
+case 'creature_training': {
+         const creature = player.creatures.find(c => c.id === activity.creatureId);
+         if (creature) {
+           const creatureXp = Math.floor(activity.duration / 1000) * 0.5;
+           const xpResult = applyCreatureXP(creature, creatureXp);
+           const creatureWithAffection = applyAffectionGain(xpResult.creature, 'training');
+           if (xpResult.leveledUp) {
+             appendLog(`${creature.nickname || 'Creature'} reached Level ${xpResult.newLevel}! (+${xpResult.statsGained.hp} HP, +${xpResult.statsGained.attack} ATK, +${xpResult.statsGained.defense} DEF, +${xpResult.statsGained.speed} SPD)`, 'success');
+             if (xpResult.evolved) {
+               appendLog(`EVOLUTION! ${creature.nickname || 'Creature'} has evolved into ${xpResult.newClass?.toUpperCase() || 'a higher form'}!`, 'success');
+             }
+             if (xpResult.mutations && xpResult.mutations.length > 0) {
+               const labels = xpResult.mutations.map(k => k.replace(/_/g, ' ')).join(', ');
+               appendLog(`🧬 ${creature.nickname || 'Creature'} mutated: ${labels}!`, 'warning');
+             }
+           }
+           appendLog(`${creature.nickname || 'Creature'} gained ${creatureXp} XP from training!`, 'success');
+           xpGain = creatureXp / 4;
+           set((state) => ({
+             player: state.player ? {
+               ...state.player,
+               creatures: state.player.creatures.map((c: any) => c.id === creature.id ? creatureWithAffection : c),
+             } : state.player,
+           }));
+         }
+         break;
+       }
       case 'physical_training': {
         xpGain = Math.floor(activity.duration / 1000) * 0.2;
         const statGain = Math.floor(xpGain / 10);
