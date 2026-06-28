@@ -107,6 +107,17 @@ Sprint goal: implement complete fusion system, trait synergies, procedural ident
 ## Sprint 6 – Combat & Dungeon System (Month 6)
 Sprint goal: refine combat system, dungeon generation, boss mechanics and automated combat integration.
 
+- [ ] T6.0 – Integrate the Final Boss. Demonlord who rules floors 100+ to 50+ in sync with player activity. The fewer players on the floor and the lower the activity, the more influence the Demonlord AI has. If a player defeats the Demonlord, he becomes the new Demonlord and the new player can issue him a challenge that he must accept. The Demonlord must have his own skillset and floor manager functions.
+  - [ ] T6.0.1 – Add DemonlordState and DemonlordSkill types to src/types/game.ts
+  - [ ] T6.0.2 – Create src/core/demonlord.ts with AI logic for activity-based influence
+  - [ ] T6.0.3 – Add DEMONLORD_ENCOUNTER mission type to missionQueue.ts
+  - [ ] T6.0.4 – Create src/stores/game/modules/demonlordModule.ts with store actions
+  - [ ] T6.0.5 – Implement demonlordFloor range (50-100+) in dungeon system
+  - [ ] T6.0.6 – Add player defeat transition to Demonlord status in combatModule.ts
+  - [ ] T6.0.7 – Implement challenge issuance and acceptance system
+  - [ ] T6.0.8 – Add Demonlord skillset (signature abilities, elemental shifts)
+  - [ ] T6.0.9 – Add career tree bonuses for Demonlord-related combat stats
+  - [ ] T6.0.10 – Create demonlord.test.ts with unit tests 
 - [ ] T6.1 – Fix combat damage formula: `damage = (ATK − DEF × 0.5) × elementalFactor + random(−2…+2)`
 - [ ] T6.2 – Add combat phase boss mechanics (HP thresholds 75/50/25%, elemental shift, environmental hazards)
 - [ ] T6.3 – Implement "Scan" ability for boss weakness discovery (wrong guess = −70% damage)
