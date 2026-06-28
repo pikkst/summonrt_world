@@ -3,7 +3,7 @@ import { createLog, calculateMovementModifiers, processTileDiscovery, getPlayerE
 import { generateTile } from '../../../core/worldGenerator.ts';
 import { getTileKey, getAffinityWeight, calculateBaseCaptureProbability } from '../../../data/constants.ts';
 import { QUEST_TEMPLATES } from '../../../data/quests.ts';
-import { generateCreatureTemplate } from '../../../modules/creatures/creatureFactory.ts';
+import { generateCreatureTemplate, SKILL_TEMPLATES } from '../../../modules/creatures/creatureFactory.ts';
 import { SeededRandom } from '../../../utils/SeededRandom.ts';
 import type { MissionStatus, MissionModifiers, ActiveMission } from '../../../core/missionQueue.ts';
 import { createActiveMission, getCreatureAgilityMod, MissionType } from '../../../core/missionQueue.ts';
@@ -14,6 +14,7 @@ import type { GameEngineState } from '../../../core/gameEngine.ts';
 import { createHeartbeat } from '../../../core/heartbeat.ts';
 import { getAggregateStats, getAllNodes, getCareerModifiers } from '../../../data/careerTree/index';
 import { getFusionResult } from '../../../data/fusionMatrix.ts';
+import { inheritSkills } from '../../../data/fusionUtils.ts';
 import axios from 'axios';
 
 export const missionActions = (set: SetState<GameStore>, get: () => GameStore) => ({
@@ -676,9 +677,7 @@ finishCapture: () => {
     if (isStellar && !specialFusionOccurred) mutations.push('Stellar Echo');
     if (specialFusionOccurred && fusionResultElement === 'unstable_void') mutations.push('Unstable Core');
 
-    const parentSkills = new Set([...(c1.skills || []), ...(c2.skills || [])]);
-    const inheritedSkills = Array.from(parentSkills).slice(0, 3);
-    const finalSkills = [...inheritedSkills, ...selectedSkills.slice(0, 4 - inheritedSkills.length)];
+    const finalSkills = inheritSkills(c1.skills || [], c2.skills || [], selectedSkills);
 
     const parentTraits = new Set([...(c1.traits || []), ...(c2.traits || [])]);
     const inheritedTraits = Array.from(parentTraits).slice(0, 2);

@@ -3,17 +3,17 @@ import { CREATURE_CLASSES, ELEMENTS, CLASS_WEIGHTS, SPECIES_LINES } from '../../
 import { SeededRandom } from '../../utils/SeededRandom.ts';
 
 export const SKILL_TEMPLATES = [
-  { key: 'scratch', name: 'Scratch', element: undefined as Element | undefined, power: 10, cost: 0, description: 'A simple strike with claws' },
-  { key: 'fire_blast', name: 'Fire Blast', element: 'fire' as Element, power: 18, cost: 5, description: 'A blazing eruption of fire' },
-  { key: 'water_spray', name: 'Water Spray', element: 'water' as Element, power: 16, cost: 4, description: 'A high-pressure stream of water' },
-  { key: 'stone_throw', name: 'Stone Throw', element: 'earth' as Element, power: 14, cost: 3, description: 'Hurls heavy rocks at the foe' },
-  { key: 'wind_slash', name: 'Wind Slash', element: 'air' as Element, power: 15, cost: 3, description: 'A sharp blade of compressed air' },
-  { key: 'spark', name: 'Spark', element: 'lightning' as Element, power: 20, cost: 6, description: 'An electrical discharge' },
-  { key: 'iron_fist', name: 'Iron Fist', element: 'iron' as Element, power: 17, cost: 4, description: 'A heavy metallic punch' },
-  { key: 'vine_whip', name: 'Vine Whip', element: 'nature' as Element, power: 13, cost: 2, description: 'A lash with thorny vines' },
-  { key: 'ice_shard', name: 'Ice Shard', element: 'ice' as Element, power: 17, cost: 5, description: 'A jagged shard of ice' },
-  { key: 'holy_light', name: 'Holy Light', element: 'light' as Element, power: 22, cost: 7, description: 'A cleansing beam of light' },
-  { key: 'shadow_bolt', name: 'Shadow Bolt', element: 'darkness' as Element, power: 22, cost: 7, description: 'Supernatural dark energy' },
+  { key: 'scratch', name: 'Scratch', element: undefined as Element | undefined, power: 10, cost: 0, description: 'A simple strike with claws', tier: 1 },
+  { key: 'fire_blast', name: 'Fire Blast', element: 'fire' as Element, power: 18, cost: 5, description: 'A blazing eruption of fire', tier: 3 },
+  { key: 'water_spray', name: 'Water Spray', element: 'water' as Element, power: 16, cost: 4, description: 'A high-pressure stream of water', tier: 2 },
+  { key: 'stone_throw', name: 'Stone Throw', element: 'earth' as Element, power: 14, cost: 3, description: 'Hurls heavy rocks at the foe', tier: 1 },
+  { key: 'wind_slash', name: 'Wind Slash', element: 'air' as Element, power: 15, cost: 3, description: 'A sharp blade of compressed air', tier: 2 },
+  { key: 'spark', name: 'Spark', element: 'lightning' as Element, power: 20, cost: 6, description: 'An electrical discharge', tier: 3 },
+  { key: 'iron_fist', name: 'Iron Fist', element: 'iron' as Element, power: 17, cost: 4, description: 'A heavy metallic punch', tier: 2 },
+  { key: 'vine_whip', name: 'Vine Whip', element: 'nature' as Element, power: 13, cost: 2, description: 'A lash with thorny vines', tier: 1 },
+  { key: 'ice_shard', name: 'Ice Shard', element: 'ice' as Element, power: 17, cost: 5, description: 'A jagged shard of ice', tier: 2 },
+  { key: 'holy_light', name: 'Holy Light', element: 'light' as Element, power: 22, cost: 7, description: 'A cleansing beam of light', tier: 4 },
+  { key: 'shadow_bolt', name: 'Shadow Bolt', element: 'darkness' as Element, power: 22, cost: 7, description: 'Supernatural dark energy', tier: 4 },
 ];
 
 export const TRAITS = [

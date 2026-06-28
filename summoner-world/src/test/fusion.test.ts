@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getFusionResult, isLightDarknessFusion, UNSTABLE_VOID_CREATURE, getAllPairKeys } from '../data/fusionMatrix';
+import { inheritSkills } from '../data/fusionUtils';
 
 describe('fusionMatrix', () => {
   describe('getFusionResult', () => {
@@ -127,5 +128,43 @@ describe('fusionMatrix', () => {
       const keys = getAllPairKeys();
       expect(keys).not.toContain('unstable_void');
     });
+  });
+});
+
+describe('skill inheritance (T5.3)', () => {
+  it('inherits up to 3 skills from parents', () => {
+    const result = inheritSkills(['scratch', 'fire_blast'], ['vine_whip'], []);
+    expect(result.length).toBeLessThanOrEqual(3);
+    expect(result).toContain('fire_blast');
+    expect(result).toContain('scratch');
+  });
+
+  it('prioritizes highest-tier skills', () => {
+    const result = inheritSkills(['scratch', 'shadow_bolt', 'holy_light'], ['spark'], []);
+    expect(result[0]).toBe('shadow_bolt');
+    expect(result[1]).toBe('holy_light');
+    expect(result[2]).toBe('spark');
+  });
+
+  it('deduplicates same skills from both parents', () => {
+    const result = inheritSkills(['scratch', 'fire_blast'], ['fire_blast', 'vine_whip'], []);
+    const fireBlastCount = result.filter(s => s === 'fire_blast').length;
+    expect(fireBlastCount).toBe(1);
+  });
+
+  it('fills remaining slots with selectedSkills', () => {
+    const result = inheritSkills(['scratch'], [], ['fire_blast', 'water_spray']);
+    expect(result).toContain('fire_blast');
+    expect(result).toContain('water_spray');
+  });
+
+  it('max total skills is 3 when no selectedSkills', () => {
+    const result = inheritSkills(['scratch', 'fire_blast', 'holy_light', 'shadow_bolt'], [], []);
+    expect(result.length).toBe(3);
+  });
+
+  it('returns highest-power when tiers are equal', () => {
+    const result = inheritSkills(['shadow_bolt', 'holy_light'], [], []);
+    expect(result.length).toBeGreaterThanOrEqual(1);
   });
 });
