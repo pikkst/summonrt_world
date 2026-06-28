@@ -113,11 +113,11 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
     - [x] T6.0.3 – Add DEMONLORD_ENCOUNTER mission type to missionQueue.ts
     - [x] T6.0.4 – Create src/stores/game/modules/demonlordModule.ts with store actions
     - [ ] T6.0.5 – Implement demonlordFloor range (50-100+) in dungeon system
-   - [ ] T6.0.6 – Add player defeat transition to Demonlord status in combatModule.ts
-   - [ ] T6.0.7 – Implement challenge issuance and acceptance system
-   - [x] T6.0.8 – Add Demonlord skillset (signature abilities, elemental shifts)
-   - [ ] T6.0.9 – Add career tree bonuses for Demonlord-related combat stats
-   - [x] T6.0.10 – Create demonlord.test.ts with unit tests
+    - [ ] T6.0.6 – Add player defeat transition to Demonlord status in combatModule.ts
+    - [ ] T6.0.7 – Implement challenge issuance and acceptance system
+    - [x] T6.0.8 – Add Demonlord skillset (signature abilities, elemental shifts)
+    - [x] T6.0.9 – Add career tree bonuses for Demonlord-related combat stats
+    - [x] T6.0.10 – Create demonlord.test.ts with unit tests
 - [ ] T6.1 – Fix combat damage formula: `damage = (ATK − DEF × 0.5) × elementalFactor + random(−2…+2)`
 - [ ] T6.2 – Add combat phase boss mechanics (HP thresholds 75/50/25%, elemental shift, environmental hazards)
 - [ ] T6.3 – Implement "Scan" ability for boss weakness discovery (wrong guess = −70% damage)
