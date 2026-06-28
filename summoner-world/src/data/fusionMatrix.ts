@@ -1,4 +1,5 @@
 import { ELEMENTS } from './constants';
+import type { Element, CreatureClass, CreatureType, CreatureTemplate } from '../types/game';
 
 export type BaseElement = typeof ELEMENTS[number];
 
@@ -75,14 +76,47 @@ export const FUSION_MATRIX: Record<string, string> = {
   'darkness+ice': 'frostbite',
   'light+ice': 'aurora',
 
-  // Light + Darkness (basis for T5.2 special chance)
-  'light+darkness': 'aether',
+  // Light + Darkness (special T5.2 rule: 5% Aether, 95% Unstable Void)
+  'darkness+light': 'aether',
 };
 
-export function getFusionResult(elementA: string, elementB: string): string | undefined {
+export function getFusionResult(elementA: string, elementB: string, rng?: () => number): string | undefined {
   const key = [elementA.toLowerCase(), elementB.toLowerCase()].sort().join('+');
+  const normalizedRng = rng ?? Math.random;
+
+  if (key === 'darkness+light') {
+    if (normalizedRng() < 0.05) {
+      return 'aether';
+    }
+    return 'unstable_void';
+  }
+
   return FUSION_MATRIX[key];
 }
+
+export function isLightDarknessFusion(elementA: string, elementB: string): boolean {
+  const normalizedA = elementA.toLowerCase();
+  const normalizedB = elementB.toLowerCase();
+  return (normalizedA === 'light' && normalizedB === 'darkness') ||
+         (normalizedA === 'darkness' && normalizedB === 'light');
+}
+
+export const UNSTABLE_VOID_CREATURE: CreatureTemplate = {
+  key: 'unstable_void',
+  name: 'Unstable Void Creature',
+  class: 'rare' as CreatureClass,
+  type: 'demon' as CreatureType,
+  elements: ['void' as Element],
+  baseHealth: 45,
+  baseAttack: 12,
+  baseDefense: 8,
+  baseSpeed: 7,
+  baseMana: 35,
+  baseExpValue: 30,
+  skills: [{ key: 'void_blast', name: 'Void Blast', element: 'void' as Element, power: 25, cost: 8, description: 'Unleashes unstable void energy' }],
+  description: 'An unstable creature born from conflicting celestial forces. Highly volatile and unpredictable.',
+  isBoss: false,
+};
 
 export function getFusionMatrix(): Record<string, string> {
   return { ...FUSION_MATRIX };

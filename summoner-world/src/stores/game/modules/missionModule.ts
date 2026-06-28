@@ -13,6 +13,7 @@ import { applyAffectionGain } from '../../../core/affection.ts';
 import type { GameEngineState } from '../../../core/gameEngine.ts';
 import { createHeartbeat } from '../../../core/heartbeat.ts';
 import { getAggregateStats, getAllNodes, getCareerModifiers } from '../../../data/careerTree/index';
+import { getFusionResult } from '../../../data/fusionMatrix.ts';
 import axios from 'axios';
 
 export const missionActions = (set: SetState<GameStore>, get: () => GameStore) => ({
@@ -646,14 +647,34 @@ finishCapture: () => {
     const newMaxMana = Math.floor(Math.max(c1.maxMana || 20, c2.maxMana || 20) * bonus);
 
     const combinedElements = Array.from(new Set([...(c1.elements || []), ...(c2.elements || [])]));
+
     let newElements = combinedElements.slice(0, 2);
-    if (isVoid && combinedElements.length > 2) newElements = [combinedElements[0] as Element, 'void' as Element];
-    if (isStellar && combinedElements.length > 2) newElements = [combinedElements[0] as Element, 'starlight' as Element];
+    let fusionResultElement: string | undefined;
+    let specialFusionOccurred = false;
+
+    const parentElements = [...(c1.elements || []), ...(c2.elements || [])];
+    const hasLight = parentElements.includes('light');
+    const hasDarkness = parentElements.includes('darkness');
+    if (hasLight && hasDarkness) {
+      fusionResultElement = getFusionResult('light', 'darkness', rng.next.bind(rng));
+      specialFusionOccurred = true;
+      if (fusionResultElement === 'aether') {
+        newElements = ['aether' as Element];
+      } else if (fusionResultElement === 'unstable_void') {
+        newElements = ['void' as Element];
+      }
+    }
+
+    if (!specialFusionOccurred) {
+      if (isVoid && combinedElements.length > 2) newElements = [combinedElements[0] as Element, 'void' as Element];
+      if (isStellar && combinedElements.length > 2) newElements = [combinedElements[0] as Element, 'starlight' as Element];
+    }
 
     const mutations = [];
     if (isAncient) mutations.push('Ancient Bloodline');
-    if (isVoid) mutations.push('Void Touched');
-    if (isStellar) mutations.push('Stellar Echo');
+    if (isVoid && !specialFusionOccurred) mutations.push('Void Touched');
+    if (isStellar && !specialFusionOccurred) mutations.push('Stellar Echo');
+    if (specialFusionOccurred && fusionResultElement === 'unstable_void') mutations.push('Unstable Core');
 
     const parentSkills = new Set([...(c1.skills || []), ...(c2.skills || [])]);
     const inheritedSkills = Array.from(parentSkills).slice(0, 3);
@@ -671,11 +692,18 @@ finishCapture: () => {
     let newClass = baseClass;
     if (isAncient) newClass = 'epic';
     if (isVoid || isStellar) newClass = newClass === 'common' ? 'rare' : newClass === 'uncommon' ? 'rare' : newClass === 'rare' ? 'epic' : newClass;
+    if (specialFusionOccurred && fusionResultElement === 'aether') {
+      newClass = newClass === 'common' ? 'epic' : newClass === 'uncommon' ? 'epic' : newClass === 'rare' ? 'legendary' : newClass;
+    }
 
     const newCreature: any = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       templateKey: `fused_${c1.templateKey}_${c2.templateKey}`,
-      nickname: `${c1.nickname || 'Soul'}-${c2.nickname || 'Soul'} Hybrid`,
+      nickname: specialFusionOccurred && fusionResultElement === 'aether'
+        ? `${c1.nickname || 'Soul'}-${c2.nickname || 'Soul'} Aether Manifestation`
+        : specialFusionOccurred && fusionResultElement === 'unstable_void'
+          ? `${c1.nickname || 'Soul'}-${c2.nickname || 'Soul'} Unstable Void`
+          : `${c1.nickname || 'Soul'}-${c2.nickname || 'Soul'} Hybrid`,
       level: 1,
       experience: 0,
       currentHealth: newMaxHP,
@@ -691,7 +719,7 @@ finishCapture: () => {
       affection: 5,
       class: newClass,
       elements: newElements,
-      type: c1.type || 'spirit'
+      type: specialFusionOccurred && fusionResultElement === 'unstable_void' ? 'demon' : c1.type || 'spirit'
     };
 
     const updatedInventory = [...player.inventory];
@@ -725,6 +753,12 @@ finishCapture: () => {
 
     appendLog(`Soul Fusion Complete! A new manifestation has emerged.`, 'success');
     if (isAncient) appendLog(`SURPRISE: The Forge flared with golden light! An Ancient Bloodline has awakened!`, 'success');
+    if (specialFusionOccurred && fusionResultElement === 'aether') {
+      appendLog(`✨ CELESTIAL CONVERGENCE! Light and Darkness have aligned to form AEther! The creature is blessed with rare power!`, 'success');
+    }
+    if (specialFusionOccurred && fusionResultElement === 'unstable_void') {
+      appendLog(`💥 ENTROPIC REACTION! The fusion produced an Unstable Void creature! Handle with extreme caution!`, 'warning');
+    }
     if (isVoid || isStellar) appendLog(`SURPRISE: Dimensional rifts opened during fusion! A mutation occurred!`, 'warning');
 
     set({ screen: 'creatures' });
