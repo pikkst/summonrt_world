@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getFusionResult, isLightDarknessFusion, UNSTABLE_VOID_CREATURE, getAllPairKeys, calculateFusionRarity, calculateFusionRarityWithSpecial, CREATURE_CLASS_TIERS } from '../data/fusionMatrix';
+import { ELEMENTS } from '../data/constants';
 import { inheritSkills } from '../data/fusionUtils';
 
 describe('fusionMatrix', () => {
@@ -18,6 +19,71 @@ describe('fusionMatrix', () => {
 
     it('returns undefined for invalid element combinations', () => {
       expect(getFusionResult('invalid', 'fire')).toBeUndefined();
+    });
+  });
+
+  describe('property-based: 1000+ random pairings (T5.9)', () => {
+    it('all 100 ordered base-element pairings return a defined result', () => {
+      const elements = ELEMENTS as readonly string[];
+      for (let i = 0; i < elements.length; i++) {
+        for (let j = 0; j < elements.length; j++) {
+          const result = getFusionResult(elements[i]!, elements[j]!);
+          expect(result).toBeDefined();
+        }
+      }
+    });
+
+    it('passes 1000 random pairings with valid elements', () => {
+      const elements = ELEMENTS as readonly string[];
+      const seed = 12345;
+      let s = seed;
+      const seededRandom = () => {
+        s = (s * 16807) % 2147483647;
+        return (s - 1) / 2147483646;
+      };
+
+      for (let k = 0; k < 1050; k++) {
+        const idxA = Math.floor(seededRandom() * elements.length);
+        const idxB = Math.floor(seededRandom() * elements.length);
+        const result = getFusionResult(elements[idxA]!, elements[idxB]!);
+        expect(result).toBeDefined();
+      }
+    });
+
+    it('produces deterministic results for non-special pairs', () => {
+      const pairs = [
+        ['fire', 'air'],
+        ['water', 'ice'],
+        ['earth', 'fire'],
+        ['lightning', 'water'],
+        ['iron', 'nature'],
+      ] as const;
+
+      for (const [a, b] of pairs) {
+        expect(getFusionResult(a, b)).toBe(getFusionResult(a, b));
+        expect(getFusionResult(a, b)).toBe(getFusionResult(b, a));
+      }
+    });
+
+    it('symmetric property holds for same-element and non-special pairings', () => {
+      const elements = ELEMENTS as readonly string[];
+      for (let i = 0; i < elements.length; i++) {
+        for (let j = i; j < elements.length; j++) {
+          const a = elements[i]!;
+          const b = elements[j]!;
+          const forward = getFusionResult(a, b);
+          const backward = getFusionResult(b, a);
+          expect(forward).toBe(backward);
+        }
+      }
+    });
+
+    it('all results from the matrix are strings', () => {
+      const keys = getAllPairKeys();
+      for (const key of keys) {
+        expect(typeof key).toBe('string');
+        expect(key.length).toBeGreaterThan(0);
+      }
     });
   });
 

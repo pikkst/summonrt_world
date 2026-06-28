@@ -100,7 +100,7 @@ Sprint goal: implement complete fusion system, trait synergies, procedural ident
 - [x] T5.6 – Add `Soul Crystal` tier-matching (consumed matching highest creature tier)
 - [x] T5.7 – Verify fusion result has correct rarity (weighted average, capped at Legendary without special conditions)
 - [x] T5.8 – Add `capturePool` and `fusionRecipe` auto-generation for new creatures
-- [ ] T5.9 – Test 1000+ random pairings in fusionMatrix (property-based)
+- [x] T5.9 – Test 1000+ random pairings in fusionMatrix (property-based)
 - [ ] T5.10 – Add fusion feedback UI: show parent stats, expected child properties
 - [ ] T5.11 – Integreiri kõik career passiived fusion'i ja kogu game loop'isse: loo 6 karjääri jaoks 50+ node'it koos cross-career synergy'dega, mappi iga node `stats{}` modifier konkreetsetele game system'idele (fusion timer, crafting speed, capture rate, dungeon timer, store traffic jne), Lisa `careerTreeIntegration.ts` mis sisaldab kõiki node->system mapping'uid ja käivitab `getAggregateStats()` tagastatud boonuseid igal game tick'il
 

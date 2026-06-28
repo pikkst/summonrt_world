@@ -19,12 +19,12 @@ export const FUSION_MATRIX: Record<string, string> = {
   // Fire + X
   'air+fire': 'storm',
   'earth+fire': 'magma',
-  'lightning+fire': 'plasma',
-  'iron+fire': 'scrap',
-  'nature+fire': 'wildfire',
-  'ice+fire': 'steam',
-  'light+fire': 'radiance',
-  'water+fire': 'boiling',
+  'fire+ice': 'steam',
+  'fire+iron': 'scrap',
+  'fire+light': 'radiance',
+  'fire+lightning': 'plasma',
+  'fire+nature': 'wildfire',
+  'fire+water': 'boiling',
   'darkness+fire': 'shadowflame',
 
   // Water + X
@@ -39,33 +39,33 @@ export const FUSION_MATRIX: Record<string, string> = {
 
   // Earth + X
   'air+earth': 'dust',
-  'lightning+earth': 'static',
-  'iron+earth': 'forge',
-  'nature+earth': 'overgrowth',
-  'ice+earth': 'frostbite',
-  'light+earth': 'crystal',
   'darkness+earth': 'blight',
+  'earth+ice': 'frostbite',
+  'earth+light': 'crystal',
+  'earth+lightning': 'static',
+  'earth+iron': 'forge',
+  'earth+nature': 'overgrowth',
 
   // Air + X
-  'lightning+air': 'static',
-  'iron+air': 'magnet',
-  'nature+air': 'spore',
-  'ice+air': 'hail',
-  'light+air': 'gale',
-  'darkness+air': 'voidwind',
+  'air+darkness': 'voidwind',
+  'air+ice': 'hail',
+  'air+iron': 'magnet',
+  'air+light': 'gale',
+  'air+lightning': 'static',
+  'air+nature': 'spore',
 
   // Lightning + X
-  'iron+lightning': 'shock',
-  'nature+lightning': 'thunder',
-  'ice+lightning': 'frost_storm',
-  'light+lightning': 'flash',
   'darkness+lightning': 'void_shock',
+  'ice+lightning': 'frost_storm',
+  'iron+lightning': 'shock',
+  'light+lightning': 'flash',
+  'lightning+nature': 'thunder',
 
   // Iron + X
-  'nature+iron': 'golem',
-  'ice+iron': 'frost_iron',
-  'light+iron': 'holy_alloy',
   'darkness+iron': 'cursed_metal',
+  'ice+iron': 'frost_iron',
+  'iron+light': 'holy_alloy',
+  'iron+nature': 'golem',
 
   // Nature + X
   'ice+nature': 'tundra',
@@ -74,7 +74,7 @@ export const FUSION_MATRIX: Record<string, string> = {
 
   // Ice + X
   'darkness+ice': 'frostbite',
-  'light+ice': 'aurora',
+  'ice+light': 'aurora',
 
   // Light + Darkness (special T5.2 rule: 5% Aether, 95% Unstable Void)
   'darkness+light': 'aether',
