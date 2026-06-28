@@ -95,7 +95,7 @@ Sprint goal: implement complete fusion system, trait synergies, procedural ident
 - [x] T5.1 – Create `fusionMatrix.ts`: 10x10 element combination matrix (Fire+Air=Storm, Water+Ice=Glacier, etc.)
 - [x] T5.2 – Implement Light+Darkness → Aether (5% chance) or unstable Void creature
 - [x] T5.3 – Implement skill inheritance: up to 3 skills from parents, highest-tier skills prioritized
-- [ ] T5.4 – Create `traitSynergy.ts`: 50+ documented trait combinations (Regeneration+Poison → Acidic Recovery, etc.)
+- [x] T5.4 – Create `traitSynergy.ts`: 50+ documented trait combinations (Regeneration+Poison → Acidic Recovery, etc.)
 - [ ] T5.5 – Implement procedural identity: head/body/limb variations, elemental FX, color palette interpolation
 - [ ] T5.6 – Add `Soul Crystal` tier-matching (consumed matching highest creature tier)
 - [ ] T5.7 – Verify fusion result has correct rarity (weighted average, capped at Legendary without special conditions)

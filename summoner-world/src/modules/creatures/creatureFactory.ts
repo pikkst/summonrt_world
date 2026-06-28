@@ -22,6 +22,13 @@ export const TRAITS = [
   { key: 'tough', name: 'Tough Skin', desc: '+3 Defense' },
   { key: 'swift', name: 'Swiftness', desc: '+3 Speed' },
   { key: 'magic_affinity', name: 'Mana Well', desc: '+2 Mana regeneration every turn' },
+  { key: 'poison', name: 'Poison', desc: 'Has a poisonous touch' },
+  { key: 'sturdy', name: 'Sturdy', desc: '+5 Defense' },
+  { key: 'agile', name: 'Agile', desc: '+5 Speed' },
+  { key: 'might', name: 'Might', desc: '+10 Attack power' },
+  { key: 'arcane', name: 'Arcane', desc: '+10 Mana' },
+  { key: 'vampire', name: 'Vampire', desc: 'Drains HP on hit' },
+  { key: 'lifesteal', name: 'Lifesteal', desc: 'Converts damage to healing' },
 ];
 
 export const CREATURE_TYPES = ['beast', 'dragon', 'undead', 'construct', 'spirit', 'demon', 'celestial', 'insect', 'plant'] as const;

@@ -15,6 +15,7 @@ import { createHeartbeat } from '../../../core/heartbeat.ts';
 import { getAggregateStats, getAllNodes, getCareerModifiers } from '../../../data/careerTree/index';
 import { getFusionResult } from '../../../data/fusionMatrix.ts';
 import { inheritSkills } from '../../../data/fusionUtils.ts';
+import { getSynergyNames, calculateSynergyEffects } from '../../../data/traitSynergy.ts';
 import axios from 'axios';
 
 export const missionActions = (set: SetState<GameStore>, get: () => GameStore) => ({
@@ -682,6 +683,13 @@ finishCapture: () => {
     const parentTraits = new Set([...(c1.traits || []), ...(c2.traits || [])]);
     const inheritedTraits = Array.from(parentTraits).slice(0, 2);
 
+    const { statBonuses, specialEffects } = calculateSynergyEffects(inheritedTraits);
+    const synergyATTACK = (statBonuses['attack'] || 0);
+    const synergyDEFENSE = (statBonuses['defense'] || 0);
+    const synergySPEED = (statBonuses['speed'] || 0);
+
+    const synergyNicknames = getSynergyNames(inheritedTraits);
+
     const baseClass = (c1.class || 'common') === (c2.class || 'common')
       ? c1.class
       : ['common','uncommon','rare','epic','legendary','mythical'].includes(c1.class || 'common')
@@ -702,23 +710,26 @@ finishCapture: () => {
         ? `${c1.nickname || 'Soul'}-${c2.nickname || 'Soul'} Aether Manifestation`
         : specialFusionOccurred && fusionResultElement === 'unstable_void'
           ? `${c1.nickname || 'Soul'}-${c2.nickname || 'Soul'} Unstable Void`
-          : `${c1.nickname || 'Soul'}-${c2.nickname || 'Soul'} Hybrid`,
+          : synergyNicknames.length > 0
+            ? `${c1.nickname || 'Soul'}-${c2.nickname || 'Soul'} ${synergyNicknames.join(' ')} Hybrid`
+            : `${c1.nickname || 'Soul'}-${c2.nickname || 'Soul'} Hybrid`,
       level: 1,
       experience: 0,
-      currentHealth: newMaxHP,
+      currentHealth: newMaxHP + (statBonuses['healthRegen'] ? Math.floor(newMaxHP * 0.1) : 0),
       maxHealth: newMaxHP,
-      currentMana: newMaxMana,
+      currentMana: newMaxMana + (statBonuses['maxMana'] || 0),
       maxMana: newMaxMana,
-      attack: newAttack,
-      defense: newDefense,
-      speed: newSpeed,
+      attack: newAttack + synergyATTACK,
+      defense: newDefense + synergyDEFENSE,
+      speed: newSpeed + synergySPEED,
       skills: finalSkills,
       traits: inheritedTraits,
       mutations: mutations,
       affection: 5,
       class: newClass,
       elements: newElements,
-      type: specialFusionOccurred && fusionResultElement === 'unstable_void' ? 'demon' : c1.type || 'spirit'
+      type: specialFusionOccurred && fusionResultElement === 'unstable_void' ? 'demon' : c1.type || 'spirit',
+      synergyEffects: specialEffects.length > 0 ? specialEffects : undefined,
     };
 
     const updatedInventory = [...player.inventory];
@@ -759,6 +770,9 @@ finishCapture: () => {
       appendLog(`💥 ENTROPIC REACTION! The fusion produced an Unstable Void creature! Handle with extreme caution!`, 'warning');
     }
     if (isVoid || isStellar) appendLog(`SURPRISE: Dimensional rifts opened during fusion! A mutation occurred!`, 'warning');
+    if (synergyNicknames.length > 0) {
+      appendLog(`✨ TRAIT SYNERGY ACTIVATED! ${synergyNicknames.join(' + ')} combined for special effects!`, 'success');
+    }
 
     set({ screen: 'creatures' });
   },

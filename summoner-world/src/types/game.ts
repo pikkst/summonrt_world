@@ -105,6 +105,7 @@ export interface CreatureInstance {
   isBossSummon?: boolean;
   evolutionStage?: number;
   evolvedFromKey?: string;
+  synergyEffects?: string[];
 }
 
 export type ItemType = 'material' | 'equipment' | 'consumable' | 'special' | 'egg';
