@@ -85,7 +85,7 @@ Sprint goal: refine elemental system, creature generation, mutations and capture
 - [x] T4.10 – Implement exact capture formula: `P_capture = (1 − (MonsterHP / MaxHP)) × AffinityWeight × RarityPenalty × (1 − (LevelDiff × 0.02))`
 - [x] T4.11 – Add `AffinityWeight` values (1.0 same element, 0.3 neutral, 0.1 opposing)
 - [x] T4.12 – Add `RarityPenalty` values (Common 1.0 … Mythical 0.15)
-- [ ] T4.13 – Failed capture → aggressive encounter or persistent territorial hostility
+- [x] T4.13 – Failed capture → aggressive encounter or persistent territorial hostility
 - [ ] T4.14 – Add creature affection system (level, training effect)
 - [ ] T4.15 – Add creature evolution paths (template-level `evolvesFromId`/`evolvesIntoId`)
 

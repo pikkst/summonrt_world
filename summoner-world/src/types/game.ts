@@ -63,6 +63,24 @@ export interface CreatureTemplate {
   evolvesIntoKey?: string;
 }
 
+export interface TerritorialHostilityEntry {
+  creatureKey: string;
+  creatureName: string;
+  class: CreatureClass;
+  type: CreatureType;
+  elements: Element[];
+  baseHealth: number;
+  baseAttack: number;
+  baseDefense: number;
+  baseSpeed: number;
+  baseMana: number;
+  baseExpValue: number;
+  skills: { key: string; name: string; description: string; element?: Element; power: number; cost: number }[];
+  description: string;
+  isBoss?: boolean;
+  hostilityTurns: number;
+}
+
 export interface CreatureInstance {
    id: string;
    templateKey: string;
@@ -193,6 +211,7 @@ isOnline?: boolean;
   activeQuests: QuestInstance[];
   completedQuests: string[];
   discoveredTiles: Set<string>;
+  territorialHostilities?: Record<string, TerritorialHostilityEntry>;
   activity?: {
     type: 'creature_training' | 'physical_training' | 'rest' | 'search_tracks' | 'search_animals';
     creatureId?: string;
@@ -298,6 +317,7 @@ export interface CombatState {
   enemyTemplate?: CreatureTemplate | null;
   playerCreatureId?: string;
   turns: number;
+  encounterType?: 'normal' | 'aggressive' | 'territorial';
 }
 
 export interface CommunityPlayer {

@@ -74,23 +74,40 @@ const getElementalEffectiveness = (atkElement: string | undefined, defElements: 
 };
 
 export const combatActions = (set: SetState<GameStore>, get: () => GameStore) => ({
-  startCombat: (enemyTemplate: CreatureTemplate | null, enemyName: string) => {
+  startCombat: (enemyTemplate: CreatureTemplate | null, enemyName: string, encounterType: 'normal' | 'aggressive' | 'territorial' = 'normal') => {
     const { player } = get();
     if (!player) return;
     const creature = player.creatures.find((c: any) => c.currentHealth > 0) || player.creatures[0];
-    const maxHp = enemyTemplate?.baseHealth || 50;
+    let maxHp = enemyTemplate?.baseHealth || 50;
+    let baseAtk = enemyTemplate?.baseAttack || 8;
+    let baseDef = enemyTemplate?.baseDefense || 5;
+    const isAggressive = encounterType === 'aggressive' || encounterType === 'territorial';
+    if (isAggressive) {
+      maxHp = Math.floor(maxHp * 1.2);
+      baseAtk = Math.floor(baseAtk * 1.15);
+      baseDef = Math.floor(baseDef * 1.1);
+    }
+    let logMessage: string;
+    if (encounterType === 'territorial') {
+      logMessage = `A territorial ${enemyName} blocks your path! It remembers your failed attempt and attacks with fury!`;
+    } else if (encounterType === 'aggressive') {
+      logMessage = `A wild ${enemyName} appears! It looks enraged and ready to fight!`;
+    } else {
+      logMessage = `A wild ${enemyName} appears! It looks ready to fight.`;
+    }
     set({
       screen: 'combat',
       combat: {
         active: true,
         phase: 'player_turn',
-        log: [`A wild ${enemyName} appears! It looks ready to fight.`],
+        log: [logMessage],
         enemyName,
         enemyHp: maxHp,
         enemyMaxHp: maxHp,
-        enemyTemplate,
+        enemyTemplate: enemyTemplate ? { ...enemyTemplate, baseHealth: maxHp, baseAttack: baseAtk, baseDefense: baseDef } : null,
         playerCreatureId: creature?.id || '',
         turns: 0,
+        encounterType,
       },
       combatTarget: creature?.id || null,
     });
@@ -303,6 +320,18 @@ const eff = getElementalEffectiveness(skill.element, enemyElements);
   handleVictory: (creatureId: string, enemyTemplate: CreatureTemplate | null, currentLog: string[], newEnemyHp: number) => {
     const { player, combat, appendLog, dungeon, currentWorldId, worlds } = get();
     if (!player) return;
+
+    if (combat.encounterType === 'territorial' && combat.enemyName) {
+      const tileKey = `${player.tileX},${player.tileY}`;
+      set((state) => {
+        const updatedHostilities = { ...(state.player?.territorialHostilities || {}) };
+        delete updatedHostilities[tileKey];
+        return {
+          player: state.player ? { ...state.player, territorialHostilities: updatedHostilities } : state.player,
+        };
+      });
+      appendLog(`The territorial ${combat.enemyName} has been driven off!`, 'success');
+    }
 
     const isBoss = (combat.enemyName || '').toLowerCase().includes('boss') || (combat.enemyName || '').toLowerCase().includes('guardian') || enemyTemplate?.isBoss;
     const baseExpGained = enemyTemplate?.baseExpValue || 20;

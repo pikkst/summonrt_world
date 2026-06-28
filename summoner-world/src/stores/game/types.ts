@@ -181,7 +181,7 @@ export interface GameActions {
    appendLog: (text: string, type: LogEntry['type']) => void;
    saveGame: () => void;
    loadGame: () => boolean;
-   startCombat: (enemyTemplate: CreatureTemplate | null, enemyName: string) => void;
+    startCombat: (enemyTemplate: CreatureTemplate | null, enemyName: string, encounterType?: 'normal' | 'aggressive' | 'territorial') => void;
    attackWithCreature: (creatureId: string) => void;
    useSkill: (skillKey: string) => void;
    triggerEnemyTurn: (enemyTemplate: CreatureTemplate | null, currentLog: string[], currentEnemyHp: number) => void;

@@ -150,6 +150,47 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
       appendLog(`Sector (${x}, ${y}) mapped. Danger: ${Math.round(difficultyScale * 10) / 10}x`, newlyExplored ? 'success' : 'info');
     }
 
+    const currentHostilities = player.territorialHostilities || {};
+    const updatedHostilities: Record<string, any> = {};
+    for (const [key, entry] of Object.entries(currentHostilities)) {
+      const remainingTurns = entry.hostilityTurns - 1;
+      if (remainingTurns > 0) {
+        updatedHostilities[key] = { ...entry, hostilityTurns: remainingTurns };
+      }
+    }
+    if (Object.keys(updatedHostilities).length !== Object.keys(currentHostilities).length) {
+      set((state) => ({
+        player: {
+          ...state.player!,
+          territorialHostilities: updatedHostilities,
+        }
+      }));
+    }
+
+    const hostility = updatedHostilities[tileKey];
+    if (hostility) {
+      const hostileTemplate = {
+        key: hostility.creatureKey,
+        name: hostility.creatureName,
+        class: hostility.class,
+        type: hostility.type,
+        elements: hostility.elements,
+        baseHealth: hostility.baseHealth,
+        baseAttack: hostility.baseAttack,
+        baseDefense: hostility.baseDefense,
+        baseSpeed: hostility.baseSpeed,
+        baseMana: hostility.baseMana,
+        baseExpValue: hostility.baseExpValue,
+        skills: hostility.skills,
+        description: hostility.description,
+        isBoss: hostility.isBoss,
+      };
+      setTimeout(() => {
+        get().startCombat(hostileTemplate, `Territorial ${hostility.creatureName}`, 'territorial');
+      }, 500);
+      return;
+    }
+
     const encounterChance = 0.05 + proximityFactor * 0.15;
     if (Math.random() < encounterChance) {
       const encounterRng = new SeededRandom(tile.encounterSeed || Date.now());
@@ -417,12 +458,40 @@ finishCapture: () => {
       });
       appendLog(`✨ Success! You captured a new creature: ${creature.name} (${creature.class.toUpperCase()})!`, 'success');
     } else {
-      appendLog(`💨 Failed to capture ${creature.name}. The creature's soul broke free of your binding spell! (Capture Chance: ${Math.round(pCapture * 100)}%)`, 'warning');
-
       if (player.creatures.length > 0) {
+        appendLog(`💨 Failed to capture ${creature.name}. The creature's soul broke free of your binding spell! (Capture Chance: ${Math.round(pCapture * 100)}%)`, 'warning');
         setTimeout(() => {
-          get().startCombat(creature, `Wild ${creature.name}`);
+          get().startCombat(creature, `Wild ${creature.name}`, 'aggressive');
         }, 500);
+      } else {
+        appendLog(`💨 Failed to capture ${creature.name}. The creature escapes but now views your territory as hostile! (Capture Chance: ${Math.round(pCapture * 100)}%)`, 'warning');
+        const tileKey = getTileKey(player.tileX, player.tileY);
+        const hostilityEntry = {
+          creatureKey: creature.key,
+          creatureName: creature.name,
+          class: creature.class,
+          type: creature.type,
+          elements: creature.elements,
+          baseHealth: creature.baseHealth,
+          baseAttack: creature.baseAttack,
+          baseDefense: creature.baseDefense,
+          baseSpeed: creature.baseSpeed,
+          baseMana: creature.baseMana,
+          baseExpValue: creature.baseExpValue,
+          skills: creature.skills.map((s) => typeof s === 'string' ? { key: s, name: '', description: '', power: 0, cost: 0 } : s),
+          description: creature.description,
+          isBoss: creature.isBoss,
+          hostilityTurns: 5 + Math.floor(Math.random() * 5),
+        };
+        set((state) => ({
+          player: {
+            ...state.player!,
+            territorialHostilities: {
+              ...(state.player!.territorialHostilities || {}),
+              [tileKey]: hostilityEntry,
+            },
+          }
+        }));
       }
     }
 
