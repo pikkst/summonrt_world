@@ -323,6 +323,40 @@ export interface DungeonState {
   encounterName?: string;
 }
 
+export interface DemonlordSkill {
+  key: string;
+  name: string;
+  description: string;
+  element?: Element;
+  power: number;
+  cost: number;
+  type: 'signature' | 'elemental_shift' | 'floor_manager' | 'aoe' | 'debuff';
+  effects?: Record<string, number>;
+}
+
+export interface DemonlordState {
+  isActive: boolean;
+  currentLordPlayerId?: string;
+  currentLordPlayerName?: string;
+  floorMin: number;
+  floorMax: number;
+  influence: number;
+  influenceDecayRate: number;
+  activityThreshold: number;
+  skills: DemonlordSkill[];
+  pendingChallenges: Array<{
+    challengerId: string;
+    challengerName: string;
+    issuedAt: number;
+  }>;
+  activeChallenge?: {
+    challengerId: string;
+    challengerName: string;
+    acceptedAt: number;
+  };
+  defeatedAt?: number;
+}
+
 export type CombatPhase = 'player_turn' | 'enemy_turn' | 'victory' | 'defeat';
 
 export interface MissionResult {
