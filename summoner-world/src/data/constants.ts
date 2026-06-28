@@ -226,3 +226,80 @@ export function calculateBaseCaptureProbability(
   );
   return hpFactor * affinityWeight * rarityPenalty * levelFactor;
 }
+
+export interface SpeciesLineDefinition {
+  speciesKey: string;
+  creatureType: string;
+  elements: string[];
+  prefixes: string[];
+  suffixes: string[];
+  stages: Array<{ class: string; minEvolutionLevel: number }>;
+}
+
+export const SPECIES_LINES: Record<string, SpeciesLineDefinition> = {
+  fang_line: {
+    speciesKey: 'fang_line',
+    creatureType: 'beast',
+    elements: ['fire', 'earth'],
+    prefixes: ['Brave', 'Mighty', 'Ancient', 'Eternal'],
+    suffixes: ['Fang', 'Lion', 'Bear', 'Behemoth'],
+    stages: [
+      { class: 'common', minEvolutionLevel: 10 },
+      { class: 'uncommon', minEvolutionLevel: 25 },
+      { class: 'rare', minEvolutionLevel: 45 },
+      { class: 'epic', minEvolutionLevel: 70 },
+    ],
+  },
+  wyrm_line: {
+    speciesKey: 'wyrm_line',
+    creatureType: 'dragon',
+    elements: ['lightning', 'air'],
+    prefixes: ['Young', 'Storm', 'Ancient', 'Elder'],
+    suffixes: ['Wyrm', 'Drake', 'Serpent', 'Titan'],
+    stages: [
+      { class: 'common', minEvolutionLevel: 10 },
+      { class: 'uncommon', minEvolutionLevel: 25 },
+      { class: 'rare', minEvolutionLevel: 45 },
+      { class: 'epic', minEvolutionLevel: 70 },
+    ],
+  },
+  wraith_line: {
+    speciesKey: 'wraith_line',
+    creatureType: 'undead',
+    elements: ['darkness', 'ice'],
+    prefixes: ['Shade', 'Wraith', 'Specter', 'Phantom'],
+    suffixes: ['Walker', 'Lord', 'Reaper', 'Harbinger'],
+    stages: [
+      { class: 'common', minEvolutionLevel: 10 },
+      { class: 'uncommon', minEvolutionLevel: 25 },
+      { class: 'rare', minEvolutionLevel: 45 },
+      { class: 'epic', minEvolutionLevel: 70 },
+    ],
+  },
+  golem_line: {
+    speciesKey: 'golem_line',
+    creatureType: 'construct',
+    elements: ['earth', 'iron'],
+    prefixes: ['Rusty', 'Iron', 'Fortified', 'Colossal'],
+    suffixes: ['Golem', 'Guardian', 'Bastion', 'Monolith'],
+    stages: [
+      { class: 'common', minEvolutionLevel: 10 },
+      { class: 'uncommon', minEvolutionLevel: 25 },
+      { class: 'rare', minEvolutionLevel: 45 },
+      { class: 'epic', minEvolutionLevel: 70 },
+    ],
+  },
+  spirit_line: {
+    speciesKey: 'spirit_line',
+    creatureType: 'spirit',
+    elements: ['light', 'nature'],
+    prefixes: ['Wisp', 'Ethereal', 'Celestial', 'Divine'],
+    suffixes: ['Spirit', 'Wyrd', 'Entity', 'Presence'],
+    stages: [
+      { class: 'common', minEvolutionLevel: 10 },
+      { class: 'uncommon', minEvolutionLevel: 25 },
+      { class: 'rare', minEvolutionLevel: 45 },
+      { class: 'epic', minEvolutionLevel: 70 },
+    ],
+  },
+};

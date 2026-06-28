@@ -87,7 +87,7 @@ Sprint goal: refine elemental system, creature generation, mutations and capture
 - [x] T4.12 – Add `RarityPenalty` values (Common 1.0 … Mythical 0.15)
 - [x] T4.13 – Failed capture → aggressive encounter or persistent territorial hostility
 - [x] T4.14 – Add creature affection system (level, training effect)
-- [ ] T4.15 – Add creature evolution paths (template-level `evolvesFromId`/`evolvesIntoId`)
+- [x] T4.15 – Add creature evolution paths (template-level `evolvesFromId`/`evolvesIntoId`)
 
 ## Sprint 5 – Fusion Logic & Skill Inheritance (Month 5)
 Sprint goal: implement complete fusion system, trait synergies, procedural identity and skill inheritance.
@@ -113,7 +113,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 - [ ] T6.4 – Create dungeon layout generator: recursive backtracking maze, ≥3 shortest paths, ≥1 treasure per 10 floors
 - [ ] T6.5 – Add dungeon room types: combat, trap, puzzle, treasure, rest, elite encounter, vendor (rare)
 - [ ] T6.6 – Implement dungeon boss scaling: `BossHP = BaseBossHP × (1 + (WorldIndex−1) × 0.25)`
-- [ ] T6.7 – Add boss signature ability every 10 worlds (World 11, 21, 31…)
+- [ ] T6.7 – Add boss signature ability every 1 worlds (World 1-99  100 is a deamonlord)
 - [ ] T6.8 – Implement dungeon floor count: `BaseFloors + WorldIndex` (W1=3+1 boss, W100=102+1 boss)
 - [ ] T6.9 – Add "ascending requires defeating floor guardian" rule (or rare teleport item)
 - [ ] T6.10 – Verify dungeon exit scales player to minimum viable level

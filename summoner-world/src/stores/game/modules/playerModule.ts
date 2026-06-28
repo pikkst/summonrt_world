@@ -3,7 +3,7 @@ import { createLog, rollAffinity, getPlayerElements, addPlayerXP, calculateMovem
 import { generateWorld, generateTile } from '../../../core/worldGenerator.ts';
 import { getTileKey, getNeighbors } from '../../../data/constants.ts';
 import { SeededRandom } from '../../../utils/SeededRandom.ts';
-import { generateCreatureTemplate } from '../../../modules/creatures/creatureFactory.ts';
+import { generateCreatureTemplate, registerSpeciesLine, pickRandomSpeciesKey, getRandomSpeciesStage } from '../../../modules/creatures/creatureFactory.ts';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import { QUEST_TEMPLATES } from '../../../data/quests.ts';
@@ -53,20 +53,51 @@ export const playerActions = (set: SetState<GameStore>, get: () => GameStore) =>
         break;
     }
 
-const player: PlayerState = {
-       id: uuidv4(),
-       name: playerName,
-       gender: 'unknown',
-       appearance: {},
-       affinity,
-       archetype,
-level: 1,
-        experience: 0n,
-        money: 1000 + (bonusStats.money || 0),
-       skillPoints: 0,
-       skillsUnlocked: {},
-       unspent_passive_points: 0,
-       unlocked_node_ids: ['root_hub'],
+    const rng = new SeededRandom(Date.now());
+    const startingSpeciesKey = pickRandomSpeciesKey(rng);
+    const startingStage = startingSpeciesKey ? getRandomSpeciesStage(startingSpeciesKey, rng) : 0;
+    const startingTemplate = startingSpeciesKey
+      ? (() => { registerSpeciesLine(startingSpeciesKey, 1); return generateCreatureTemplate(1, rng, false, startingSpeciesKey, startingStage); })()
+      : generateCreatureTemplate(1, rng);
+    const startingCreature: CreatureInstance = {
+      id: uuidv4(),
+      templateKey: startingTemplate.key,
+      nickname: startingTemplate.name,
+      level: 1,
+      experience: 0n,
+      currentHealth: startingTemplate.baseHealth,
+      currentMana: startingTemplate.baseMana,
+      maxHealth: startingTemplate.baseHealth,
+      maxMana: startingTemplate.baseMana,
+      attack: startingTemplate.baseAttack,
+      defense: startingTemplate.baseDefense,
+      speed: startingTemplate.baseSpeed,
+      class: startingTemplate.class,
+      skills: startingTemplate.skills.map((s) => typeof s === 'string' ? s : s.key),
+      traits: [],
+      mutations: [],
+      affection: 0,
+      type: startingTemplate.type,
+      elements: startingTemplate.elements,
+      baseExpValue: startingTemplate.baseExpValue,
+      evolutionStage: 0,
+      evolvedFromKey: undefined,
+    };
+
+    const player: PlayerState = {
+      id: uuidv4(),
+      name: playerName,
+      gender: 'unknown',
+      appearance: {},
+      affinity,
+      archetype,
+      level: 1,
+      experience: 0n,
+      money: 1000 + (bonusStats.money || 0),
+      skillPoints: 0,
+      skillsUnlocked: {},
+      unspent_passive_points: 0,
+      unlocked_node_ids: ['root_hub'],
       energy: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
       nerve: { current: 15, max: 15, lastUpdate: new Date().toISOString() },
       happy: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
@@ -80,7 +111,7 @@ level: 1,
       tileY: 10,
       dayCount: 1,
       gameTimeMinutes: 420,
-      creatures: [],
+      creatures: [startingCreature],
       inventory: [
         { templateKey: 'healing_herb', quantity: 5 },
         { templateKey: 'mana_crystal', quantity: 2 },

@@ -1,5 +1,5 @@
 import type { ElementalAffinity, CreatureInstance, WorldData, LogEntry, ItemTemplate, TileData, CreatureTemplate, PlayerState } from '../types/game.ts';
-import { generateCreatureTemplate } from '../modules/creatures/creatureFactory.ts';
+import { generateCreatureTemplate, pickRandomSpeciesKey, getRandomSpeciesStage, registerSpeciesLine } from '../modules/creatures/creatureFactory.ts';
 import { SeededRandom } from '../utils/SeededRandom.ts';
 import { applyCreatureXP, grantPartyXP, getXPThreshold } from './xpCurve.ts';
 
@@ -115,14 +115,23 @@ export class GameEngine {
 
   generateEncounter(worldId: number, tile: TileData, _affinity: ElementalAffinity): { template: CreatureTemplate; name: string } | null {
     const rng = new SeededRandom(this.rng.next() * 10000);
-    
-    // Proximity scaling
+
     const distToCenter = Math.hypot(tile.x - 1000, tile.y - 1000);
     const maxDist = 1414;
     const proximityFactor = Math.max(0, 1 - (distToCenter / maxDist));
-    
+
     const effectiveWorldTier = Math.max(1, worldId + Math.floor(proximityFactor * 10) + Math.floor((this.state.player?.level || 1) / 5));
-    const template = generateCreatureTemplate(effectiveWorldTier, rng);
+
+    let template: CreatureTemplate;
+    const speciesKey = pickRandomSpeciesKey(rng);
+    if (speciesKey && rng.next() < 0.35) {
+      const stage = getRandomSpeciesStage(speciesKey, rng);
+      registerSpeciesLine(speciesKey, effectiveWorldTier);
+      template = generateCreatureTemplate(effectiveWorldTier, rng, false, speciesKey, stage);
+    } else {
+      template = generateCreatureTemplate(effectiveWorldTier, rng);
+    }
+
     return { template, name: `${template.name} (Level ${effectiveWorldTier})` };
   }
 

@@ -3,6 +3,15 @@ import type { Element } from '../types/game';
 import type { EvolutionStage } from '../data/constants.ts';
 import { EVOLUTION_CHAINS, getClassTier, getMutationChance, getMaxMutationsForClass, MUTATION_TYPES, MUTATION_SKILL_POOL, MUTATION_TRAIT_POOL, ELEMENTS, type MutationType } from '../data/constants.ts';
 import { getAffectionXPBonus } from './affection.ts';
+import { getTemplateByKey } from '../modules/creatures/creatureFactory.ts';
+
+export interface EvolutionResult {
+  stage: EvolutionStage;
+  newClass: string;
+  statMultiplier: number;
+  templateKey?: string;
+  evolvedFromKey?: string;
+}
 
 export function getXPThreshold(level: number): bigint {
   if (level < 1) throw new Error('Level must be at least 1');
@@ -122,8 +131,23 @@ export interface CreatureXPResult {
   mutations?: string[];
 }
 
-export function checkEvolution(creature: CreatureInstance): { stage: EvolutionStage; newClass: string; statMultiplier: number } | null {
+export function checkEvolution(creature: CreatureInstance): EvolutionResult | null {
   const currentClass = creature.class || 'common';
+
+  const template = getTemplateByKey(creature.templateKey);
+  if (template?.evolvesIntoKey) {
+    const targetTemplate = getTemplateByKey(template.evolvesIntoKey);
+    if (targetTemplate && template.evolutionLevel && creature.level >= template.evolutionLevel) {
+      return {
+        stage: { minLevel: targetTemplate.evolutionLevel || 999, newClass: targetTemplate.class, statMultiplier: 1.2 },
+        newClass: targetTemplate.class,
+        statMultiplier: 1.2,
+        templateKey: targetTemplate.key,
+        evolvedFromKey: template.key,
+      };
+    }
+  }
+
   const chain = EVOLUTION_CHAINS[currentClass];
   if (!chain || chain.length === 0) return null;
 
@@ -214,10 +238,12 @@ export function applyCreatureXP(
   let evolutionStats = { hp: 0, attack: 0, defense: 0, speed: 0 };
   const mutations: string[] = [];
 
-  const mutationSkills = [...(creature.skills || [])];
-  const mutationTraits = [...(creature.traits || [])];
-  const mutationElements = [...(creature.elements || [])];
+  let mutationSkills = [...(creature.skills || [])];
+  let mutationTraits = [...(creature.traits || [])];
+  let mutationElements = [...(creature.elements || [])];
   const maxMutations = getMaxMutationsForClass(newClass);
+  let templateEvolutionKey: string | undefined;
+  let templateEvolutionFromKey: string | undefined;
 
   while (newLevel < maxLevel) {
     const threshold = getCreatureXPThreshold(newLevel);
@@ -236,14 +262,36 @@ export function applyCreatureXP(
       evolved = true;
       evolutionStage += 1;
       newClass = evoResult.newClass;
-      const hpMult = Math.max(1, evoResult.statMultiplier);
-      const atkMult = Math.max(1, evoResult.statMultiplier);
-      const defMult = Math.max(1, evoResult.statMultiplier);
-      const spdMult = Math.max(1, evoResult.statMultiplier);
-      evolutionStats.hp = Math.floor(((creature.maxHealth || 50) * 0.1) * (hpMult - 1));
-      evolutionStats.attack = Math.floor(((creature.attack || 10) * 0.1) * (atkMult - 1));
-      evolutionStats.defense = Math.floor(((creature.defense || 5) * 0.1) * (defMult - 1));
-      evolutionStats.speed = Math.floor(((creature.speed || 5) * 0.1) * (spdMult - 1));
+
+      if (evoResult.templateKey && evoResult.evolvedFromKey) {
+        templateEvolutionKey = evoResult.templateKey;
+        templateEvolutionFromKey = evoResult.evolvedFromKey;
+        const targetTemplate = getTemplateByKey(evoResult.templateKey);
+        if (targetTemplate) {
+          const classTierDiff = getClassTier(targetTemplate.class) - getClassTier(creature.class || 'common');
+          const mult = Math.max(1, 1 + classTierDiff * 0.15);
+          evolutionStats.hp = Math.floor((creature.maxHealth || 50) * (mult - 1));
+          evolutionStats.attack = Math.floor((creature.attack || 10) * (mult - 1));
+          evolutionStats.defense = Math.floor((creature.defense || 5) * (mult - 1));
+          evolutionStats.speed = Math.floor((creature.speed || 5) * (mult - 1));
+          if (targetTemplate.elements && targetTemplate.elements.length > 0) {
+            mutationElements = [...targetTemplate.elements];
+          }
+          if (targetTemplate.skills) {
+            const newSkills = targetTemplate.skills.map(s => typeof s === 'string' ? s : s.key);
+            mutationSkills = [...new Set([...mutationSkills, ...newSkills])];
+          }
+        }
+      } else {
+        const hpMult = Math.max(1, evoResult.statMultiplier);
+        const atkMult = Math.max(1, evoResult.statMultiplier);
+        const defMult = Math.max(1, evoResult.statMultiplier);
+        const spdMult = Math.max(1, evoResult.statMultiplier);
+        evolutionStats.hp = Math.floor(((creature.maxHealth || 50) * 0.1) * (hpMult - 1));
+        evolutionStats.attack = Math.floor(((creature.attack || 10) * 0.1) * (atkMult - 1));
+        evolutionStats.defense = Math.floor(((creature.defense || 5) * 0.1) * (defMult - 1));
+        evolutionStats.speed = Math.floor(((creature.speed || 5) * 0.1) * (spdMult - 1));
+      }
       statsGained.hp += evolutionStats.hp;
       statsGained.attack += evolutionStats.attack;
       statsGained.defense += evolutionStats.defense;
@@ -275,6 +323,8 @@ export function applyCreatureXP(
 
   const updatedCreature: CreatureInstance = {
     ...creature,
+    templateKey: templateEvolutionKey || creature.templateKey,
+    evolvedFromKey: templateEvolutionFromKey || creature.evolvedFromKey,
     class: newClass,
     level: newLevel,
     experience: newExp,
