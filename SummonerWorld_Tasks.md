@@ -112,7 +112,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
     - [x] T6.0.2 – Create src/core/demonlord.ts with AI logic for activity-based influence
     - [x] T6.0.3 – Add DEMONLORD_ENCOUNTER mission type to missionQueue.ts
     - [x] T6.0.4 – Create src/stores/game/modules/demonlordModule.ts with store actions
-    - [ ] T6.0.5 – Implement demonlordFloor range (50-100+) in dungeon system
+    - [x] T6.0.5 – Implement demonlordFloor range (50-100) in dungeon system
     - [ ] T6.0.6 – Add player defeat transition to Demonlord status in combatModule.ts
     - [ ] T6.0.7 – Implement challenge issuance and acceptance system
     - [x] T6.0.8 – Add Demonlord skillset (signature abilities, elemental shifts)

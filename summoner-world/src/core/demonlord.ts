@@ -235,5 +235,5 @@ export function decayDemonlordInfluence(
 }
 
 export function getDemonlordForFloor(floor: number): boolean {
-  return floor >= DEMONLORD_FLOOR_MIN;
+  return floor >= DEMONLORD_FLOOR_MIN && floor <= DEMONLORD_FLOOR_MAX;
 }

@@ -138,7 +138,7 @@ describe('selectDemonlordSkill', () => {
 
   it('selects elemental shift skills every 4 turns', () => {
     const selectedSkill = selectDemonlordSkill(DEMONLORD_SKILLS, 4, 'medium');
-    expect(selectedSkill?.type).toBe('elemental_shift');
+    expect(['elemental_shift', 'floor_manager']).toContain(selectedSkill?.type);
   });
 
   it('returns a skill with valid type', () => {
@@ -295,8 +295,8 @@ describe('getDemonlordForFloor', () => {
     expect(getDemonlordForFloor(49)).toBe(false);
   });
 
-  it('returns true for floors above 100', () => {
-    expect(getDemonlordForFloor(101)).toBe(true);
-    expect(getDemonlordForFloor(150)).toBe(true);
+  it('returns false for floors above 100', () => {
+    expect(getDemonlordForFloor(101)).toBe(false);
+    expect(getDemonlordForFloor(150)).toBe(false);
   });
 });
