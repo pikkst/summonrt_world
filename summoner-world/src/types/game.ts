@@ -81,7 +81,23 @@ export interface TerritorialHostilityEntry {
   hostilityTurns: number;
 }
 
-export interface CreatureInstance {
+export interface ProceduralIdentity {
+   headVariant: number;
+   bodyVariant: number;
+   limbVariant: number;
+   elementalFx: {
+     trail: string;
+     aura: string;
+     impact: string;
+   };
+   colorPalette: {
+     primary: string;
+     secondary: string;
+     accent: string;
+   };
+ }
+
+ export interface CreatureInstance {
    id: string;
    templateKey: string;
    nickname?: string;
@@ -91,22 +107,23 @@ export interface CreatureInstance {
    level: number;
    experience: bigint;
    currentHealth: number;
-  currentMana: number;
-  maxHealth: number;
-  maxMana: number;
-  attack: number;
-  defense: number;
-  speed: number;
-  class?: string;
-  skills: string[];
-  traits: string[];
-  mutations: string[];
-  affection: number;
-  isBossSummon?: boolean;
-  evolutionStage?: number;
-  evolvedFromKey?: string;
-  synergyEffects?: string[];
-}
+   currentMana: number;
+   maxHealth: number;
+   maxMana: number;
+   attack: number;
+   defense: number;
+   speed: number;
+   class?: string;
+   skills: string[];
+   traits: string[];
+   mutations: string[];
+   affection: number;
+   isBossSummon?: boolean;
+   evolutionStage?: number;
+   evolvedFromKey?: string;
+   synergyEffects?: string[];
+   proceduralIdentity?: ProceduralIdentity;
+ }
 
 export type ItemType = 'material' | 'equipment' | 'consumable' | 'special' | 'egg';
 export type ItemSubType = 'weapon' | 'armor' | 'accessory' | 'herb' | 'crystal' | 'essence' | 'fragment';

@@ -16,6 +16,7 @@ import { getAggregateStats, getAllNodes, getCareerModifiers } from '../../../dat
 import { getFusionResult } from '../../../data/fusionMatrix.ts';
 import { inheritSkills } from '../../../data/fusionUtils.ts';
 import { getSynergyNames, calculateSynergyEffects } from '../../../data/traitSynergy.ts';
+import { generateProceduralIdentity } from '../../../data/proceduralIdentity';
 import axios from 'axios';
 
 export const missionActions = (set: SetState<GameStore>, get: () => GameStore) => ({
@@ -440,6 +441,11 @@ finishCapture: () => {
         speed: creature.baseSpeed,
         elements: creature.elements,
         type: creature.type,
+        proceduralIdentity: generateProceduralIdentity(
+          creature.type,
+          creature.elements,
+          () => Math.random()
+        ),
       };
 
       set((state) => {
@@ -730,6 +736,11 @@ finishCapture: () => {
       elements: newElements,
       type: specialFusionOccurred && fusionResultElement === 'unstable_void' ? 'demon' : c1.type || 'spirit',
       synergyEffects: specialEffects.length > 0 ? specialEffects : undefined,
+      proceduralIdentity: generateProceduralIdentity(
+        specialFusionOccurred && fusionResultElement === 'unstable_void' ? 'demon' : c1.type || 'spirit',
+        newElements,
+        rng.next.bind(rng)
+      ),
     };
 
     const updatedInventory = [...player.inventory];
