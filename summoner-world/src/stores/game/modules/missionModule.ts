@@ -13,7 +13,7 @@ import { applyAffectionGain } from '../../../core/affection.ts';
 import type { GameEngineState } from '../../../core/gameEngine.ts';
 import { createHeartbeat } from '../../../core/heartbeat.ts';
 import { getAggregateStats, getAllNodes, getCareerModifiers } from '../../../data/careerTree/index';
-import { getFusionResult } from '../../../data/fusionMatrix.ts';
+import { getFusionResult, calculateFusionRarityWithSpecial } from '../../../data/fusionMatrix.ts';
 import { inheritSkills } from '../../../data/fusionUtils.ts';
 import { getSoulCrystalTierForClass } from '../../../data/constants.ts';
 import { getSynergyNames, calculateSynergyEffects } from '../../../data/traitSynergy.ts';
@@ -714,13 +714,14 @@ finishCapture: () => {
 
     const synergyNicknames = getSynergyNames(inheritedTraits);
 
-    let newClass = effectiveBaseClass;
-
-    if (isAncient) newClass = 'epic';
-    if (isVoid || isStellar) newClass = newClass === 'common' ? 'rare' : newClass === 'uncommon' ? 'rare' : newClass === 'rare' ? 'epic' : newClass;
-    if (specialFusionOccurred && fusionResultElement === 'aether') {
-      newClass = newClass === 'common' ? 'epic' : newClass === 'uncommon' ? 'epic' : newClass === 'rare' ? 'legendary' : newClass;
-    }
+    const newClass = calculateFusionRarityWithSpecial(
+      c1.class || 'common',
+      c2.class || 'common',
+      isAncient,
+      isVoid,
+      isStellar,
+      specialFusionOccurred && fusionResultElement === 'aether'
+    );
 
     const newCreature: any = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,

@@ -98,7 +98,7 @@ Sprint goal: implement complete fusion system, trait synergies, procedural ident
 - [x] T5.4 – Create `traitSynergy.ts`: 50+ documented trait combinations (Regeneration+Poison → Acidic Recovery, etc.)
 - [x] T5.5 – Implement procedural identity: head/body/limb variations, elemental FX, color palette interpolation
 - [x] T5.6 – Add `Soul Crystal` tier-matching (consumed matching highest creature tier)
-- [ ] T5.7 – Verify fusion result has correct rarity (weighted average, capped at Legendary without special conditions)
+- [x] T5.7 – Verify fusion result has correct rarity (weighted average, capped at Legendary without special conditions)
 - [ ] T5.8 – Add `capturePool` and `fusionRecipe` auto-generation for new creatures
 - [ ] T5.9 – Test 1000+ random pairings in fusionMatrix (property-based)
 - [ ] T5.10 – Add fusion feedback UI: show parent stats, expected child properties

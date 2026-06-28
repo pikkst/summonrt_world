@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getFusionResult, isLightDarknessFusion, UNSTABLE_VOID_CREATURE, getAllPairKeys } from '../data/fusionMatrix';
+import { getFusionResult, isLightDarknessFusion, UNSTABLE_VOID_CREATURE, getAllPairKeys, calculateFusionRarity, calculateFusionRarityWithSpecial, CREATURE_CLASS_TIERS } from '../data/fusionMatrix';
 import { inheritSkills } from '../data/fusionUtils';
 
 describe('fusionMatrix', () => {
@@ -166,5 +166,117 @@ describe('skill inheritance (T5.3)', () => {
   it('returns highest-power when tiers are equal', () => {
     const result = inheritSkills(['shadow_bolt', 'holy_light'], [], []);
     expect(result.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('fusion rarity calculation (T5.7)', () => {
+  describe('calculateFusionRarity', () => {
+    it('returns common for two common parents (avg = 0)', () => {
+      expect(calculateFusionRarity('common', 'common')).toBe('common');
+    });
+
+    it('returns uncommon for common + uncommon parents (avg = 0.5, ceil = 1)', () => {
+      expect(calculateFusionRarity('common', 'uncommon')).toBe('uncommon');
+    });
+
+    it('returns uncommon for uncommon + uncommon parents (avg = 1)', () => {
+      expect(calculateFusionRarity('uncommon', 'uncommon')).toBe('uncommon');
+    });
+
+    it('returns rare for common + rare parents (avg = 1)', () => {
+      expect(calculateFusionRarity('common', 'rare')).toBe('uncommon');
+    });
+
+    it('returns rare for uncommon + rare parents (avg = 1.5)', () => {
+      expect(calculateFusionRarity('uncommon', 'rare')).toBe('rare');
+    });
+
+    it('returns rare for rare + rare parents (avg = 2)', () => {
+      expect(calculateFusionRarity('rare', 'rare')).toBe('rare');
+    });
+
+    it('returns epic for uncommon + epic parents (avg = 2)', () => {
+      expect(calculateFusionRarity('uncommon', 'epic')).toBe('rare');
+    });
+
+    it('returns epic for epic + epic parents (avg = 3)', () => {
+      expect(calculateFusionRarity('epic', 'epic')).toBe('epic');
+    });
+
+    it('returns epic for rare + epic parents (avg = 2.5)', () => {
+      expect(calculateFusionRarity('rare', 'epic')).toBe('epic');
+    });
+
+    it('returns legendary for epic + legendary parents (avg = 3.5)', () => {
+      expect(calculateFusionRarity('epic', 'legendary')).toBe('legendary');
+    });
+
+    it('returns legendary for legendary + legendary parents (avg = 4)', () => {
+      expect(calculateFusionRarity('legendary', 'legendary')).toBe('legendary');
+    });
+
+    it('caps mythical to legendary without special conditions', () => {
+      expect(calculateFusionRarity('mythical', 'mythical')).toBe('legendary');
+      expect(calculateFusionRarity('mythical', 'epic')).toBe('legendary');
+      expect(calculateFusionRarity('mythical', 'legendary')).toBe('legendary');
+    });
+
+    it('handles invalid rarity values gracefully', () => {
+      expect(calculateFusionRarity('invalid', 'common')).toBe('common');
+      expect(calculateFusionRarity('common', 'invalid')).toBe('common');
+    });
+  });
+
+  describe('CREATURE_CLASS_TIERS', () => {
+    it('defines correct tier values', () => {
+      expect(CREATURE_CLASS_TIERS.common).toBe(0);
+      expect(CREATURE_CLASS_TIERS.uncommon).toBe(1);
+      expect(CREATURE_CLASS_TIERS.rare).toBe(2);
+      expect(CREATURE_CLASS_TIERS.epic).toBe(3);
+      expect(CREATURE_CLASS_TIERS.legendary).toBe(4);
+      expect(CREATURE_CLASS_TIERS.mythical).toBe(5);
+    });
+
+    it('has all expected classes defined', () => {
+      const classes = Object.keys(CREATURE_CLASS_TIERS).sort();
+      expect(classes).toEqual(['common', 'epic', 'legendary', 'mythical', 'rare', 'uncommon']);
+    });
+  });
+
+  describe('calculateFusionRarityWithSpecial', () => {
+    it('bases result on weighted average of parents', () => {
+      expect(calculateFusionRarityWithSpecial('common', 'common', false, false, false, false)).toBe('common');
+      expect(calculateFusionRarityWithSpecial('rare', 'rare', false, false, false, false)).toBe('rare');
+    });
+
+    it('Ancient Bloodline raises to epic minimum', () => {
+      expect(calculateFusionRarityWithSpecial('common', 'common', true, false, false, false)).toBe('epic');
+      expect(calculateFusionRarityWithSpecial('uncommon', 'common', true, false, false, false)).toBe('epic');
+    });
+
+    it('Void/Stellar mutations raise rarity by one tier', () => {
+      expect(calculateFusionRarityWithSpecial('common', 'common', false, true, false, false)).toBe('uncommon');
+      expect(calculateFusionRarityWithSpecial('uncommon', 'uncommon', false, false, true, false)).toBe('rare');
+      expect(calculateFusionRarityWithSpecial('epic', 'epic', false, true, false, false)).toBe('legendary');
+    });
+
+    it('Aether fusion raises rarity by one tier', () => {
+      expect(calculateFusionRarityWithSpecial('rare', 'rare', false, false, false, true)).toBe('epic');
+      expect(calculateFusionRarityWithSpecial('epic', 'epic', false, false, false, true)).toBe('legendary');
+    });
+
+    it('multiple special conditions allow mythical tier', () => {
+      expect(calculateFusionRarityWithSpecial('rare', 'rare', true, true, true, true)).toBe('mythical');
+    });
+
+    it('Aether with Ancient can reach legendary', () => {
+      expect(calculateFusionRarityWithSpecial('rare', 'rare', true, false, false, true)).toBe('legendary');
+    });
+
+    it('normal fusion without special conditions capped at legendary', () => {
+      expect(calculateFusionRarityWithSpecial('legendary', 'legendary', false, false, false, false)).toBe('legendary');
+      expect(calculateFusionRarityWithSpecial('mythical', 'mythical', false, false, false, false)).toBe('legendary');
+      expect(calculateFusionRarityWithSpecial('legendary', 'epic', false, false, false, false)).toBe('legendary');
+    });
   });
 });

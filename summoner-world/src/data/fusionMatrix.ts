@@ -125,3 +125,50 @@ export function getFusionMatrix(): Record<string, string> {
 export function getAllPairKeys(): string[] {
   return Object.keys(FUSION_MATRIX);
 }
+
+export const CREATURE_CLASS_TIERS: Record<string, number> = {
+  common: 0,
+  uncommon: 1,
+  rare: 2,
+  epic: 3,
+  legendary: 4,
+  mythical: 5,
+};
+
+export function calculateFusionRarity(parentAClass: string, parentBClass: string): string {
+  const tierA = CREATURE_CLASS_TIERS[parentAClass.toLowerCase()] ?? 0;
+  const tierB = CREATURE_CLASS_TIERS[parentBClass.toLowerCase()] ?? 0;
+
+  const weightedAverage = (tierA + tierB) / 2;
+
+  // Cap at legendary tier (4) - mythical not achievable without special conditions
+  // Use ceiling to round up fractional averages
+  const tier = Math.min(Math.ceil(weightedAverage), 4);
+
+  const resultTiers = ['common', 'uncommon', 'rare', 'epic', 'legendary'] as const;
+  return resultTiers[tier] ?? 'common';
+}
+
+export function calculateFusionRarityWithSpecial(
+  parentAClass: string,
+  parentBClass: string,
+  isAncient: boolean,
+  isVoid: boolean,
+  isStellar: boolean,
+  isAether: boolean
+): string {
+  const baseClass = calculateFusionRarity(parentAClass, parentBClass);
+  let tier = CREATURE_CLASS_TIERS[baseClass] ?? 0;
+
+  if (isAncient) tier = Math.max(tier, 3);
+  if (isVoid || isStellar) tier = Math.min(5, tier + 1);
+  if (isAether) tier = Math.min(5, tier + 1);
+
+  // Without special conditions, cap at legendary (4)
+  // With special conditions (isAncient, isVoid, isStellar, isAether), mythical (5) is possible
+  const maxTier = (isAncient || isVoid || isStellar || isAether) ? 5 : 4;
+  tier = Math.min(tier, maxTier);
+
+  const resultTiers = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythical'] as const;
+  return resultTiers[tier] ?? 'common';
+}
