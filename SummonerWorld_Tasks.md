@@ -92,7 +92,7 @@ Sprint goal: refine elemental system, creature generation, mutations and capture
 ## Sprint 5 – Fusion Logic & Skill Inheritance (Month 5)
 Sprint goal: implement complete fusion system, trait synergies, procedural identity and skill inheritance.
 
-- [ ] T5.1 – Create `fusionMatrix.ts`: 10x10 element combination matrix (Fire+Air=Storm, Water+Ice=Glacier, etc.)
+- [x] T5.1 – Create `fusionMatrix.ts`: 10x10 element combination matrix (Fire+Air=Storm, Water+Ice=Glacier, etc.)
 - [ ] T5.2 – Implement Light+Darkness → Aether (5% chance) or unstable Void creature
 - [ ] T5.3 – Implement skill inheritance: up to 3 skills from parents, highest-tier skills prioritized
 - [ ] T5.4 – Create `traitSynergy.ts`: 50+ documented trait combinations (Regeneration+Poison → Acidic Recovery, etc.)
