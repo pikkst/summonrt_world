@@ -119,7 +119,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
     - [x] T6.0.9 – Add career tree bonuses for Demonlord-related combat stats
     - [x] T6.0.10 – Create demonlord.test.ts with unit tests
 - [x] T6.1 – Fix combat damage formula: `damage = (ATK − DEF × 0.5) × elementalFactor + random(−2…+2)`
-- [ ] T6.2 – Add combat phase boss mechanics (HP thresholds 75/50/25%, elemental shift, environmental hazards)
+- [x] T6.2 – Add combat phase boss mechanics (HP thresholds 75/50/25%, elemental shift, environmental hazards)
 - [ ] T6.3 – Implement "Scan" ability for boss weakness discovery (wrong guess = −70% damage)
 - [ ] T6.4 – Create dungeon layout generator: recursive backtracking maze, ≥3 shortest paths, ≥1 treasure per 10 floors
 - [ ] T6.5 – Add dungeon room types: combat, trap, puzzle, treasure, rest, elite encounter, vendor (rare)

@@ -59,6 +59,7 @@ export interface CreatureTemplate {
   skills: Skill[];
   description: string;
   isBoss?: boolean;
+  bossPhases?: BossPhase[];
   evolutionLevel?: number;
   evolvesIntoKey?: string;
   capturePool?: {
@@ -359,6 +360,12 @@ export interface DemonlordState {
 
 export type CombatPhase = 'player_turn' | 'enemy_turn' | 'victory' | 'defeat';
 
+export interface BossPhase {
+  threshold: number;
+  elementalShift?: Element;
+  hazard?: string;
+}
+
 export interface MissionResult {
   victory: boolean;
   battle_log: string[];
@@ -377,6 +384,10 @@ export interface CombatState {
   playerCreatureId?: string;
   turns: number;
   encounterType?: 'normal' | 'aggressive' | 'territorial';
+  isBoss?: boolean;
+  bossPhasesTriggered?: boolean[];
+  activeBossElement?: Element;
+  activeHazard?: string;
 }
 
 export interface CommunityPlayer {

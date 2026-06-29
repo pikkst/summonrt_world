@@ -99,6 +99,7 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
     } else {
       logMessage = `A wild ${enemyName} appears! It looks ready to fight.`;
     }
+    const isBoss = enemyTemplate?.isBoss || (enemyName || '').toLowerCase().includes('boss') || (enemyName || '').toLowerCase().includes('guardian');
     set({
       screen: 'combat',
       combat: {
@@ -112,6 +113,10 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
         playerCreatureId: creature?.id || '',
         turns: 0,
         encounterType,
+        isBoss,
+        bossPhasesTriggered: isBoss ? [false, false, false] : undefined,
+        activeBossElement: isBoss ? (enemyTemplate?.elements?.[0] || 'fire') : undefined,
+        activeHazard: undefined,
       },
       combatTarget: creature?.id || null,
     });
@@ -157,6 +162,59 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
     }
   },
 
+  applyBossPhaseMechanics: () => {
+    const { combat } = get();
+    if (!combat.isBoss || !combat.enemyMaxHp || !combat.enemyName) return;
+
+    const thresholds = [0.75, 0.5, 0.25];
+    const triggered = combat.bossPhasesTriggered || [];
+    const hpPercent = (combat.enemyHp || 0) / combat.enemyMaxHp;
+
+    const allElements: Element[] = ['fire', 'water', 'earth', 'air', 'lightning', 'iron', 'nature', 'ice', 'light', 'darkness'];
+    const hazards = [
+      'Poisonous fumes fill the air!',
+      'The ground cracks open with lava!',
+      'A blizzard rages across the arena!',
+      'Acidic rain pours down from above!',
+      'Scorching heat radiates from the walls!',
+      'Shadowy miasma saps the will to fight!',
+    ];
+
+    const newTriggered = [...triggered];
+    const logMessages: string[] = [];
+    let activeBossElement: Element | undefined;
+    let activeHazard: string | undefined;
+    let changed = false;
+
+    thresholds.forEach((threshold, index) => {
+      if (hpPercent <= threshold && !newTriggered[index]) {
+        newTriggered[index] = true;
+        changed = true;
+
+        const newElement = allElements[Math.floor(Math.random() * allElements.length)];
+        const hazard = hazards[Math.floor(Math.random() * hazards.length)];
+
+        logMessages.push(`⚠️ BOSS PHASE CHANGE! ${combat.enemyName} shifts to ${newElement} element!`);
+        logMessages.push(`🌍 Environmental hazard: ${hazard}`);
+
+        activeBossElement = newElement;
+        activeHazard = hazard;
+      }
+    });
+
+    if (changed) {
+      set((s: any) => ({
+        combat: {
+          ...s.combat,
+          log: [...s.combat.log, ...logMessages],
+          bossPhasesTriggered: newTriggered,
+          activeBossElement,
+          activeHazard,
+        },
+      }));
+    }
+  },
+
   attackWithCreature: (creatureId: string) => {
     const state = get();
     const { player, combat } = state;
@@ -193,6 +251,7 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
       combat: { ...s.combat, log: combatLog, enemyHp: newEnemyHp, phase: 'enemy_turn', turns: s.combat.turns + 1 },
     }));
 
+    get().applyBossPhaseMechanics();
     get().triggerEnemyTurn(enemyTemplate, combatLog, newEnemyHp);
   },
 
@@ -254,6 +313,7 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
       combat: { ...s.combat, log: combatLog, enemyHp: newEnemyHp, phase: 'enemy_turn', turns: s.combat.turns + 1 },
     }));
 
+    get().applyBossPhaseMechanics();
     get().triggerEnemyTurn(enemyTemplate, combatLog, newEnemyHp);
   },
 
@@ -286,7 +346,7 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
          const baseAtk = enemyTemplate?.baseAttack || 8;
           enemyDamage = Math.max(1, Math.floor((baseAtk * skillMult - (activeCreature.defense || 5) * 0.5) * eff.factor + (Math.floor(rng.next() * 5) - 2)));
        } else {
-         const enemyElement = enemyTemplate?.elements?.[0];
+          const enemyElement = combat.activeBossElement || enemyTemplate?.elements?.[0];
          const eff = getElementalEffectiveness(enemyElement, activeCreature.elements);
          effMsg = eff.msg;
           enemyDamage = Math.max(1, Math.floor(((enemyTemplate?.baseAttack || 8) - (activeCreature.defense || 5) * 0.5) * eff.factor + (Math.floor(rng.next() * 5) - 2)));
@@ -298,7 +358,7 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
        const finalPlayerDamage = applyDamageTakenReduction(enemyDamage, careerBonuses);
 
        const newPlayerHp = Math.max(0, (activeCreature.currentHealth || 100) - finalPlayerDamage);
-       const enemyLog = [...currentLog, `The ${combat.enemyName} ${actionName} and deals ${finalPlayerDamage} damage!${effMsg}`];
+        const enemyLog = [...(combat.log || []), `The ${combat.enemyName} ${actionName} and deals ${finalPlayerDamage} damage!${effMsg}`];
 
       if (newPlayerHp <= 0) {
         const hasHealthySummon = player.creatures.some((c: any) => c.currentHealth > 0 && c.id !== activeCreature.id);
