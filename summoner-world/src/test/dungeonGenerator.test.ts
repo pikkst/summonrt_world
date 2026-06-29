@@ -282,15 +282,27 @@ describe('findAllShortestPaths', () => {
 });
 
 describe('No disconnected rooms', () => {
-  it('all rooms reachable from entrance', () => {
-    const graph = generateDungeonFloor(1, 1, 12345);
-    const distances = calculateRoomDistanceMap(graph, graph.entranceRoomId);
+   it('all rooms reachable from entrance', () => {
+     const graph = generateDungeonFloor(1, 1, 12345);
+     const distances = calculateRoomDistanceMap(graph, graph.entranceRoomId);
 
-    for (const room of graph.rooms) {
-      expect(distances.has(room.id), `Room ${room.id} is not reachable from entrance`).toBe(true);
-    }
-  });
-});
+     for (const room of graph.rooms) {
+       expect(distances.has(room.id), `Room ${room.id} is not reachable from entrance`).toBe(true);
+     }
+   });
+
+   it('generates 100 floors without any disconnected rooms', () => {
+     const worldIndex = 97;
+     for (let floorIndex = 1; floorIndex <= 100; floorIndex++) {
+       const graph = generateDungeonFloor(worldIndex, floorIndex, 12345);
+       const distances = calculateRoomDistanceMap(graph, graph.entranceRoomId);
+
+       for (const room of graph.rooms) {
+         expect(distances.has(room.id), `Floor ${floorIndex}: Room ${room.id} is not reachable from entrance`).toBe(true);
+       }
+     }
+   }, 60000);
+ });
 
 describe('Treasure rooms', () => {
   it('has at least 1 treasure room per floor', () => {
@@ -307,6 +319,22 @@ describe('Treasure rooms', () => {
       const room = graph.rooms.find(r => r.id === treasureId);
       expect(room).toBeDefined();
       expect(room?.type).toBe('treasure');
+    }
+  });
+});
+
+describe('Boss floor always reachable', () => {
+  it('has boss room reachable from entrance on every floor in tower', () => {
+    const tower = generateDungeonTower(50, 12345);
+
+    for (const floor of tower.floors) {
+      const path = findShortestPath(floor, floor.entranceRoomId, floor.bossRoomId);
+      expect(path, `Floor ${floor.floorIndex}: boss room not reachable from entrance`).not.toBeNull();
+      if (path) {
+        expect(path.length).toBeGreaterThan(0);
+        expect(path[0]).toBe(floor.entranceRoomId);
+        expect(path[path.length - 1]).toBe(floor.bossRoomId);
+      }
     }
   });
 });

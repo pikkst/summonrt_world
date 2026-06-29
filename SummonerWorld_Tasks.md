@@ -194,13 +194,13 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * calculateRoomDistanceMap()
 * Used for treasure placement, shortcut injection, boss logic.
 
-- [ ] T6.4.10 – Add dungeon generation tests
+- [x] T6.4.10 – Add dungeon generation tests
 
-* [ ] 100 generated floors → no disconnected rooms
+* [x] 100 generated floors → no disconnected rooms
 * [x] ≥ 3 shortest paths validated
 * [x] ≥ 1 treasure room per floor
 * [x] Deterministic seed test
-* [ ] Boss floor always reachable.
+* [x] Boss floor always reachable.
 
 - [ ] T6.5 – Extend completed combat phase boss mechanics
 
