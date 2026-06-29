@@ -127,7 +127,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * Produce a connected room graph with entrance and boss/exit rooms
 * Ensure deterministic generation using world seed + floor seed
 
-- [ ] T6.4.2 – Add multi‑path guarantee (ensureMultipleShortestPaths)
+- [x] T6.4.2 – Add multi‑path guarantee (ensureMultipleShortestPaths)
 
 * Compute shortest path entrance → boss using BFS
 * Inject controlled shortcut edges until ≥ 3 distinct shortest paths exist
