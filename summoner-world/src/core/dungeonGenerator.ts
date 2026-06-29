@@ -148,6 +148,51 @@ export function mazeToGraph(maze: MazeCell[][], seed: number): DungeonFloorGraph
   };
 }
 
+export function assignTreasureRooms(
+  graph: DungeonFloorGraph,
+  rng: SeededRandom,
+  worldIndex: number,
+  floorIndex: number
+): void {
+  const { rooms, entranceRoomId, bossRoomId } = graph;
+
+  const roomDistances = calculateRoomDistanceMap(graph, entranceRoomId);
+  const maxDistance = Math.max(...Array.from(roomDistances.values()));
+
+  const farRooms = rooms.filter(r =>
+    r.id !== entranceRoomId &&
+    r.id !== bossRoomId &&
+    (r.type === 'combat' || r.type === undefined) &&
+    (roomDistances.get(r.id) ?? 0) >= Math.ceil(maxDistance * 0.6)
+  );
+
+  const minTreasureRooms = 1;
+  const maxTreasureRooms = Math.max(3, Math.floor(rooms.length / 10));
+  const treasureCount = rng.int(minTreasureRooms, maxTreasureRooms);
+
+  const treasureRooms: DungeonRoom[] = [];
+  const shuffled = rng.shuffle([...farRooms]);
+
+  for (let i = 0; i < Math.min(treasureCount, shuffled.length); i++) {
+    const room = shuffled[i];
+    if (room) {
+      room.type = 'treasure';
+      treasureRooms.push(room);
+    }
+  }
+
+  graph.treasureRoomIds = treasureRooms.map(r => r.id);
+}
+
+export function assignOtherRoomTypes(graph: DungeonFloorGraph, _rng: SeededRandom): void {
+  const roomTypes: RoomType[] = ['combat', 'trap', 'puzzle', 'rest', 'elite', 'vendor'];
+  for (const room of graph.rooms) {
+    if (room.type === 'treasure' || room.type === 'entrance' || room.type === 'boss') continue;
+    const type = _rng.pick(roomTypes);
+    if (type) room.type = type;
+  }
+}
+
 export function assignRoomTypes(
   graph: DungeonFloorGraph,
   rng: SeededRandom,
@@ -155,33 +200,15 @@ export function assignRoomTypes(
   floorIndex: number
 ): void {
   const { rooms, entranceRoomId, bossRoomId } = graph;
-  
+
   const entranceRoom = rooms.find(r => r.id === entranceRoomId);
   if (entranceRoom) entranceRoom.type = 'entrance';
 
   const bossRoom = rooms.find(r => r.id === bossRoomId);
   if (bossRoom) bossRoom.type = 'boss';
 
-  const otherRooms = rooms.filter(r => r.id !== entranceRoomId && r.id !== bossRoomId);
-  const treasureCount = rng.int(1, 3);
-  const treasureRooms: DungeonRoom[] = [];
-
-  for (let i = 0; i < treasureCount; i++) {
-    const room = rng.pick(otherRooms);
-    if (room) {
-      room.type = 'treasure';
-      treasureRooms.push(room);
-      const idx = otherRooms.indexOf(room);
-      if (idx > -1) otherRooms.splice(idx, 1);
-    }
-  }
-  graph.treasureRoomIds = treasureRooms.map(r => r.id);
-
-  const roomTypes: RoomType[] = ['combat', 'trap', 'puzzle', 'rest', 'elite', 'vendor'];
-  for (const room of otherRooms) {
-    const type = rng.pick(roomTypes);
-    if (type) room.type = type;
-  }
+  assignTreasureRooms(graph, rng, worldIndex, floorIndex);
+  assignOtherRoomTypes(graph, rng);
 }
 
 export function generateDungeonFloor(

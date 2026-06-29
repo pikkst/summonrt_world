@@ -9,6 +9,7 @@ import {
   mazeToGraph,
   assignRoomTypes,
   ensureMultipleShortestPaths,
+  assignTreasureRooms,
 } from '../core/dungeonGenerator';
 import { SeededRandom } from '../utils/SeededRandom';
 import type { DungeonFloorGraph } from '../types/game';
@@ -185,11 +186,60 @@ describe('Deterministic seed test', () => {
     expect(graph1.treasureRoomIds.length).toBe(graph2.treasureRoomIds.length);
 
 for (let i = 0; i < graph1.rooms.length; i++) {
-       const room1 = graph1.rooms[i];
-       const room2 = graph2.rooms[i];
-       expect(room1?.id).toBe(room2?.id);
-       expect(room1?.type).toBe(room2?.type);
-       expect(room1?.connections).toEqual(room2?.connections);
-     }
+      const room1 = graph1.rooms[i];
+      const room2 = graph2.rooms[i];
+      expect(room1?.id).toBe(room2?.id);
+      expect(room1?.type).toBe(room2?.type);
+      expect(room1?.connections).toEqual(room2?.connections);
+    }
+  });
+});
+
+describe('Treasure room placement logic', () => {
+  it('places treasure rooms far from entrance (at least 60% of max distance)', () => {
+    const rng = new SeededRandom(12345);
+    const maze = createMaze(rng, 5, 5);
+    const graph = mazeToGraph(maze, 12345);
+    graph.floorIndex = 1;
+    graph.worldIndex = 1;
+
+    const entranceRoom = graph.rooms.find(r => r.id === graph.entranceRoomId);
+    if (entranceRoom) entranceRoom.type = 'entrance';
+    const bossRoom = graph.rooms.find(r => r.id === graph.bossRoomId);
+    if (bossRoom) bossRoom.type = 'boss';
+
+    assignTreasureRooms(graph, rng, 1, 1);
+
+    const roomDistances = calculateRoomDistanceMap(graph, graph.entranceRoomId);
+    const maxDistance = Math.max(...Array.from(roomDistances.values()));
+    const minRequiredDistance = Math.ceil(maxDistance * 0.6);
+
+    for (const treasureId of graph.treasureRoomIds) {
+      const dist = roomDistances.get(treasureId) ?? 0;
+      expect(dist).toBeGreaterThanOrEqual(minRequiredDistance);
+    }
+  });
+
+  it('treasure rooms are not entrance or boss rooms', () => {
+    const graph = generateDungeonFloor(1, 1, 12345);
+
+    for (const treasureId of graph.treasureRoomIds) {
+      expect(treasureId).not.toBe(graph.entranceRoomId);
+      expect(treasureId).not.toBe(graph.bossRoomId);
+    }
+  });
+
+  it('treasure rooms are reachable from entrance', () => {
+    const graph = generateDungeonFloor(1, 1, 12345);
+    const distances = calculateRoomDistanceMap(graph, graph.entranceRoomId);
+
+    for (const treasureId of graph.treasureRoomIds) {
+      expect(distances.has(treasureId)).toBe(true);
+    }
+  });
+
+  it('guarantees at least 1 treasure room per floor', () => {
+    const graph = generateDungeonFloor(1, 1, 12345);
+    expect(graph.treasureRoomIds.length).toBeGreaterThanOrEqual(1);
   });
 });

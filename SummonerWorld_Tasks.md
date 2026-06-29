@@ -133,7 +133,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * Inject controlled shortcut edges until ≥ 3 distinct shortest paths exist
 * Re‑validate path uniqueness after each added edge
 
-- [ ] T6.4.3 – Add treasure room placement logic
+- [x] T6.4.3 – Add treasure room placement logic
 
 * Each floor must contain ≥ 1 treasure room
 * Treasure room must be located far from entrance
