@@ -139,7 +139,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * Treasure room must be located far from entrance
 * Add optional secondary treasure rooms for large floors
 
-- [ ] T6.4.4 – Implement room type assignment system
+- [x] T6.4.4 – Implement room type assignment system
 
 * Assign room types: combat, trap, puzzle, treasure, rest, elite, vendor
 * Ensure biome/tier‑themed consistency

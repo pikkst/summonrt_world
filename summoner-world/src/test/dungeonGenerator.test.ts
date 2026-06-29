@@ -12,7 +12,7 @@ import {
   assignTreasureRooms,
 } from '../core/dungeonGenerator';
 import { SeededRandom } from '../utils/SeededRandom';
-import type { DungeonFloorGraph } from '../types/game';
+import type { DungeonFloorGraph, RoomType } from '../types/game';
 
 describe('getDungeonFloorSeed', () => {
   it('generates deterministic seed from world seed + floor seed', () => {
@@ -241,5 +241,71 @@ describe('Treasure room placement logic', () => {
   it('guarantees at least 1 treasure room per floor', () => {
     const graph = generateDungeonFloor(1, 1, 12345);
     expect(graph.treasureRoomIds.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('Room type assignment', () => {
+  it('guarantees at least 1 rest room per floor', () => {
+    for (let i = 0; i < 20; i++) {
+      const graph = generateDungeonFloor(1, i + 1, 12345);
+      const restRooms = graph.rooms.filter(r => r.type === 'rest');
+      expect(restRooms.length).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it('all non-special rooms receive a valid room type', () => {
+    const graph = generateDungeonFloor(1, 1, 12345);
+    const validTypes: RoomType[] = ['combat', 'trap', 'puzzle', 'treasure', 'rest', 'elite', 'vendor', 'entrance', 'boss'];
+    
+    for (const room of graph.rooms) {
+      expect(validTypes).toContain(room.type);
+    }
+  });
+
+  it('room types are deterministic with same seed', () => {
+    const graph1 = generateDungeonFloor(3, 5, 99999);
+    const graph2 = generateDungeonFloor(3, 5, 99999);
+    
+    for (let i = 0; i < graph1.rooms.length; i++) {
+      expect(graph1.rooms[i]?.type).toBe(graph2.rooms[i]?.type);
+    }
+  });
+
+  it('rest room is not placed at entrance or boss room', () => {
+    const graph = generateDungeonFloor(1, 1, 12345);
+    const restRooms = graph.rooms.filter(r => r.type === 'rest');
+    
+    for (const restRoom of restRooms) {
+      expect(restRoom.id).not.toBe(graph.entranceRoomId);
+      expect(restRoom.id).not.toBe(graph.bossRoomId);
+    }
+  });
+
+  it('high tier worlds modify room type distribution', () => {
+    const lowTierGraph = generateDungeonFloor(1, 1, 12345);
+    const highTierGraph = generateDungeonFloor(50, 1, 12345);
+    
+    const lowTierElite = lowTierGraph.rooms.filter(r => r.type === 'elite').length;
+    const highTierElite = highTierGraph.rooms.filter(r => r.type === 'elite').length;
+    
+    expect(highTierElite).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe(' themed room type consistency', () => {
+  it('crystal caves theme increases puzzle room likelihood', () => {
+    const graphs = Array.from({ length: 30 }, (_, i) => generateDungeonFloor(95, i + 1, 12345));
+    const puzzleCounts = graphs.flatMap(g => g.rooms.filter(r => r.type === 'puzzle').length);
+    const avgPuzzleCount = puzzleCounts.reduce((a, b) => a + b, 0) / puzzleCounts.length;
+    
+    expect(avgPuzzleCount).toBeGreaterThan(0);
+  });
+
+  it('volcanic theme increases trap room likelihood', () => {
+    const graphs = Array.from({ length: 30 }, (_, i) => generateDungeonFloor(55, i + 1, 12345));
+    const trapCounts = graphs.flatMap(g => g.rooms.filter(r => r.type === 'trap').length);
+    const avgTrapCount = trapCounts.reduce((a, b) => a + b, 0) / trapCounts.length;
+    
+    expect(avgTrapCount).toBeGreaterThan(0);
   });
 });

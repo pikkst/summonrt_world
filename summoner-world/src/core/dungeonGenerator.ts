@@ -184,13 +184,124 @@ export function assignTreasureRooms(
   graph.treasureRoomIds = treasureRooms.map(r => r.id);
 }
 
-export function assignOtherRoomTypes(graph: DungeonFloorGraph, _rng: SeededRandom): void {
-  const roomTypes: RoomType[] = ['combat', 'trap', 'puzzle', 'rest', 'elite', 'vendor'];
-  for (const room of graph.rooms) {
-    if (room.type === 'treasure' || room.type === 'entrance' || room.type === 'boss') continue;
-    const type = _rng.pick(roomTypes);
+interface RoomTypeTheme {
+  roomTypes: RoomType[];
+  weights: number[];
+}
+
+const BIOME_ROOM_THEMES: Record<string, RoomTypeTheme> = {
+  forest: {
+    roomTypes: ['combat', 'trap', 'puzzle', 'rest', 'elite', 'vendor'],
+    weights: [0.35, 0.15, 0.15, 0.15, 0.15, 0.05]
+  },
+  volcanic: {
+    roomTypes: ['combat', 'trap', 'puzzle', 'rest', 'elite', 'vendor'],
+    weights: [0.4, 0.2, 0.1, 0.1, 0.15, 0.05]
+  },
+  crystal_caves: {
+    roomTypes: ['combat', 'trap', 'puzzle', 'rest', 'elite', 'vendor'],
+    weights: [0.25, 0.1, 0.25, 0.15, 0.2, 0.05]
+  },
+  coast: {
+    roomTypes: ['combat', 'trap', 'puzzle', 'rest', 'elite', 'vendor'],
+    weights: [0.3, 0.1, 0.1, 0.2, 0.15, 0.15]
+  },
+  plains: {
+    roomTypes: ['combat', 'trap', 'puzzle', 'rest', 'elite', 'vendor'],
+    weights: [0.35, 0.1, 0.1, 0.2, 0.1, 0.15]
+  },
+  swamp: {
+    roomTypes: ['combat', 'trap', 'puzzle', 'rest', 'elite', 'vendor'],
+    weights: [0.3, 0.2, 0.15, 0.15, 0.1, 0.1]
+  },
+  desert: {
+    roomTypes: ['combat', 'trap', 'puzzle', 'rest', 'elite', 'vendor'],
+    weights: [0.4, 0.15, 0.1, 0.15, 0.15, 0.05]
+  },
+  tundra: {
+    roomTypes: ['combat', 'trap', 'puzzle', 'rest', 'elite', 'vendor'],
+    weights: [0.35, 0.1, 0.15, 0.2, 0.1, 0.1]
+  },
+  mountains: {
+    roomTypes: ['combat', 'trap', 'puzzle', 'rest', 'elite', 'vendor'],
+    weights: [0.4, 0.1, 0.1, 0.15, 0.2, 0.05]
+  },
+  sky_islands: {
+    roomTypes: ['combat', 'trap', 'puzzle', 'rest', 'elite', 'vendor'],
+    weights: [0.3, 0.05, 0.2, 0.2, 0.2, 0.05]
+  },
+  default: {
+    roomTypes: ['combat', 'trap', 'puzzle', 'rest', 'elite', 'vendor'],
+    weights: [0.3, 0.15, 0.15, 0.15, 0.15, 0.1]
+  }
+};
+
+const TIER_MODIFIERS = {
+  trap: (tier: number) => tier > 2 ? 0.2 : 0.15,
+  puzzle: (tier: number) => tier > 1 ? 0.2 : 0.15,
+  elite: (tier: number) => tier > 3 ? 0.2 : 0.1,
+  vendor: (tier: number) => tier > 4 ? 0.15 : 0.05,
+  rest: () => 0.15
+};
+
+export function assignOtherRoomTypes(
+  graph: DungeonFloorGraph,
+  rng: SeededRandom,
+  _worldIndex: number,
+  _floorIndex: number
+): void {
+  const worldTier = Math.max(1, Math.floor(_worldIndex / 10) + 1);
+  const biome = getBiomeForCoords(0, 0, _worldIndex);
+  
+  const theme = (BIOME_ROOM_THEMES[biome] || BIOME_ROOM_THEMES.default) as RoomTypeTheme;
+  const weightedTypes: RoomType[] = [];
+  
+  for (let i = 0; i < theme.roomTypes.length; i++) {
+    const type = theme.roomTypes[i];
+    const baseWeight = theme.weights[i] ?? 0.1;
+    const modifier = type && TIER_MODIFIERS[type as keyof typeof TIER_MODIFIERS];
+    const finalWeight = typeof modifier === 'function' ? modifier(worldTier) : baseWeight;
+    const count = Math.max(1, Math.floor(finalWeight * graph.rooms.length));
+    for (let j = 0; j < count; j++) {
+      if (type) weightedTypes.push(type);
+    }
+  }
+  
+  const assignableRooms = graph.rooms.filter(r => 
+    r.type === 'combat' || r.type === undefined
+  );
+  
+  const restRoomCandidates = assignableRooms
+    .filter(r => r.type !== 'treasure' && r.type !== 'entrance' && r.type !== 'boss');
+  const shuffled = rng.shuffle(restRoomCandidates);
+  
+  if (shuffled.length > 0) {
+    const restRoom = shuffled[0];
+    if (restRoom) restRoom.type = 'rest';
+  }
+  
+  for (const room of assignableRooms) {
+    if (room.type === 'rest') continue;
+    const type = rng.pick(weightedTypes);
     if (type) room.type = type;
   }
+}
+
+export function getBiomeForCoords(x: number, y: number, seed: number): string {
+  const centerX = 1000;
+  const centerY = 1000;
+  const dist = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+  const maxDist = 1414;
+  
+  const noise = Math.abs(Math.sin(x * 0.01 + y * 0.01 + seed) * 0.5);
+  const normalizedDist = (dist / maxDist) + (noise * 0.1);
+  
+  if (normalizedDist > 0.8) return 'coast';
+  if (normalizedDist > 0.6) return 'plains';
+  if (normalizedDist > 0.4) return 'forest';
+  if (normalizedDist > 0.2) return 'mountains';
+  if (normalizedDist > 0.05) return 'volcanic';
+  return 'crystal_caves';
 }
 
 export function assignRoomTypes(
@@ -207,8 +318,8 @@ export function assignRoomTypes(
   const bossRoom = rooms.find(r => r.id === bossRoomId);
   if (bossRoom) bossRoom.type = 'boss';
 
-  assignTreasureRooms(graph, rng, worldIndex, floorIndex);
-  assignOtherRoomTypes(graph, rng);
+assignTreasureRooms(graph, rng, worldIndex, floorIndex);
+  assignOtherRoomTypes(graph, rng, worldIndex, floorIndex);
 }
 
 export function generateDungeonFloor(
