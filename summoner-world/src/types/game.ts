@@ -332,6 +332,29 @@ export interface DungeonFloorGraph {
   treasureRoomIds: string[];
 }
 
+export interface DungeonTowerVerticalLink {
+  fromFloorIndex: number;
+  fromRoomId: string;
+  toFloorIndex: number;
+  toRoomId: string;
+}
+
+export interface DungeonTowerSafeFloor {
+  floorIndex: number;
+  restRoomId: string;
+  vendorRoomId: string;
+  teleportUnlockRoomId: string;
+}
+
+export interface DungeonTower {
+  worldIndex: number;
+  globalSeed: number;
+  totalFloors: number;
+  floors: DungeonFloorGraph[];
+  verticalLinks: DungeonTowerVerticalLink[];
+  safeFloors: DungeonTowerSafeFloor[];
+}
+
 export interface DungeonMetadata {
   worldId: number;
   totalFloors: number;
@@ -525,4 +548,3 @@ export interface CommunityState {
   guilds: CommunityGuild[];
   trades: CommunityTrade[];
 }
-

@@ -145,7 +145,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * Ensure biome/tier‑themed consistency
 * Guarantee at least 1 rest room 
 
-- [ ] T6.4.5 – Create generateDungeonTower(worldIndex) (Sword Art Online–style central tower)
+- [x] T6.4.5 – Create generateDungeonTower(worldIndex) (Sword Art Online–style central tower)
 
 * Build continuous vertical tower
 * Floor count = BaseFloors + WorldIndex

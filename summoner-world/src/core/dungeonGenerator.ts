@@ -1,7 +1,7 @@
-import type { DungeonFloorGraph, DungeonRoom, RoomType } from '../types/game';
+import type { DungeonFloorGraph, DungeonRoom, DungeonTower, DungeonTowerSafeFloor, DungeonTowerVerticalLink, RoomType } from '../types/game';
 import { SeededRandom } from '../utils/SeededRandom';
 
-const DUNGEON_BASE_FLOORS = 3;
+export const DUNGEON_BASE_FLOORS = 3;
 const GRID_WIDTH = 5;
 const GRID_HEIGHT = 5;
 
@@ -340,6 +340,82 @@ export function generateDungeonFloor(
   ensureMultipleShortestPaths(graph, rng);
 
   return graph;
+}
+
+export function getDungeonTowerFloorCount(worldIndex: number): number {
+  return DUNGEON_BASE_FLOORS + Math.max(1, worldIndex);
+}
+
+export function generateDungeonTower(
+  worldIndex: number,
+  globalSeed = 12345
+): DungeonTower {
+  const totalFloors = getDungeonTowerFloorCount(worldIndex);
+  const floors: DungeonFloorGraph[] = [];
+  const verticalLinks: DungeonTowerVerticalLink[] = [];
+  const safeFloors: DungeonTowerSafeFloor[] = [];
+
+  for (let floorIndex = 1; floorIndex <= totalFloors; floorIndex++) {
+    const floor = generateDungeonFloor(worldIndex, floorIndex, globalSeed);
+
+    if (isSafeTowerFloor(floorIndex)) {
+      const safeFloor = markSafeTowerFloor(floor);
+      if (safeFloor) safeFloors.push(safeFloor);
+    }
+
+    floors.push(floor);
+  }
+
+  for (let i = 0; i < floors.length - 1; i++) {
+    const fromFloor = floors[i];
+    const toFloor = floors[i + 1];
+    if (!fromFloor || !toFloor) continue;
+
+    verticalLinks.push({
+      fromFloorIndex: fromFloor.floorIndex,
+      fromRoomId: fromFloor.bossRoomId,
+      toFloorIndex: toFloor.floorIndex,
+      toRoomId: toFloor.entranceRoomId
+    });
+  }
+
+  return {
+    worldIndex,
+    globalSeed,
+    totalFloors,
+    floors,
+    verticalLinks,
+    safeFloors
+  };
+}
+
+function isSafeTowerFloor(floorIndex: number): boolean {
+  return floorIndex > 0 && floorIndex % 10 === 0;
+}
+
+function markSafeTowerFloor(floor: DungeonFloorGraph): DungeonTowerSafeFloor | null {
+  const serviceRooms = floor.rooms
+    .filter(room => room.id !== floor.entranceRoomId && room.id !== floor.bossRoomId && room.type !== 'treasure')
+    .sort((a, b) => {
+      if (a.y !== b.y) return a.y - b.y;
+      return a.x - b.x;
+    });
+
+  const restRoom = serviceRooms[0];
+  const vendorRoom = serviceRooms[1] ?? serviceRooms[0];
+  const teleportRoom = serviceRooms[2] ?? serviceRooms[1] ?? serviceRooms[0];
+
+  if (!restRoom || !vendorRoom || !teleportRoom) return null;
+
+  restRoom.type = 'rest';
+  vendorRoom.type = 'vendor';
+
+  return {
+    floorIndex: floor.floorIndex,
+    restRoomId: restRoom.id,
+    vendorRoomId: vendorRoom.id,
+    teleportUnlockRoomId: teleportRoom.id
+  };
 }
 
 export function findShortestPath(

@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
   getDungeonFloorSeed,
+  getDungeonTowerFloorCount,
   generateDungeonFloor,
+  generateDungeonTower,
   findShortestPath,
   findAllShortestPaths,
   calculateRoomDistanceMap,
@@ -64,6 +66,57 @@ describe('generateDungeonFloor', () => {
     const expectedBossY = graph.rooms.length / 5 - 1;
     const expectedBossX = 4;
     expect(graph.bossRoomId).toBe(`room_${expectedBossY}_${expectedBossX}`);
+  });
+});
+
+describe('generateDungeonTower', () => {
+  it('builds floor count from base floors plus world index', () => {
+    const tower = generateDungeonTower(7, 12345);
+
+    expect(tower.totalFloors).toBe(getDungeonTowerFloorCount(7));
+    expect(tower.floors).toHaveLength(tower.totalFloors);
+    expect(tower.totalFloors).toBe(10);
+  });
+
+  it('links every floor exit to the next floor entrance', () => {
+    const tower = generateDungeonTower(5, 12345);
+
+    expect(tower.verticalLinks).toHaveLength(tower.totalFloors - 1);
+
+    for (const link of tower.verticalLinks) {
+      const fromFloor = tower.floors.find(floor => floor.floorIndex === link.fromFloorIndex);
+      const toFloor = tower.floors.find(floor => floor.floorIndex === link.toFloorIndex);
+
+      expect(toFloor?.floorIndex).toBe((fromFloor?.floorIndex ?? 0) + 1);
+      expect(link.fromRoomId).toBe(fromFloor?.bossRoomId);
+      expect(link.toRoomId).toBe(toFloor?.entranceRoomId);
+    }
+  });
+
+  it('marks every 10th floor as safe with rest, vendor, and teleport unlock metadata', () => {
+    const tower = generateDungeonTower(20, 12345);
+
+    expect(tower.safeFloors.map(floor => floor.floorIndex)).toEqual([10, 20]);
+
+    for (const safeFloor of tower.safeFloors) {
+      const floor = tower.floors.find(generatedFloor => generatedFloor.floorIndex === safeFloor.floorIndex);
+      const restRoom = floor?.rooms.find(room => room.id === safeFloor.restRoomId);
+      const vendorRoom = floor?.rooms.find(room => room.id === safeFloor.vendorRoomId);
+      const teleportRoom = floor?.rooms.find(room => room.id === safeFloor.teleportUnlockRoomId);
+
+      expect(restRoom?.type).toBe('rest');
+      expect(vendorRoom?.type).toBe('vendor');
+      expect(teleportRoom).toBeDefined();
+      expect(safeFloor.restRoomId).not.toBe(floor?.entranceRoomId);
+      expect(safeFloor.vendorRoomId).not.toBe(floor?.bossRoomId);
+    }
+  });
+
+  it('is deterministic for the same world and global seed', () => {
+    const tower1 = generateDungeonTower(12, 98765);
+    const tower2 = generateDungeonTower(12, 98765);
+
+    expect(tower1).toEqual(tower2);
   });
 });
 
