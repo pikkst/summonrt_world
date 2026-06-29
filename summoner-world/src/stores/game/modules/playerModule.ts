@@ -10,6 +10,31 @@ import { QUEST_TEMPLATES } from '../../../data/quests.ts';
 import { applyCreatureXP } from '../../../core/xpCurve.ts';
 import { applyAffectionGain } from '../../../core/affection.ts';
 
+function toBigIntXP(value: unknown): bigint {
+  if (typeof value === 'bigint') return value;
+  if (typeof value === 'number' && Number.isFinite(value)) return BigInt(Math.trunc(value));
+  if (typeof value === 'string' && value.trim().length > 0) {
+    try {
+      return BigInt(value);
+    } catch {
+      return 0n;
+    }
+  }
+  return 0n;
+}
+
+function serializeXP(value: unknown): number {
+  return Number(toBigIntXP(value));
+}
+
+function normalizeCreatures(creatures: unknown): CreatureInstance[] {
+  if (!Array.isArray(creatures)) return [];
+  return creatures.map((creature) => ({
+    ...(creature as CreatureInstance),
+    experience: toBigIntXP((creature as CreatureInstance).experience),
+  }));
+}
+
 export const playerActions = (set: SetState<GameStore>, get: () => GameStore) => ({
   initGame: (playerName: string, archetype: string = 'fighter') => {
     const affinity = rollAffinity();
@@ -183,7 +208,8 @@ set({
              currentWorldId: serverPlayer.currentWorld || 1,
              tileX: typeof serverPlayer.posX === 'number' ? serverPlayer.posX : 10,
              tileY: typeof serverPlayer.posY === 'number' ? serverPlayer.posY : 10,
-             creatures: serverPlayer.creatures || [],
+             experience: toBigIntXP(serverPlayer.experience),
+             creatures: normalizeCreatures(serverPlayer.creatures),
              inventory: serverPlayer.inventory || [],
              activeQuests: serverPlayer.activeQuests || [],
              completedQuests: serverPlayer.completedQuests || [],
@@ -265,7 +291,8 @@ set({
           tileX: typeof serverPlayer.posX === 'number' && !isNaN(serverPlayer.posX) ? serverPlayer.posX : startWorld.startTile.x,
           tileY: typeof serverPlayer.posY === 'number' && !isNaN(serverPlayer.posY) ? serverPlayer.posY : startWorld.startTile.y,
           gameTimeMinutes: typeof serverPlayer.gameTimeMinutes === 'number' && !isNaN(serverPlayer.gameTimeMinutes) ? serverPlayer.gameTimeMinutes : 420,
-          creatures: serverPlayer.creatures || [],
+          experience: toBigIntXP(serverPlayer.experience),
+          creatures: normalizeCreatures(serverPlayer.creatures),
           inventory: serverPlayer.inventory || [],
           activeQuests: serverPlayer.activeQuests || [],
           completedQuests: serverPlayer.completedQuests || [],
@@ -332,7 +359,14 @@ set({
     try {
       const res = await axios.post(`${'http://localhost:5000/api'}/train`, { playerId: player.id, stat, energyCost });
       if (res.data.success) {
-        set({ player: { ...res.data.player, id: res.data.player._id } });
+        set({
+          player: {
+            ...res.data.player,
+            id: res.data.player._id,
+            experience: toBigIntXP(res.data.player.experience),
+            creatures: normalizeCreatures(res.data.player.creatures),
+          },
+        });
         appendLog(`Trained ${stat}! Gained ${res.data.gain.toFixed(2)} points.`, 'success');
       }
     } catch (err: any) {
@@ -346,10 +380,24 @@ set({
     try {
       const res = await axios.post(`${'http://localhost:5000/api'}/summon-act`, { playerId: player.id, actType, nerveCost });
       if (res.data.success) {
-        set({ player: { ...res.data.player, id: res.data.player._id } });
+        set({
+          player: {
+            ...res.data.player,
+            id: res.data.player._id,
+            experience: toBigIntXP(res.data.player.experience),
+            creatures: normalizeCreatures(res.data.player.creatures),
+          },
+        });
         appendLog(`Summon Act Successful! Gained ${res.data.reward} stones and ${res.data.xp} XP.`, 'success');
       } else {
-        set({ player: { ...res.data.player, id: res.data.player._id } });
+        set({
+          player: {
+            ...res.data.player,
+            id: res.data.player._id,
+            experience: toBigIntXP(res.data.player.experience),
+            creatures: normalizeCreatures(res.data.player.creatures),
+          },
+        });
         appendLog(`Summon Act Failed! You lost some spirit.`, 'warning');
       }
     } catch (err: any) {
@@ -391,7 +439,8 @@ set({
            unspent_passive_points: serverPlayer.unspent_passive_points ?? 0,
            unlocked_node_ids: serverPlayer.unlocked_node_ids ?? ['root_hub'],
            discoveredTiles: discoveredTilesSet,
-           creatures: serverPlayer.creatures || [],
+           experience: toBigIntXP(serverPlayer.experience),
+           creatures: normalizeCreatures(serverPlayer.creatures),
            inventory: serverPlayer.inventory || [],
            activeQuests: serverPlayer.activeQuests || [],
            completedQuests: serverPlayer.completedQuests || [],
@@ -420,6 +469,11 @@ set({
 
     const serializedPlayer = {
       ...state.player,
+      experience: serializeXP(state.player.experience),
+      creatures: state.player.creatures.map((creature) => ({
+        ...creature,
+        experience: serializeXP(creature.experience),
+      })),
       discoveredTiles: Array.from(state.player.discoveredTiles || []),
     };
 
@@ -508,7 +562,8 @@ set({
         tileY: typeof rawPlayer.tileY === 'number' && !isNaN(rawPlayer.tileY) ? rawPlayer.tileY : 10,
         discoveredTiles: new Set(rawPlayer.discoveredTiles || []),
         affinity: rawPlayer.affinity || { primary: 'fire' as Element, learned: [] as Element[] },
-        creatures: rawPlayer.creatures || [],
+        experience: toBigIntXP(rawPlayer.experience),
+        creatures: normalizeCreatures(rawPlayer.creatures),
         inventory: rawPlayer.inventory || [],
         activeQuests: rawPlayer.activeQuests || [],
         completedQuests: rawPlayer.completedQuests || [],
