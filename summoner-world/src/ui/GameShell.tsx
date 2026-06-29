@@ -161,10 +161,10 @@ export const GameShell: React.FC = () => {
   }, [worlds, currentWorldId, player?.tileX, player?.tileY]);
 
   if (!initialized) {
-    return <StartScreen />;
+    return <LoginScreen />;
   }
 
-  if (!player) return <StartScreen />;
+  if (!player) return <LoginScreen />;
 
   const world = worlds.get(currentWorldId);
   if (!world) return null;

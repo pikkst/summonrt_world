@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../stores/gameStore';
 import axios from 'axios';
+import loginBackground from '../../images/bacround_Sumoner_World.png';
+import logoImage from '../../images/logo_Sumoner_World.png';
 
 export const LoginScreen: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -28,19 +30,26 @@ export const LoginScreen: React.FC = () => {
 
   return (
     <div className="fixed inset-0 bg-[#050505] flex items-center justify-center text-white font-sans p-4 overflow-hidden">
-      {/* Decorative background elements */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-500/10 rounded-full blur-[120px] animate-pulse"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-500/10 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '2s' }}></div>
+      <img
+        src={loginBackground}
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      <div className="absolute inset-0 bg-black/55" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/70" />
       
       <div className="max-w-md w-full relative z-10">
-        <div className="bg-gray-900/40 backdrop-blur-2xl p-10 rounded-3xl border border-gray-800 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-          <div className="text-center mb-10">
+        <div className="bg-gray-950/70 backdrop-blur-md p-8 sm:p-10 rounded-2xl border border-slate-300/20 shadow-[0_24px_70px_rgba(0,0,0,0.65)]">
+          <div className="text-center mb-8">
             <div className="inline-block px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[10px] font-black tracking-[0.3em] text-emerald-400 uppercase mb-4">
               Soul Protocol v1.0
             </div>
-            <h1 className="text-5xl font-black italic tracking-tighter text-white mb-2 leading-none">
-              SUMMONER<span className="text-emerald-500">WORLD</span>
-            </h1>
+            <img
+              src={logoImage}
+              alt="Summoner World"
+              className="mx-auto mb-3 h-auto w-full max-w-[330px]"
+            />
             <p className="text-gray-500 text-[10px] uppercase font-bold tracking-widest italic opacity-50">A Persistent Multi-World Simulation</p>
           </div>
           
