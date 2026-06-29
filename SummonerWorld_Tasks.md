@@ -217,7 +217,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * Wrong guess → −70% damage penalty for 3 turns
 * Add UI feedback: "Weakness Identified" overlay
 
-- [ ] T6.7 – Add dungeon room type interactions and UI
+- [x] T6.7 – Add dungeon room type interactions and UI
 
 * T6.4.4 already completed room type assignment for trap, puzzle, treasure, rest, elite, and vendor
 * Trap rooms: text‑based minigame (avoid, disarm, endure)
@@ -226,7 +226,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * Vendor rooms: temporary merchant with dungeon‑specific items
 * Treasure rooms: guaranteed loot chest + rare chance for mythical egg
 
-- [ ] T6.8 – Implement dungeon floor count & progression rules
+- [x] T6.8 – Implement dungeon floor count & progression rules
 
 * Floor count = BaseFloors + WorldIndex
 * World 1 → 3 floors + boss
@@ -235,7 +235,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * Dungeon exit scales player to minimum viable level (per GDD)
 
 - [ ] T6.9 – Add "ascending requires defeating floor guardian" rule (or rare teleport item)
-- [ ] T6.10 – Verify dungeon exit scales player to minimum viable level
+- [x] T6.10 – Verify dungeon exit scales player to minimum viable level
 - [ ] T6.11 – Add trap/puzzle minigame UI (text-based choices)
 - [ ] T6.12 – Test full clear World 10 dungeon simulation (integration test)
 - [ ] T6.13 – Integrate automated combat engine with timed missions: dungeon scouting and wild encounters resolved via `resolveAutomatedCombat()`

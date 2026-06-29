@@ -1,5 +1,5 @@
-import type { GameStore, GameStoreState, PlayerState, WorldData, LogEntry, QuestInstance, Element, CreatureInstance, SetState } from '../types.ts';
-import { createLog, calculateMovementModifiers, processTileDiscovery, getPlayerElements, addPlayerXP, getWorldModifier } from '../helpers.ts';
+import type { GameStore, GameStoreState, PlayerState, WorldData, LogEntry, QuestInstance, Element, CreatureInstance, SetState, CreatureTemplate } from '../types.ts';
+import { createLog, calculateMovementModifiers, processTileDiscovery, getPlayerElements, addPlayerXP, getWorldModifier, applyMinViableLevelScaling, calculateMinViableLevel } from '../helpers.ts';
 import { generateTile } from '../../../core/worldGenerator.ts';
 import { getTileKey, getAffinityWeight, calculateBaseCaptureProbability } from '../../../data/constants.ts';
 import { QUEST_TEMPLATES } from '../../../data/quests.ts';
@@ -19,7 +19,8 @@ import { inheritSkills } from '../../../data/fusionUtils.ts';
 import { getSoulCrystalTierForClass } from '../../../data/constants.ts';
 import { getSynergyNames, calculateSynergyEffects } from '../../../data/traitSynergy.ts';
 import { generateProceduralIdentity } from '../../../data/proceduralIdentity';
-import { generateDungeonTower, exportDungeonRun } from '../../../core/dungeonGenerator';
+import { generateDungeonTower, exportDungeonRun, generateTrapInteraction, generatePuzzleInteraction, generateEliteInteraction, generateVendorInteraction, generateTreasureInteraction, TrapRoomInteraction, PuzzleRoomInteraction, EliteRoomInteraction, VendorRoomInteraction, TreasureRoomInteraction } from '../../../core/dungeonGenerator';
+import type { RoomInteractionState } from '../../../types/game.ts';
 import axios from 'axios';
 
 export const missionActions = (set: SetState<GameStore>, get: () => GameStore) => ({
@@ -841,7 +842,7 @@ finishCapture: () => {
   },
 
   descendDungeon: () => {
-    const { player, currentWorldId, worlds, dungeon, appendLog } = get();
+    const { player, currentWorldId, worlds, dungeon, appendLog, startCombat } = get();
     if (!player) return;
     const world = worlds.get(currentWorldId);
     if (!world) return;
@@ -853,117 +854,311 @@ finishCapture: () => {
 
     const nextFloor = dungeon.currentFloor + 1;
     const isBoss = nextFloor === dungeon.totalFloors;
-    const isTrap = !isBoss && Math.random() < 0.15;
-    const isTreasure = !isBoss && !isTrap && Math.random() < 0.1;
+    const tower = dungeon.tower;
+    
+    const rng = new SeededRandom(Date.now() + nextFloor);
+    const floorGraph = tower?.floors.find(f => f.floorIndex === nextFloor);
+    const roomTypes = ['combat', 'trap', 'puzzle', 'treasure', 'elite', 'vendor', 'rest'];
+    const randomRoomType = roomTypes[rng.int(0, roomTypes.length - 1)];
+    
+    let roomInteraction: RoomInteractionState | undefined;
+    let encounterType: 'guardian' | 'trap' | 'treasure' | 'boss' | 'puzzle' | 'elite' | 'vendor' = 'guardian';
 
-    let enemyName: string;
-    let maxHp: number;
-    let encounterType: 'guardian' | 'trap' | 'treasure' | 'boss' = 'guardian';
-
-    if (isTrap) {
-      encounterType = 'trap';
-      const trapTypes = ['Spike Pit', 'Poison Gas', 'Crushing Walls', 'Lightning Rune', 'Fire Vent'];
-      const trapIdx = Math.floor(Math.random() * trapTypes.length);
-      enemyName = trapTypes[trapIdx] || 'Unknown Trap';
-      maxHp = 20 + nextFloor * 3 + currentWorldId * 2;
-    } else if (isTreasure) {
-      encounterType = 'treasure';
-      enemyName = 'Treasure Mimic';
-      maxHp = 30 + nextFloor * 4 + currentWorldId * 3;
-    } else if (isBoss) {
+    if (isBoss) {
       encounterType = 'boss';
-      enemyName = `${world.name} World Boss`;
-      maxHp = 120 + currentWorldId * 15;
-    } else {
-      encounterType = 'guardian';
-      enemyName = `Floor ${nextFloor} Warden`;
-      maxHp = 40 + nextFloor * 5 + currentWorldId * 3;
+      const bossTemplate: CreatureTemplate = {
+        key: 'world_boss',
+        name: `${world.name} Guardian`,
+        class: 'legendary',
+        type: 'dragon',
+        elements: ['earth', 'fire'],
+        baseHealth: 120 + currentWorldId * 15,
+        baseAttack: 15 + currentWorldId * 2,
+        baseDefense: 10 + currentWorldId,
+        baseSpeed: 5 + Math.floor(currentWorldId / 2),
+        baseMana: 30,
+        baseExpValue: 50 + currentWorldId * 5,
+        skills: [{ key: 'world_slam', name: 'World Slam', description: 'Devastating earth attack', power: 20, cost: 10 }],
+        description: 'The tower guardian.',
+        isBoss: true,
+      };
+      startCombat(bossTemplate, 'Tower Guardian', 'normal');
+      set((state) => ({
+        dungeon: {
+          ...state.dungeon,
+          currentFloor: nextFloor,
+          inEncounter: true,
+          encounterType: 'boss',
+        },
+        screen: 'combat',
+      }));
+      return;
     }
 
+    switch (randomRoomType) {
+      case 'trap': {
+        encounterType = 'trap';
+        const trapInteraction = generateTrapInteraction(rng);
+        roomInteraction = {
+          active: true,
+          roomType: 'trap',
+          roomId: `floor_${nextFloor}_trap`,
+          choices: trapInteraction.choices.map(c => ({ id: c.id, label: c.label, description: c.description })),
+          message: trapInteraction.description,
+        };
+        set((state) => ({
+          dungeon: {
+            ...state.dungeon,
+            currentFloor: nextFloor,
+            inEncounter: true,
+            encounterType: 'trap',
+          },
+          combat: {
+            ...state.combat,
+            active: false,
+            log: [`You enter a trap room. ${trapInteraction.description}`],
+          },
+        }));
+        return;
+      }
+      case 'puzzle': {
+        encounterType = 'puzzle';
+        const puzzleInteraction = generatePuzzleInteraction(rng, currentWorldId);
+        roomInteraction = {
+          active: true,
+          roomType: 'puzzle',
+          roomId: `floor_${nextFloor}_puzzle`,
+          choices: puzzleInteraction.choices.map(c => ({ id: c.id, label: c.label, description: c.description })),
+          message: puzzleInteraction.description,
+        };
+        set((state) => ({
+          dungeon: {
+            ...state.dungeon,
+            currentFloor: nextFloor,
+            inEncounter: true,
+            encounterType: 'puzzle',
+          },
+          combat: {
+            ...state.combat,
+            active: false,
+            roomInteraction,
+          },
+        }));
+        return;
+      }
+      case 'treasure': {
+        encounterType = 'treasure';
+        const treasureInteraction = generateTreasureInteraction(rng, currentWorldId);
+        roomInteraction = {
+          active: true,
+          roomType: 'treasure',
+          roomId: `floor_${nextFloor}_treasure`,
+          message: treasureInteraction.description,
+        };
+        set((state) => ({
+          dungeon: {
+            ...state.dungeon,
+            currentFloor: nextFloor,
+            inEncounter: true,
+            encounterType: 'treasure',
+          },
+          combat: {
+            ...state.combat,
+            active: false,
+            roomInteraction,
+          },
+        }));
+        return;
+      }
+      case 'elite': {
+        encounterType = 'elite';
+        const eliteInteraction = generateEliteInteraction(rng, currentWorldId);
+        const eliteTemplate: CreatureTemplate = {
+          key: 'elite_guardian',
+          name: eliteInteraction.enemyName,
+          class: 'rare',
+          type: 'construct',
+          elements: ['earth'],
+          baseHealth: 50 + (eliteInteraction.enemyLevel * 8),
+          baseAttack: 10 + (eliteInteraction.enemyLevel * 2),
+          baseDefense: 8 + (eliteInteraction.enemyLevel * 1.5),
+          baseSpeed: 5 + eliteInteraction.enemyLevel,
+          baseMana: 20,
+          baseExpValue: 30 + (eliteInteraction.enemyLevel * 2),
+          skills: [{ key: 'earth_slash', name: 'Earth Slash', description: 'A powerful earth attack', power: 15, cost: 5 }],
+          description: 'An elite guardian of the dungeon.',
+          isBoss: false,
+        };
+        startCombat(eliteTemplate, eliteInteraction.enemyName, 'normal');
+        set((state) => ({
+          dungeon: {
+            ...state.dungeon,
+            currentFloor: nextFloor,
+            inEncounter: true,
+            encounterType: 'elite',
+          },
+        }));
+        return;
+      }
+      case 'vendor': {
+        encounterType = 'vendor';
+        const vendorInteraction = generateVendorInteraction(rng, currentWorldId);
+        roomInteraction = {
+          active: true,
+          roomType: 'vendor',
+          roomId: `floor_${nextFloor}_vendor`,
+          choices: vendorInteraction.items.map(i => ({ id: i.key, label: i.name, description: `${i.price} stones` })),
+          message: vendorInteraction.description,
+          vendorData: vendorInteraction,
+        };
+        set((state) => ({
+          dungeon: {
+            ...state.dungeon,
+            currentFloor: nextFloor,
+            inEncounter: true,
+            encounterType: 'vendor',
+          },
+          combat: {
+            ...state.combat,
+            active: false,
+            roomInteraction,
+          },
+        }));
+        return;
+      }
+      case 'rest': {
+        roomInteraction = {
+          active: false,
+          roomType: 'rest',
+          roomId: `floor_${nextFloor}_rest`,
+          message: 'A peaceful rest area. Your vitality is restored.',
+        };
+        set((state) => ({
+          player: {
+            ...state.player!,
+            energy: { ...state.player!.energy, current: state.player!.energy.max },
+            nerve: { ...state.player!.nerve, current: state.player!.nerve.max },
+            life: { ...state.player!.life, current: state.player!.life.max },
+          },
+          dungeon: {
+            ...state.dungeon,
+            currentFloor: nextFloor,
+            inEncounter: false,
+            encounterType: undefined,
+            clearedFloors: [...state.dungeon.clearedFloors, nextFloor],
+          },
+          combat: {
+            ...state.combat,
+            active: false,
+            roomInteraction,
+          },
+        }));
+        appendLog('You found a rest area. Your vitality is fully restored!', 'success');
+        return;
+      }
+      default:
+        break;
+    }
+
+    const enemyName = `Floor ${nextFloor} Warden`;
+    const maxHp = 40 + nextFloor * 5 + currentWorldId * 3;
+    const guardianTemplate: CreatureTemplate = {
+      key: 'floor_guardian',
+      name: enemyName,
+      class: 'uncommon',
+      type: 'beast',
+      elements: ['earth'],
+      baseHealth: maxHp,
+      baseAttack: 8 + nextFloor,
+      baseDefense: 5 + Math.floor(nextFloor / 2),
+      baseSpeed: 5 + Math.floor(nextFloor / 3),
+      baseMana: 15,
+      baseExpValue: 20 + nextFloor * 2,
+      skills: [{ key: 'slash', name: 'Slash', description: 'Basic attack', power: 10, cost: 0 }],
+      description: 'A lesser guardian.',
+      isBoss: false,
+    };
+    startCombat(guardianTemplate, enemyName, 'normal');
     set((state) => ({
       dungeon: {
         ...state.dungeon,
         currentFloor: nextFloor,
         inEncounter: true,
-        encounterType,
-        encounterName: enemyName,
+        encounterType: 'guardian',
       },
-      combat: {
-        active: true,
-        phase: 'player_turn',
-        log: [`You advance to Floor ${nextFloor}. ${isTrap ? 'A hidden trap triggers!' : isTreasure ? 'A treasure mimic appears!' : isBoss ? 'The World Boss awaits!' : 'A new guardian appears!'}`],
-        enemyName,
-        enemyHp: maxHp,
-        enemyMaxHp: maxHp,
-        enemyTemplate: null,
-        playerCreatureId: player.creatures[0]?.id || '',
-        turns: 0,
-      },
-      combatTarget: player.creatures[0]?.id || null,
-      screen: 'combat',
     }));
   },
 
-  resolveDungeonEncounter: (victory: boolean) => {
-    const { dungeon, currentWorldId, worlds, appendLog } = get();
-    if (!dungeon.active) return;
+resolveDungeonEncounter: (victory: boolean) => {
+     const { dungeon, currentWorldId, worlds, appendLog } = get();
+     if (!dungeon.active) return;
 
-    if (victory) {
-      const newCleared = [...dungeon.clearedFloors, dungeon.currentFloor];
-      const isBoss = dungeon.currentFloor === dungeon.totalFloors;
-      const isTreasure = dungeon.encounterType === 'treasure';
+     if (victory) {
+       const newCleared = [...dungeon.clearedFloors, dungeon.currentFloor];
+       const isBoss = dungeon.currentFloor === dungeon.totalFloors;
+       const isTreasure = dungeon.encounterType === 'treasure';
 
-      set((state) => {
-        const updatedQuests = state.player!.activeQuests.map((q: QuestInstance) => {
-          const template = QUEST_TEMPLATES[q.templateKey];
-          if (!template || q.status !== 'active') return q;
+       const player = get().player;
+       if (!player) return;
 
-          if (template.type === 'combat' && template.target === 'dungeon_floor') {
-            return { ...q, progress: Math.min(q.targetProgress, newCleared.length) };
-          }
-          if (template.type === 'combat' && template.target === 'world_boss' && isBoss) {
-            return { ...q, progress: Math.min(q.targetProgress, q.progress + 1) };
-          }
-          return q;
-        });
+       const { player: scaledPlayer, creatures: scaledCreatures } = applyMinViableLevelScaling(player, currentWorldId, player.creatures);
 
-        return {
-          player: {
-            ...state.player!,
-            activeQuests: updatedQuests,
-          },
-          dungeon: {
-            ...state.dungeon,
-            clearedFloors: newCleared,
-            bossDefeated: isBoss ? true : state.dungeon.bossDefeated,
-            inEncounter: false,
-            encounterType: undefined,
-            encounterName: undefined,
-          },
-          combat: { active: false, phase: 'player_turn', log: [], enemyName: '', enemyHp: 0, enemyMaxHp: 0, enemyTemplate: null, playerCreatureId: '', turns: 0 },
-          combatTarget: null,
-        };
-      });
+       set((state) => {
+         const updatedQuests = state.player!.activeQuests.map((q: QuestInstance) => {
+           const template = QUEST_TEMPLATES[q.templateKey];
+           if (!template || q.status !== 'active') return q;
 
-      if (isTreasure) {
-        appendLog('The mimic dissolved into gold and items!', 'success');
-        const goldFound = 50 + currentWorldId * 20;
-        const p = get().player;
-        if (p) {
-          set((state) => ({
-            player: {
-              ...state.player!,
-              money: state.player!.money + goldFound,
-            }
-          }));
-          appendLog(`Found ${goldFound} gold!`, 'success');
-        }
-      } else if (isBoss) {
-        appendLog(`World Boss defeated! You have conquered ${worlds.get(currentWorldId)?.name}!`, 'success');
-      } else {
-        appendLog(`Floor ${dungeon.currentFloor} cleared.`, 'success');
-      }
-    } else {
+           if (template.type === 'combat' && template.target === 'dungeon_floor') {
+             return { ...q, progress: Math.min(q.targetProgress, newCleared.length) };
+           }
+           if (template.type === 'combat' && template.target === 'world_boss' && isBoss) {
+             return { ...q, progress: Math.min(q.targetProgress, q.progress + 1) };
+           }
+           return q;
+         });
+
+         return {
+           player: {
+             ...scaledPlayer,
+             creatures: scaledCreatures,
+             activeQuests: updatedQuests,
+           },
+           dungeon: {
+             ...state.dungeon,
+             clearedFloors: newCleared,
+             bossDefeated: isBoss ? true : state.dungeon.bossDefeated,
+             inEncounter: false,
+             encounterType: undefined,
+             encounterName: undefined,
+           },
+           combat: { active: false, phase: 'player_turn', log: [], enemyName: '', enemyHp: 0, enemyMaxHp: 0, enemyTemplate: null, playerCreatureId: '', turns: 0 },
+           combatTarget: null,
+         };
+       });
+
+       if (isTreasure) {
+         appendLog('The mimic dissolved into gold and items!', 'success');
+         const goldFound = 50 + currentWorldId * 20;
+         const p = get().player;
+         if (p) {
+           set((state) => ({
+             player: {
+               ...state.player!,
+               money: state.player!.money + goldFound,
+             }
+           }));
+           appendLog(`Found ${goldFound} gold!`, 'success');
+         }
+       } else if (isBoss) {
+         const minLevel = calculateMinViableLevel(currentWorldId);
+         if (player.level < minLevel && scaledPlayer.level >= minLevel) {
+           appendLog(`Dungeon exit scaled you to minimum viable level ${minLevel} for this world tier.`, 'success');
+         }
+         appendLog(`World Boss defeated! You have conquered ${worlds.get(currentWorldId)?.name}!`, 'success');
+       } else {
+         appendLog(`Floor ${dungeon.currentFloor} cleared.`, 'success');
+       }
+     } else {
       set((state) => ({
         dungeon: { ...state.dungeon, inEncounter: false, encounterType: undefined, encounterName: undefined },
         combat: { active: false, phase: 'player_turn', log: [], enemyName: '', enemyHp: 0, enemyMaxHp: 0, enemyTemplate: null, playerCreatureId: '', turns: 0 },
@@ -974,16 +1169,28 @@ finishCapture: () => {
     }
   },
 
-  fleeDungeon: () => {
-    const { appendLog } = get();
-    if (Math.random() < 0.5) {
-      appendLog('You escaped the dungeon!', 'warning');
-      set({ screen: 'explore', dungeon: { active: false, worldId: 1, currentFloor: 0, totalFloors: 3, clearedFloors: [], bossDefeated: false, inEncounter: false, encounterType: undefined }, combat: { active: false, phase: 'player_turn', log: [], enemyName: '', enemyHp: 0, enemyMaxHp: 0, enemyTemplate: null, playerCreatureId: '', turns: 0 }, combatTarget: null });
-    } else {
-      appendLog('Could not escape the dungeon!', 'warning');
-      set((state: any) => ({ combat: { ...state.combat, phase: 'enemy_turn' } }));
-    }
-  },
+fleeDungeon: () => {
+     const { appendLog, player, currentWorldId } = get();
+     if (!player) return;
+     if (Math.random() < 0.5) {
+       const escapedWorldId = currentWorldId || 1;
+       const { player: scaledPlayer, creatures: scaledCreatures } = applyMinViableLevelScaling(player, escapedWorldId, player.creatures);
+       
+       appendLog('You escaped the dungeon!', 'warning');
+       appendLog(`Dungeon exit scaled you to minimum viable level ${calculateMinViableLevel(escapedWorldId)} for this world tier.`, 'info');
+       
+       set((state) => ({ 
+         screen: 'explore', 
+         player: { ...scaledPlayer, creatures: scaledCreatures },
+         dungeon: { active: false, worldId: escapedWorldId, currentFloor: 0, totalFloors: 3, clearedFloors: [], bossDefeated: false, inEncounter: false, encounterType: undefined }, 
+         combat: { active: false, phase: 'player_turn', log: [], enemyName: '', enemyHp: 0, enemyMaxHp: 0, enemyTemplate: null, playerCreatureId: '', turns: 0 }, 
+         combatTarget: null 
+       }));
+     } else {
+       appendLog('Could not escape the dungeon!', 'warning');
+       set((state: any) => ({ combat: { ...state.combat, phase: 'enemy_turn' } }));
+     }
+   },
 
   exploreTile: () => {
     const { player, worlds, currentWorldId, appendLog, exploring } = get();

@@ -31,11 +31,15 @@ import type {
    CombatPhase,
    CommunityTab,
    BossHazard,
+   RoomInteractionState,
+   RoomInteractionChoice,
+   RoomInteractionResult,
   } from '../../types/game.ts';
  import type { ActiveMission } from '../../core/missionQueue.ts';
  import type { MissionType, MissionModifiers } from '../../core/missionQueue.ts';
  import type { HeartbeatInstance } from '../../core/heartbeat.ts';
  import type { FloorActivity } from '../../core/demonlord';
+ import type { TrapRoomInteraction, PuzzleRoomInteraction, EliteRoomInteraction, VendorRoomInteraction, TreasureRoomInteraction } from '../../core/dungeonGenerator';
 
 export type {
   PlayerState,
@@ -66,11 +70,19 @@ export type {
   CombatPhase,
   CommunityTab,
   BossHazard,
+  RoomInteractionState,
+  RoomInteractionChoice,
+  RoomInteractionResult,
 ActiveMission,
    MissionType,
    MissionModifiers,
    HeartbeatInstance,
    FloorActivity,
+   TrapRoomInteraction,
+   PuzzleRoomInteraction,
+   EliteRoomInteraction,
+   VendorRoomInteraction,
+   TreasureRoomInteraction,
  };
 
 export interface GameStoreState {
@@ -209,6 +221,11 @@ export interface GameActions {
    descendDungeon: () => void;
    resolveDungeonEncounter: (victory: boolean) => void;
    fleeDungeon: () => void;
+   resolveTrapRoom: (choice: string) => void;
+   resolvePuzzleRoom: (choice: string) => void;
+   resolveEliteRoom: () => void;
+   resolveVendorRoom: (itemId: string) => void;
+   resolveTreasureRoom: () => void;
    exploreTile: () => void;
    cancelExploration: () => void;
    createMapScroll: () => void;
@@ -247,4 +264,3 @@ showLevelUpNotification: (notifications: Array<{ creatureName: string; newLevel:
    }
 
 export type GameStore = GameStoreState & GameActions;
-

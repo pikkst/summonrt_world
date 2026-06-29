@@ -392,7 +392,7 @@ export interface DungeonState {
   clearedFloors: number[];
   bossDefeated: boolean;
   inEncounter: boolean;
-  encounterType?: 'guardian' | 'trap' | 'treasure' | 'boss';
+  encounterType?: 'guardian' | 'trap' | 'treasure' | 'boss' | 'puzzle' | 'elite' | 'vendor' | 'rest';
   encounterName?: string;
   tower?: DungeonTower;
 }
@@ -489,6 +489,37 @@ export interface CombatState {
     scannedAtTurn: number;
     penaltyTurnsRemaining?: number;
   };
+  roomInteraction?: RoomInteractionState;
+}
+
+export interface RoomInteractionState {
+  active: boolean;
+  roomType: RoomType;
+  roomId?: string;
+  choices?: RoomInteractionChoice[];
+  selectedChoice?: string;
+  result?: RoomInteractionResult;
+  message?: string;
+  vendorData?: {
+    description: string;
+    items: { key: string; name: string; price: number; stock: number }[];
+  };
+  treasureData?: {
+    hasMythicalEgg: boolean;
+  };
+}
+
+export interface RoomInteractionChoice {
+  id: string;
+  label: string;
+  description?: string;
+}
+
+export interface RoomInteractionResult {
+  success: boolean;
+  damageTaken?: number;
+  rewards?: InventoryStack[];
+  message: string;
 }
 
 export interface CommunityPlayer {

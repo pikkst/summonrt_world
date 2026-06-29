@@ -121,9 +121,9 @@ describe('T6.5 Boss Phase Mechanics', () => {
       } as any,
     });
 
-    const initialHealth = useGameStore.getState().player!.creatures[0].currentHealth;
-    useGameStore.getState().applyEnvironmentalHazardDamage();
-    const finalHealth = useGameStore.getState().player!.creatures[0].currentHealth;
+const initialHealth = useGameStore.getState().player!.creatures[0]!.currentHealth;
+     useGameStore.getState().applyEnvironmentalHazardDamage();
+     const finalHealth = useGameStore.getState().player!.creatures[0]!.currentHealth;
 
     expect(finalHealth).toBeLessThan(initialHealth);
     const combatLog = useGameStore.getState().combat.log;

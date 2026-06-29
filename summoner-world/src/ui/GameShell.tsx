@@ -1471,7 +1471,84 @@ function CombatPanel() {
             </>
           )}
 
-          {(combat.phase === 'victory' || combat.phase === 'defeat') && (
+          {combat.roomInteraction?.active && !combat.active && (
+             <div className="max-w-4xl mx-auto space-y-6">
+               <div className="bg-gray-900/40 border border-gray-800 rounded-3xl p-8">
+                 <h3 className="text-2xl font-black text-white italic tracking-tighter mb-4">
+                   {combat.roomInteraction.roomType === 'trap' ? 'Hazard Encounter' : 
+                    combat.roomInteraction.roomType === 'puzzle' ? 'Puzzle Room' : 
+                    combat.roomInteraction.roomType === 'vendor' ? 'Merchant Encounter' : 
+                    combat.roomInteraction.roomType === 'treasure' ? 'Treasure Chamber' : 
+                    'Special Room'}
+                 </h3>
+                 <p className="text-gray-400 mb-6 font-serif italic">{combat.roomInteraction.message}</p>
+                 
+                 {combat.roomInteraction.choices && (
+                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+                     {combat.roomInteraction.choices.map((choice) => (
+                       <button
+                         key={choice.id}
+                         onClick={() => {
+                           const resolveAction = (useGameStore.getState() as any)[`resolve${capitalize(combat.roomInteraction!.roomType)}Room`];
+                           if (resolveAction) resolveAction(choice.id);
+                         }}
+                         className="bg-gray-950 hover:bg-emerald-600/20 text-emerald-400 border border-gray-800 hover:border-emerald-500/30 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all text-left px-4"
+                       >
+                         <div className="font-bold text-white mb-1">{choice.label}</div>
+                         <div className="text-[9px] text-gray-500">{choice.description}</div>
+                       </button>
+                     ))}
+                   </div>
+                 )}
+                 
+                 {combat.roomInteraction.vendorData && !combat.roomInteraction.choices && (
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+                     {combat.roomInteraction.vendorData.items.map((item) => (
+                       <button
+                         key={item.key}
+                         onClick={() => {
+                           const resolveVendorRoom = (useGameStore.getState() as any).resolveVendorRoom;
+                           if (resolveVendorRoom) resolveVendorRoom(item.key);
+                         }}
+                         disabled={item.stock <= 0}
+                         className="bg-gray-950 hover:bg-emerald-600/20 text-emerald-400 border border-gray-800 hover:border-emerald-500/30 py-3 rounded-xl font-black uppercase tracking-widest text-[9px] transition-all text-left px-3 disabled:opacity-30 disabled:cursor-not-allowed"
+                       >
+                         <div className="font-bold text-white">{item.name} <span className="text-gray-500 font-normal">({item.price} stones)</span></div>
+                         <div className="text-[8px] text-gray-500">Stock: {item.stock}</div>
+                       </button>
+                     ))}
+                   </div>
+                 )}
+                 
+                 {combat.roomInteraction.treasureData && !combat.roomInteraction.choices && (
+                   <div className="text-center">
+                     <button
+                       onClick={() => {
+                         const resolveTreasureRoom = (useGameStore.getState() as any).resolveTreasureRoom;
+                         if (resolveTreasureRoom) resolveTreasureRoom();
+                       }}
+                       className="bg-gradient-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-black py-4 px-8 rounded-2xl font-black uppercase tracking-[0.2em] transition-all transform active:scale-[0.98]"
+                     >
+                       {combat.roomInteraction.treasureData.hasMythicalEgg ? 'Claim Mythical Egg!' : 'Collect Treasure'}
+                     </button>
+                     {combat.roomInteraction.treasureData.hasMythicalEgg && (
+                       <p className="text-[10px] text-yellow-400 font-bold uppercase tracking-widest mt-3 animate-pulse">★ Rare Drop Detected! ★</p>
+                     )}
+                   </div>
+                 )}
+                 
+                 {combat.roomInteraction.result && (
+                   <div className="mt-4 text-center">
+                     <p className={`text-sm font-bold ${combat.roomInteraction.result.success ? 'text-emerald-400' : 'text-rose-400'}`}>
+                       {combat.roomInteraction.result.message}
+                     </p>
+                   </div>
+                 )}
+               </div>
+             </div>
+           )}
+
+           {(combat.phase === 'victory' || combat.phase === 'defeat') && (
             <div className="text-center space-y-6 py-4 animate-in zoom-in duration-500">
               <h3 className={`text-5xl font-black italic tracking-tighter uppercase ${combat.phase === 'victory' ? 'text-emerald-500' : 'text-rose-500'}`}>
                 {combat.phase === 'victory' ? 'Victory' : 'Defeat'}
