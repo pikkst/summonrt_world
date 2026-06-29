@@ -322,6 +322,24 @@ export interface DungeonRoom {
   connections: string[];
 }
 
+export type DungeonFloorLayoutType = 'maze' | 'boss_arena';
+
+export interface DungeonEnvironmentalHazard {
+  key: string;
+  name: string;
+  element: Element;
+  description: string;
+  damageMultiplier: number;
+  triggerRate: number;
+}
+
+export interface DungeonBossScaling {
+  baseBossHp: number;
+  hpMultiplier: number;
+  scaledBossHp: number;
+  signatureAbilityCount: number;
+}
+
 export interface DungeonFloorGraph {
   floorIndex: number;
   worldIndex: number;
@@ -330,6 +348,11 @@ export interface DungeonFloorGraph {
   entranceRoomId: string;
   bossRoomId: string;
   treasureRoomIds: string[];
+  layoutType?: DungeonFloorLayoutType;
+  isBossFloor?: boolean;
+  worldElement?: Element;
+  environmentalHazards?: DungeonEnvironmentalHazard[];
+  bossScaling?: DungeonBossScaling;
 }
 
 export interface DungeonTowerVerticalLink {

@@ -1,7 +1,19 @@
-import type { DungeonFloorGraph, DungeonRoom, DungeonTower, DungeonTowerSafeFloor, DungeonTowerVerticalLink, RoomType } from '../types/game';
+import { ELEMENTS } from '../data/constants';
+import type {
+  DungeonBossScaling,
+  DungeonEnvironmentalHazard,
+  DungeonFloorGraph,
+  DungeonRoom,
+  DungeonTower,
+  DungeonTowerSafeFloor,
+  DungeonTowerVerticalLink,
+  Element,
+  RoomType
+} from '../types/game';
 import { SeededRandom } from '../utils/SeededRandom';
 
 export const DUNGEON_BASE_FLOORS = 3;
+export const BASE_BOSS_HP = 1000;
 const GRID_WIDTH = 5;
 const GRID_HEIGHT = 5;
 
@@ -144,7 +156,8 @@ export function mazeToGraph(maze: MazeCell[][], seed: number): DungeonFloorGraph
     rooms,
     entranceRoomId: `room_0_0`,
     bossRoomId,
-    treasureRoomIds: []
+    treasureRoomIds: [],
+    layoutType: 'maze'
   };
 }
 
@@ -335,11 +348,210 @@ export function generateDungeonFloor(
   
   graph.floorIndex = floorIndex;
   graph.worldIndex = worldIndex;
+  graph.layoutType = 'maze';
   
   assignRoomTypes(graph, rng, worldIndex, floorIndex);
   ensureMultipleShortestPaths(graph, rng);
 
   return graph;
+}
+
+export function generateBossFloor(
+  worldIndex: number,
+  floorIndex: number,
+  globalSeed: number
+): DungeonFloorGraph {
+  const seed = getDungeonFloorSeed(worldIndex, floorIndex, globalSeed);
+  const worldElement = getWorldElement(worldIndex);
+  const rooms = createOpenBossArenaRooms();
+
+  return {
+    floorIndex,
+    worldIndex,
+    seed,
+    rooms,
+    entranceRoomId: 'arena_2_0',
+    bossRoomId: 'arena_2_2',
+    treasureRoomIds: [],
+    layoutType: 'boss_arena',
+    isBossFloor: true,
+    worldElement,
+    environmentalHazards: getBossFloorEnvironmentalHazards(worldElement),
+    bossScaling: calculateBossScaling(worldIndex)
+  };
+}
+
+function createOpenBossArenaRooms(): DungeonRoom[] {
+  const rooms: DungeonRoom[] = [];
+  const width = 5;
+  const height = 5;
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const id = `arena_${y}_${x}`;
+      const connections: string[] = [];
+
+      if (y > 0) connections.push(`arena_${y - 1}_${x}`);
+      if (y < height - 1) connections.push(`arena_${y + 1}_${x}`);
+      if (x > 0) connections.push(`arena_${y}_${x - 1}`);
+      if (x < width - 1) connections.push(`arena_${y}_${x + 1}`);
+
+      rooms.push({
+        id,
+        x,
+        y,
+        type: getBossArenaRoomType(x, y),
+        connections
+      });
+    }
+  }
+
+  return rooms;
+}
+
+function getBossArenaRoomType(x: number, y: number): RoomType {
+  if (x === 0 && y === 2) return 'entrance';
+  if (x === 2 && y === 2) return 'boss';
+  if ((x === 1 && y === 1) || (x === 3 && y === 1) || (x === 1 && y === 3) || (x === 3 && y === 3)) {
+    return 'trap';
+  }
+  if (x === 2 && (y === 0 || y === 4)) return 'rest';
+  return 'combat';
+}
+
+export function getWorldElement(worldIndex: number): Element {
+  return ELEMENTS[(Math.max(1, worldIndex) - 1) % ELEMENTS.length] as Element;
+}
+
+export function getBossFloorEnvironmentalHazards(element: Element): DungeonEnvironmentalHazard[] {
+  const hazardByElement: Record<Element, DungeonEnvironmentalHazard> = {
+    fire: {
+      key: 'lava_burst',
+      name: 'Lava Burst',
+      element: 'fire',
+      description: 'Molten vents erupt around the boss arena.',
+      damageMultiplier: 1.15,
+      triggerRate: 0.18
+    },
+    water: {
+      key: 'tidal_surge',
+      name: 'Tidal Surge',
+      element: 'water',
+      description: 'Rising water pressure pushes combatants across the arena.',
+      damageMultiplier: 1.1,
+      triggerRate: 0.16
+    },
+    earth: {
+      key: 'seismic_fracture',
+      name: 'Seismic Fracture',
+      element: 'earth',
+      description: 'The floor cracks and punishes slow positioning.',
+      damageMultiplier: 1.12,
+      triggerRate: 0.15
+    },
+    air: {
+      key: 'cyclone_crosswind',
+      name: 'Cyclone Crosswind',
+      element: 'air',
+      description: 'Violent crosswinds disrupt creature commands.',
+      damageMultiplier: 1.08,
+      triggerRate: 0.2
+    },
+    lightning: {
+      key: 'storm_pulse',
+      name: 'Storm Pulse',
+      element: 'lightning',
+      description: 'Arc flashes chain through exposed arena lanes.',
+      damageMultiplier: 1.18,
+      triggerRate: 0.17
+    },
+    iron: {
+      key: 'magnetic_crush',
+      name: 'Magnetic Crush',
+      element: 'iron',
+      description: 'Iron plates slam together and punish armored targets.',
+      damageMultiplier: 1.14,
+      triggerRate: 0.14
+    },
+    nature: {
+      key: 'thorn_overgrowth',
+      name: 'Thorn Overgrowth',
+      element: 'nature',
+      description: 'Living roots spread into temporary hazard zones.',
+      damageMultiplier: 1.09,
+      triggerRate: 0.19
+    },
+    ice: {
+      key: 'frost_spikes',
+      name: 'Frost Spikes',
+      element: 'ice',
+      description: 'Jagged ice blooms under weakened creatures.',
+      damageMultiplier: 1.13,
+      triggerRate: 0.16
+    },
+    light: {
+      key: 'radiant_judgment',
+      name: 'Radiant Judgment',
+      element: 'light',
+      description: 'Focused beams mark unsafe arena quadrants.',
+      damageMultiplier: 1.11,
+      triggerRate: 0.15
+    },
+    darkness: {
+      key: 'umbral_zone',
+      name: 'Umbral Zone',
+      element: 'darkness',
+      description: 'Dark zones obscure weakness reads and punish hesitation.',
+      damageMultiplier: 1.16,
+      triggerRate: 0.16
+    },
+    void: {
+      key: 'void_collapse',
+      name: 'Void Collapse',
+      element: 'void',
+      description: 'Unstable void pockets collapse inside the arena.',
+      damageMultiplier: 1.2,
+      triggerRate: 0.12
+    },
+    starlight: {
+      key: 'stellar_rain',
+      name: 'Stellar Rain',
+      element: 'starlight',
+      description: 'Starlight fragments fall in rotating patterns.',
+      damageMultiplier: 1.2,
+      triggerRate: 0.12
+    },
+    chaos: {
+      key: 'chaos_surge',
+      name: 'Chaos Surge',
+      element: 'chaos',
+      description: 'Chaotic pressure mutates arena danger each phase.',
+      damageMultiplier: 1.2,
+      triggerRate: 0.12
+    },
+    omni: {
+      key: 'convergence_field',
+      name: 'Convergence Field',
+      element: 'omni',
+      description: 'All elements converge into rotating arena pressure.',
+      damageMultiplier: 1.25,
+      triggerRate: 0.1
+    }
+  };
+
+  return [hazardByElement[element]];
+}
+
+export function calculateBossScaling(worldIndex: number, baseBossHp = BASE_BOSS_HP): DungeonBossScaling {
+  const normalizedWorldIndex = Math.max(1, worldIndex);
+  const hpMultiplier = 1 + ((normalizedWorldIndex - 1) * 0.25);
+
+  return {
+    baseBossHp,
+    hpMultiplier,
+    scaledBossHp: Math.round(baseBossHp * hpMultiplier),
+    signatureAbilityCount: Math.floor(normalizedWorldIndex / 10)
+  };
 }
 
 export function getDungeonTowerFloorCount(worldIndex: number): number {
@@ -356,9 +568,11 @@ export function generateDungeonTower(
   const safeFloors: DungeonTowerSafeFloor[] = [];
 
   for (let floorIndex = 1; floorIndex <= totalFloors; floorIndex++) {
-    const floor = generateDungeonFloor(worldIndex, floorIndex, globalSeed);
+    const floor = floorIndex === totalFloors
+      ? generateBossFloor(worldIndex, floorIndex, globalSeed)
+      : generateDungeonFloor(worldIndex, floorIndex, globalSeed);
 
-    if (isSafeTowerFloor(floorIndex)) {
+    if (isSafeTowerFloor(floorIndex) && !floor.isBossFloor) {
       const safeFloor = markSafeTowerFloor(floor);
       if (safeFloor) safeFloors.push(safeFloor);
     }

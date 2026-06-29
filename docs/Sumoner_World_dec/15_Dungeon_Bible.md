@@ -27,7 +27,7 @@ Aligned source:
 - `SummonerWorld_Tasks.md`
 
 Completed through:
-- T6.4.4 - Dungeon Room Assignment System
+- T6.4.6 - Boss floor generation rules
 
 Completed ahead of sequence:
 - T6.4.7 - Deterministic floor seed system
@@ -45,6 +45,8 @@ Completed Sprint 6 dungeon/combat foundation:
 - T6.4.2 - Multi-path guarantee
 - T6.4.3 - Treasure room placement
 - T6.4.4 - Room type assignment with biome/tier consistency and rest room guarantee
+- T6.4.5 - Central tower generation
+- T6.4.6 - Boss floor generation rules
 - T6.4.7 - Deterministic floor seed system
 - T6.4.9 - Pathfinding utilities
 
@@ -61,6 +63,10 @@ Completed Sprint 6 dungeon/combat foundation:
 - Deterministic floor seeds from world, floor, and global seed
 - Shortest-path and distance-map utilities
 - Unit tests for current floor generation, room types, paths, treasures, and deterministic output
+- Final tower floor boss arena generation
+- Open non-maze boss arena layout
+- Element-based boss arena hazards
+- GDD boss HP and signature ability scaling metadata
 - Boss phase mechanics
 - Scan ability for boss weakness discovery
 - Demonlord floor range and challenge flow
@@ -68,10 +74,9 @@ Completed Sprint 6 dungeon/combat foundation:
 ## Remaining Sprint 6 Tasks
 
 Next:
-- T6.4.5 - Create generateDungeonTower(worldIndex)
+- T6.4.8 - Dungeon metadata export
 
 Remaining:
-- T6.4.6 - Boss floor generation rules
 - T6.4.8 - Dungeon metadata export
 - T6.4.10 - Remaining dungeon generation tests: 100-floor simulation and boss-floor reachability
 - T6.5 - Extend boss phase mechanics with environmental hazard rotation and Summoner career bonuses

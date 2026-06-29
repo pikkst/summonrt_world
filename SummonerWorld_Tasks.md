@@ -9,10 +9,10 @@ Current alignment state:
 - The core architecture is Player Core -> Creature Core -> World Core -> NPC Core -> Economy Core.
 - Creature AI remains valuable, but it is treated as a Creature Bible technical appendix.
 - Sprint 0-5 are complete.
-- Sprint 6 sequential implementation is complete through T6.4.4.
+- Sprint 6 sequential implementation is complete through T6.4.6.
 - T6.4.7 and T6.4.9 are also complete ahead of sequence.
 - T6.4.10 is partially complete: current unit tests cover connectivity, multi-paths, treasure rooms, deterministic seeds, and room types; 100-floor simulation and boss-floor reachability remain.
-- The next implementation task is T6.4.5.
+- The next implementation task is T6.4.8.
 - T6.5, T6.6, and T6.7 overlap earlier completed tasks and should be read as extension tasks, not fresh duplicates.
 - New missing backlog added from `docs/Sumoner_World_dec`: Player Core alignment, event-driven architecture, documentation volume completion, reputation, titles, achievements, statistics, contracts, commands, and end-game structure.
 
@@ -168,7 +168,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * Link floors vertically (exit → next entrance)
 * Mark safe floors (every 10th): rest area + vendor + teleport unlock
 
-- [ ] T6.4.6 – Add boss floor generation rules
+- [x] T6.4.6 – Add boss floor generation rules
 
 * Final floor of each world contains a boss arena
 * Arena layout must be open, non‑maze

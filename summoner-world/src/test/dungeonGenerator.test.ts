@@ -1,7 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import {
+  BASE_BOSS_HP,
+  calculateBossScaling,
   getDungeonFloorSeed,
   getDungeonTowerFloorCount,
+  getWorldElement,
+  generateBossFloor,
   generateDungeonFloor,
   generateDungeonTower,
   findShortestPath,
@@ -117,6 +121,84 @@ describe('generateDungeonTower', () => {
     const tower2 = generateDungeonTower(12, 98765);
 
     expect(tower1).toEqual(tower2);
+  });
+
+  it('uses a dedicated boss arena on the final floor of each world', () => {
+    const tower = generateDungeonTower(7, 12345);
+    const finalFloor = tower.floors[tower.floors.length - 1];
+
+    expect(finalFloor?.floorIndex).toBe(tower.totalFloors);
+    expect(finalFloor?.isBossFloor).toBe(true);
+    expect(finalFloor?.layoutType).toBe('boss_arena');
+    expect(finalFloor?.rooms.find(room => room.id === finalFloor.bossRoomId)?.type).toBe('boss');
+    expect(tower.safeFloors.some(floor => floor.floorIndex === tower.totalFloors)).toBe(false);
+  });
+});
+
+describe('generateBossFloor', () => {
+  it('creates an open non-maze boss arena layout', () => {
+    const floor = generateBossFloor(1, getDungeonTowerFloorCount(1), 12345);
+
+    expect(floor.rooms).toHaveLength(25);
+    expect(floor.entranceRoomId).toBe('arena_2_0');
+    expect(floor.bossRoomId).toBe('arena_2_2');
+    expect(floor.treasureRoomIds).toHaveLength(0);
+
+    const centerRoom = floor.rooms.find(room => room.id === floor.bossRoomId);
+    const cornerRoom = floor.rooms.find(room => room.id === 'arena_0_0');
+
+    expect(centerRoom?.connections).toHaveLength(4);
+    expect(cornerRoom?.connections).toHaveLength(2);
+    expect(findShortestPath(floor, floor.entranceRoomId, floor.bossRoomId)).toEqual([
+      'arena_2_0',
+      'arena_2_1',
+      'arena_2_2'
+    ]);
+  });
+
+  it('adds environmental hazards based on the world element', () => {
+    const floor = generateBossFloor(5, 8, 12345);
+
+    expect(floor.worldElement).toBe(getWorldElement(5));
+    expect(floor.environmentalHazards).toHaveLength(1);
+    expect(floor.environmentalHazards?.[0]?.element).toBe(floor.worldElement);
+    expect(floor.environmentalHazards?.[0]?.triggerRate).toBeGreaterThan(0);
+    expect(floor.environmentalHazards?.[0]?.damageMultiplier).toBeGreaterThan(1);
+  });
+
+  it('integrates the GDD boss scaling formula', () => {
+    const floor = generateBossFloor(11, 14, 12345);
+
+    expect(floor.bossScaling).toEqual({
+      baseBossHp: BASE_BOSS_HP,
+      hpMultiplier: 3.5,
+      scaledBossHp: 3500,
+      signatureAbilityCount: 1
+    });
+  });
+
+  it('is deterministic for the same world, floor, and seed', () => {
+    const floor1 = generateBossFloor(30, 33, 98765);
+    const floor2 = generateBossFloor(30, 33, 98765);
+
+    expect(floor1).toEqual(floor2);
+  });
+});
+
+describe('calculateBossScaling', () => {
+  it('scales HP by world index and adds one signature ability every 10 worlds', () => {
+    expect(calculateBossScaling(1)).toEqual({
+      baseBossHp: BASE_BOSS_HP,
+      hpMultiplier: 1,
+      scaledBossHp: BASE_BOSS_HP,
+      signatureAbilityCount: 0
+    });
+
+    expect(calculateBossScaling(20)).toMatchObject({
+      hpMultiplier: 5.75,
+      scaledBossHp: 5750,
+      signatureAbilityCount: 2
+    });
   });
 });
 
