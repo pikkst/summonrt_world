@@ -120,12 +120,140 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
     - [x] T6.0.10 – Create demonlord.test.ts with unit tests
 - [x] T6.1 – Fix combat damage formula: `damage = (ATK − DEF × 0.5) × elementalFactor + random(−2…+2)`
 - [x] T6.2 – Add combat phase boss mechanics (HP thresholds 75/50/25%, elemental shift, environmental hazards)
-- [ ] T6.3 – Implement "Scan" ability for boss weakness discovery (wrong guess = −70% damage)
-- [ ] T6.4 – Create dungeon layout generator: recursive backtracking maze, ≥3 shortest paths, ≥1 treasure per 10 floors
-- [ ] T6.5 – Add dungeon room types: combat, trap, puzzle, treasure, rest, elite encounter, vendor (rare)
-- [ ] T6.6 – Implement dungeon boss scaling: `BossHP = BaseBossHP × (1 + (WorldIndex−1) × 0.25)`
-- [ ] T6.7 – Add boss signature ability every 1 worlds (World 1-99 100 is a demonlord/ ai or a player who defeat demonlord)
-- [ ] T6.8 – Implement dungeon floor count: `BaseFloors + WorldIndex` (W1=3+1 boss, W100=102+1 boss)
+- [x] T6.3 – Implement "Scan" ability for boss weakness discovery (wrong guess = −70% damage)
+- [ ] T6.4.1 – Create generateDungeonFloor(worldIndex, floorIndex) function
+
+Implement recursive backtracking maze generation
+
+Produce a connected room graph with entrance and boss/exit rooms
+
+Ensure deterministic generation using world seed + floor seed
+
+- [ ] T6.4.2 – Add multi‑path guarantee (ensureMultipleShortestPaths)
+
+Compute shortest path entrance → boss using BFS
+
+Inject controlled shortcut edges until ≥ 3 distinct shortest paths exist
+
+Re‑validate path uniqueness after each added edge
+
+- [ ] T6.4.3 – Add treasure room placement logic
+
+Each floor must contain ≥ 1 treasure room
+
+Treasure room must be located far from entrance
+
+Add optional secondary treasure rooms for large floors
+
+- [ ] T6.4.4 – Implement room type assignment system
+
+Assign room types: combat, trap, puzzle, treasure, rest, elite, vendor
+
+Ensure biome/tier‑themed consistency
+
+Guarantee at least 1 rest room every 10 floors
+
+- [ ] T6.4.5 – Create generateDungeonTower(worldIndex) (Sword Art Online–style central tower)
+
+Build continuous vertical tower
+
+Floor count = BaseFloors + WorldIndex
+
+Link floors vertically (exit → next entrance)
+
+Mark safe floors (every 10th): rest area + vendor + teleport unlock
+
+- [ ] T6.4.6 – Add boss floor generation rules
+
+Final floor of each world contains a boss arena
+
+Arena layout must be open, non‑maze
+
+Add environmental hazards based on world element
+
+Integrate boss scaling formula from GDD
+
+- [ ] T6.4.7 – Add deterministic floor seed system (FLOOR_SEEDS)
+
+Each floor uses hash(worldIndex, floorIndex, globalSeed)
+
+Guarantee identical dungeon layout for all players
+
+Add unit test: same seed → identical floor graph
+
+- [ ] T6.4.8 – Add dungeon metadata export
+
+Store floor graph, room types, treasure locations, boss room ID
+
+Save into DungeonRun.state for persistence
+
+Required for online synchronization and party dungeon runs
+
+- [ ] T6.4.9 – Add pathfinding utilities
+
+findShortestPath()
+
+findAllShortestPaths()
+
+calculateRoomDistanceMap()
+
+Used for treasure placement, shortcut injection, boss logic.
+
+- [ ] T6.4.10 – Add dungeon generation tests
+
+100 generated floors → no disconnected rooms
+
+≥ 3 shortest paths validated
+
+≥ 1 treasure room per floor
+
+Deterministic seed test
+
+Boss floor always reachable.
+
+- [ ] T6.5 – Add combat phase boss mechanics
+
+Boss phases at HP thresholds 75%, 50%, 25%
+
+Elemental shift per phase
+
+Add environmental hazard rotation (lava bursts, frost spikes, storm pulses)
+
+Integrate Summoner career bonuses into boss phase calculations
+
+- [ ] T6.6 – Implement “Scan” ability for boss weakness discovery
+
+Add SCAN skill to creature ability pool
+
+Correct guess → reveal elemental weakness
+
+Wrong guess → −70% damage penalty for 3 turns
+
+Add UI feedback: “Weakness Identified” overlay..
+
+- [ ] T6.7 – Add dungeon room types (trap, puzzle, treasure, elite, vendor)
+
+Trap rooms: text‑based minigame (avoid, disarm, endure)
+
+Puzzle rooms: logic riddles, pattern matching, rune alignment
+
+Elite rooms: mini‑boss encounters with rare drops
+
+Vendor rooms: temporary merchant with dungeon‑specific items
+
+Treasure rooms: guaranteed loot chest + rare chance for mythical egg
+
+- [ ] T6.8 – Implement dungeon floor count & progression rules
+
+Floor count = BaseFloors + WorldIndex
+
+World 1 → 3 floors + boss
+
+World 50 → 100 floors + boss
+
+Ascending requires defeating floor guardian or using rare teleport item
+
+Dungeon exit scales player to minimum viable level (per GDD)
 - [ ] T6.9 – Add "ascending requires defeating floor guardian" rule (or rare teleport item)
 - [ ] T6.10 – Verify dungeon exit scales player to minimum viable level
 - [ ] T6.11 – Add trap/puzzle minigame UI (text-based choices)

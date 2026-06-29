@@ -14,6 +14,7 @@ export const SKILL_TEMPLATES = [
   { key: 'ice_shard', name: 'Ice Shard', element: 'ice' as Element, power: 17, cost: 5, description: 'A jagged shard of ice', tier: 2 },
   { key: 'holy_light', name: 'Holy Light', element: 'light' as Element, power: 22, cost: 7, description: 'A cleansing beam of light', tier: 4 },
   { key: 'shadow_bolt', name: 'Shadow Bolt', element: 'darkness' as Element, power: 22, cost: 7, description: 'Supernatural dark energy', tier: 4 },
+  { key: 'scan', name: 'Scan', element: undefined as Element | undefined, power: 0, cost: 3, description: 'Analyze enemy elemental composition to discover weaknesses', tier: 1 },
 ];
 
 export const TRAITS = [

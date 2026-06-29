@@ -388,6 +388,13 @@ export interface CombatState {
   bossPhasesTriggered?: boolean[];
   activeBossElement?: Element;
   activeHazard?: string;
+  scanResult?: {
+    weaknesses: Element[];
+    resistances: Element[];
+    guessedElement?: Element;
+    guessCorrect?: boolean;
+    scannedAtTurn: number;
+  };
 }
 
 export interface CommunityPlayer {

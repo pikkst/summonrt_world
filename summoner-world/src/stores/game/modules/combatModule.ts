@@ -215,6 +215,59 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
     }
   },
 
+  scanEnemy: () => {
+    const { combat } = get();
+    if (!combat.active || combat.phase !== 'player_turn' || !combat.isBoss || !combat.enemyTemplate) return;
+
+    const enemyElements = combat.enemyTemplate.elements || [];
+    const weaknesses = computeBossWeaknesses(enemyElements);
+    const resistances = computeBossResistances(enemyElements);
+    const weaknessNames = weaknesses.length > 0 ? weaknesses.join(', ') : 'none detected';
+    const resistanceNames = resistances.length > 0 ? resistances.join(', ') : 'none detected';
+
+    const logMessages = [
+      `🔍 SCAN COMPLETE: ${combat.enemyName} elemental profile analyzed.`,
+      `   Weaknesses: ${weaknessNames}`,
+      `   Resistances: ${resistanceNames}`,
+      `   Guess the primary weakness to amplify your damage by +30%, but a wrong guess will penalize you by -70%.`,
+    ];
+
+    set((s: any) => ({
+      combat: {
+        ...s.combat,
+        log: [...s.combat.log, ...logMessages],
+        scanResult: {
+          weaknesses,
+          resistances,
+          scannedAtTurn: s.combat.turns,
+        },
+        phase: 'player_turn',
+      },
+    }));
+  },
+
+  guessWeakness: (element: Element) => {
+    const { combat } = get();
+    if (!combat.active || combat.phase !== 'player_turn' || !combat.scanResult) return;
+
+    const isCorrect = combat.scanResult.weaknesses.includes(element);
+    const resultMessage = isCorrect
+      ? `✅ CORRECT! ${element} is a weakness of ${combat.enemyName}! Your damage is amplified by +30%.`
+      : `❌ WRONG! ${element} is NOT a weakness! Your damage is penalized by -70%.`;
+
+    set((s: any) => ({
+      combat: {
+        ...s.combat,
+        log: [...s.combat.log, `🎯 GUESS: ${element.toUpperCase()} — ${resultMessage}`],
+        scanResult: {
+          ...s.combat.scanResult,
+          guessedElement: element,
+          guessCorrect: isCorrect,
+        },
+      },
+    }));
+  },
+
   attackWithCreature: (creatureId: string) => {
     const state = get();
     const { player, combat } = state;
@@ -235,12 +288,17 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
 
     let damageRaw = (creature.attack || 10) - (enemyTemplate.baseDefense || 5) * 0.5;
     const damageMult = creatureElement ? getElementDamageMultiplier(player) : 1;
-    let playerDamage = Math.max(1, Math.floor(damageRaw * eff.factor * damageMult * affectionMult + (Math.floor(Math.random() * 5) - 2)));
+    const guessMult = getGuessDamageMultiplier(combat.scanResult);
+    let playerDamage = Math.max(1, Math.floor(damageRaw * eff.factor * damageMult * affectionMult * guessMult + (Math.floor(Math.random() * 5) - 2)));
     playerDamage = applyCombatCareerBonuses(playerDamage, careerBonuses);
 
     const newEnemyHp = Math.max(0, (combat.enemyHp || 50) - playerDamage);
 
-    let combatLog = [...combat.log, `${creature.nickname || 'Your creature'} attacks for ${playerDamage} damage!${eff.msg}`];
+    let guessText = '';
+    if (combat.scanResult?.guessCorrect === true) guessText = ' (Weakness hit! +30%)';
+    else if (combat.scanResult?.guessCorrect === false) guessText = ' (Wrong guess! -70% damage)';
+
+    let combatLog = [...combat.log, `${creature.nickname || 'Your creature'} attacks for ${playerDamage} damage!${eff.msg}${guessText}`];
 
     if (newEnemyHp <= 0) {
       get().handleVictory(creatureId, enemyTemplate, combatLog, newEnemyHp);
@@ -285,7 +343,8 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
 
     let damageRaw = (baseAtk * skillMult) - (enemyTemplate.baseDefense || 5) * 0.5;
     const damageMult = skill.element ? getElementDamageMultiplier(player) : 1;
-    let skillDamage = Math.max(1, Math.floor(damageRaw * eff.factor * damageMult * affectionMult + (Math.floor(Math.random() * 5) - 2)));
+    const guessMult = getGuessDamageMultiplier(combat.scanResult);
+    let skillDamage = Math.max(1, Math.floor(damageRaw * eff.factor * damageMult * affectionMult * guessMult + (Math.floor(Math.random() * 5) - 2)));
     skillDamage = applyCombatCareerBonuses(skillDamage, careerBonuses);
 
     const newEnemyHp = Math.max(0, (combat.enemyHp || 50) - skillDamage);
@@ -295,7 +354,11 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
       c.id === creature.id ? { ...c, currentMana: newMana } : c
     );
 
-    let combatLog = [...combat.log, `${creature.nickname || 'Your creature'} uses ${skill.name} for ${skillDamage} damage!${eff.msg}`];
+    let guessText = '';
+    if (combat.scanResult?.guessCorrect === true) guessText = ' (Weakness hit! +30%)';
+    else if (combat.scanResult?.guessCorrect === false) guessText = ' (Wrong guess! -70% damage)';
+
+    let combatLog = [...combat.log, `${creature.nickname || 'Your creature'} uses ${skill.name} for ${skillDamage} damage!${eff.msg}${guessText}`];
 
     set((s: any) => ({
       player: {
@@ -564,3 +627,32 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
     combatTarget: state.combatTarget === creatureId ? null : creatureId,
   })),
 });
+
+export const computeBossWeaknesses = (defElements: Element[]): Element[] => {
+  const weaknesses: Element[] = [];
+  for (const [attacker, advantages] of Object.entries(ELEMENTAL_ADVANTAGES)) {
+    for (const defElem of defElements) {
+      if (advantages.includes(defElem) && !weaknesses.includes(attacker as Element)) {
+        weaknesses.push(attacker as Element);
+      }
+    }
+  }
+  return weaknesses;
+};
+
+export const computeBossResistances = (defElements: Element[]): Element[] => {
+  const resistances: Element[] = [];
+  for (const [attacker, disadvantages] of Object.entries(ELEMENTAL_DISADVANTAGES)) {
+    for (const defElem of defElements) {
+      if (disadvantages.includes(defElem) && !resistances.includes(attacker as Element)) {
+        resistances.push(attacker as Element);
+      }
+    }
+  }
+  return resistances;
+};
+
+export const getGuessDamageMultiplier = (scanResult: CombatState['scanResult']): number => {
+  if (!scanResult || scanResult.guessCorrect === undefined) return 1;
+  return scanResult.guessCorrect ? 1.3 : 0.3;
+};

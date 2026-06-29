@@ -195,9 +195,11 @@ export interface GameActions {
     handleVictory: (creatureId: string, enemyTemplate: CreatureTemplate | null, currentLog: string[], newEnemyHp: number) => void;
     fleeCombat: () => void;
     selectCreatureForCombat: (creatureId: string) => void;
-    applyBossPhaseMechanics: () => void;
-   useItem: (itemKey: string) => void;
-   updateSettings: (patch: Partial<PlayerState['settings']>) => void;
+     applyBossPhaseMechanics: () => void;
+    useItem: (itemKey: string) => void;
+    updateSettings: (patch: Partial<PlayerState['settings']>) => void;
+     scanEnemy: () => void;
+     guessWeakness: (element: Element) => void;
    enterDungeon: () => void;
    descendDungeon: () => void;
    resolveDungeonEncounter: (victory: boolean) => void;

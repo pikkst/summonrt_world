@@ -1273,6 +1273,8 @@ function CombatPanel() {
   const useSkill = useGameStore((s) => s.useSkill);
   const fleeCombat = useGameStore((s) => s.fleeCombat);
   const useItem = useGameStore((s) => s.useItem);
+  const scanEnemy = useGameStore((s) => s.scanEnemy);
+  const guessWeakness = useGameStore((s) => s.guessWeakness);
   const closeModal = useGameStore((s) => s.closeModal);
 
   if (!combat.active) {
@@ -1352,6 +1354,55 @@ function CombatPanel() {
 
           {combat.phase === 'player_turn' && (
             <>
+              {combat.isBoss && !combat.scanResult && (
+                <div className="bg-amber-950/20 border border-amber-500/30 p-4 rounded-xl">
+                  <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest block mb-2">Boss Analysis Module</span>
+                  <button 
+                    onClick={() => scanEnemy()} 
+                    className="w-full bg-amber-950/40 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all"
+                  >
+                    🔍 Scan Enemy Composition
+                  </button>
+                </div>
+              )}
+
+              {combat.scanResult && (
+                <div className="bg-indigo-950/20 border border-indigo-500/30 p-4 rounded-xl">
+                  <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest block mb-2">Scanned Intel — Weaknesses & Resistances</span>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    <span className="px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded text-[9px] font-black text-emerald-400 uppercase">
+                      Weaknesses: {combat.scanResult.weaknesses.length > 0 ? combat.scanResult.weaknesses.join(', ') : 'None'}
+                    </span>
+                    <span className="px-2 py-1 bg-rose-500/10 border border-rose-500/20 rounded text-[9px] font-black text-rose-400 uppercase">
+                      Resistances: {combat.scanResult.resistances.length > 0 ? combat.scanResult.resistances.join(', ') : 'None'}
+                    </span>
+                  </div>
+                  {combat.scanResult.guessCorrect === undefined && (
+                    <div>
+                      <span className="text-[9px] font-black text-amber-400 uppercase tracking-widest block mb-2">Guess Primary Weakness</span>
+                      <div className="grid grid-cols-3 gap-2">
+                        {combat.scanResult.weaknesses.length > 0 ? combat.scanResult.weaknesses.map((w) => (
+                          <button 
+                            key={w} 
+                            onClick={() => guessWeakness(w)} 
+                            className="py-2 bg-emerald-500/10 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/20 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all"
+                          >
+                            {w.replace(/_/g, ' ')}
+                          </button>
+                        )) : (
+                          <span className="text-[9px] text-gray-500 col-span-3">No weaknesses detected.</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  {combat.scanResult.guessCorrect !== undefined && (
+                    <div className={`text-[10px] font-black uppercase tracking-widest ${combat.scanResult.guessCorrect ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {combat.scanResult.guessCorrect ? '✅ Correct guess active — Damage amplified +30%' : '❌ Wrong guess active — Damage penalized -70%'}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {combat.playerCreatureId && (
                 <div className="grid grid-cols-2 gap-3">
                   {combatSkills.slice(0, 4).map((skill) => (
