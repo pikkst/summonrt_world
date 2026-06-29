@@ -65,9 +65,9 @@ export const GameShell: React.FC = () => {
   const selectCreatureForCombat = useGameStore((s) => s.selectCreatureForCombat);
   const combat = useGameStore((s) => s.combat);
   const combatTarget = useGameStore((s) => s.combatTarget);
-  const useSkill = useGameStore((s) => s.useSkill);
+  const useSkillAction = useGameStore((s) => s.useSkill);
   const fleeCombat = useGameStore((s) => s.fleeCombat);
-  const useItem = useGameStore((s) => s.useItem);
+  const useItemAction = useGameStore((s) => s.useItem);
   const nearbyPlayers = useGameStore((s) => (s as any).nearbyPlayers || []);
   const createMapScroll = useGameStore((s) => (s as any).createMapScroll);
 
@@ -238,7 +238,7 @@ export const GameShell: React.FC = () => {
         openInventory();
         break;
       case 'gym':
-      case 'train':
+      case 'dojo':
         openGym();
         break;
       case 'acts':
@@ -254,7 +254,6 @@ export const GameShell: React.FC = () => {
         openDungeon();
         break;
       case 'settings':
-      case 's':
         openSettings();
         break;
       case 'quests':
@@ -1270,9 +1269,9 @@ function SettingsPanel() {
 function CombatPanel() {
   const combat = useGameStore((s) => s.combat);
   const player = useGameStore((s) => s.player);
-  const useSkill = useGameStore((s) => s.useSkill);
+  const useSkillAction = useGameStore((s) => s.useSkill);
   const fleeCombat = useGameStore((s) => s.fleeCombat);
-  const useItem = useGameStore((s) => s.useItem);
+  const useItemAction = useGameStore((s) => s.useItem);
   const scanEnemy = useGameStore((s) => s.scanEnemy);
   const guessWeakness = useGameStore((s) => s.guessWeakness);
   const closeModal = useGameStore((s) => s.closeModal);
@@ -1408,7 +1407,7 @@ function CombatPanel() {
                   {combatSkills.slice(0, 4).map((skill) => (
                     <button 
                       key={skill} 
-                      onClick={() => useSkill(skill)} 
+                      onClick={() => useSkillAction(skill)} 
                       className="bg-gray-950 hover:bg-emerald-600/20 text-emerald-400 border border-gray-800 hover:border-emerald-500/30 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all"
                     >
                       {skill.replace(/_/g, ' ')}
@@ -1453,7 +1452,7 @@ function CombatPanel() {
 
               {combat.playerCreatureId && (
                 <div className="flex gap-3 pt-2">
-                  <button onClick={() => useItem('healing_herb')} className="flex-1 py-4 text-[10px] font-black uppercase tracking-widest text-indigo-400 border border-indigo-500/20 rounded-2xl hover:bg-indigo-500/10 transition-all">Consumable</button>
+                  <button onClick={() => useItemAction('healing_herb')} className="flex-1 py-4 text-[10px] font-black uppercase tracking-widest text-indigo-400 border border-indigo-500/20 rounded-2xl hover:bg-indigo-500/10 transition-all">Consumable</button>
                   <button onClick={fleeCombat} className="flex-1 py-4 text-[10px] font-black uppercase tracking-widest text-gray-500 border border-gray-800 rounded-2xl hover:bg-gray-800 transition-all">Withdraw</button>
                 </div>
               )}
