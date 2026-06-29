@@ -121,139 +121,101 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 - [x] T6.1 – Fix combat damage formula: `damage = (ATK − DEF × 0.5) × elementalFactor + random(−2…+2)`
 - [x] T6.2 – Add combat phase boss mechanics (HP thresholds 75/50/25%, elemental shift, environmental hazards)
 - [x] T6.3 – Implement "Scan" ability for boss weakness discovery (wrong guess = −70% damage)
-- [ ] T6.4.1 – Create generateDungeonFloor(worldIndex, floorIndex) function
+- [x] T6.4.1 – Create generateDungeonFloor(worldIndex, floorIndex) function
 
-Implement recursive backtracking maze generation
-
-Produce a connected room graph with entrance and boss/exit rooms
-
-Ensure deterministic generation using world seed + floor seed
+* Implement recursive backtracking maze generation
+* Produce a connected room graph with entrance and boss/exit rooms
+* Ensure deterministic generation using world seed + floor seed
 
 - [ ] T6.4.2 – Add multi‑path guarantee (ensureMultipleShortestPaths)
 
-Compute shortest path entrance → boss using BFS
-
-Inject controlled shortcut edges until ≥ 3 distinct shortest paths exist
-
-Re‑validate path uniqueness after each added edge
+* Compute shortest path entrance → boss using BFS
+* Inject controlled shortcut edges until ≥ 3 distinct shortest paths exist
+* Re‑validate path uniqueness after each added edge
 
 - [ ] T6.4.3 – Add treasure room placement logic
 
-Each floor must contain ≥ 1 treasure room
-
-Treasure room must be located far from entrance
-
-Add optional secondary treasure rooms for large floors
+* Each floor must contain ≥ 1 treasure room
+* Treasure room must be located far from entrance
+* Add optional secondary treasure rooms for large floors
 
 - [ ] T6.4.4 – Implement room type assignment system
 
-Assign room types: combat, trap, puzzle, treasure, rest, elite, vendor
-
-Ensure biome/tier‑themed consistency
-
-Guarantee at least 1 rest room every 10 floors
+* Assign room types: combat, trap, puzzle, treasure, rest, elite, vendor
+* Ensure biome/tier‑themed consistency
+* Guarantee at least 1 rest room 
 
 - [ ] T6.4.5 – Create generateDungeonTower(worldIndex) (Sword Art Online–style central tower)
 
-Build continuous vertical tower
-
-Floor count = BaseFloors + WorldIndex
-
-Link floors vertically (exit → next entrance)
-
-Mark safe floors (every 10th): rest area + vendor + teleport unlock
+* Build continuous vertical tower
+* Floor count = BaseFloors + WorldIndex
+* Link floors vertically (exit → next entrance)
+* Mark safe floors (every 10th): rest area + vendor + teleport unlock
 
 - [ ] T6.4.6 – Add boss floor generation rules
 
-Final floor of each world contains a boss arena
-
-Arena layout must be open, non‑maze
-
-Add environmental hazards based on world element
-
-Integrate boss scaling formula from GDD
+* Final floor of each world contains a boss arena
+* Arena layout must be open, non‑maze
+* Add environmental hazards based on world element
+* Integrate boss scaling formula from GDD
 
 - [ ] T6.4.7 – Add deterministic floor seed system (FLOOR_SEEDS)
 
-Each floor uses hash(worldIndex, floorIndex, globalSeed)
-
-Guarantee identical dungeon layout for all players
-
-Add unit test: same seed → identical floor graph
+* Each floor uses hash(worldIndex, floorIndex, globalSeed)
+* Guarantee identical dungeon layout for all players
+* Add unit test: same seed → identical floor graph
 
 - [ ] T6.4.8 – Add dungeon metadata export
 
-Store floor graph, room types, treasure locations, boss room ID
-
-Save into DungeonRun.state for persistence
-
-Required for online synchronization and party dungeon runs
+* Store floor graph, room types, treasure locations, boss room ID
+* Save into DungeonRun.state for persistence
+* Required for online synchronization and party dungeon runs
 
 - [ ] T6.4.9 – Add pathfinding utilities
 
-findShortestPath()
-
-findAllShortestPaths()
-
-calculateRoomDistanceMap()
-
-Used for treasure placement, shortcut injection, boss logic.
+* findShortestPath()
+* findAllShortestPaths()
+* calculateRoomDistanceMap()
+* Used for treasure placement, shortcut injection, boss logic.
 
 - [ ] T6.4.10 – Add dungeon generation tests
 
-100 generated floors → no disconnected rooms
-
-≥ 3 shortest paths validated
-
-≥ 1 treasure room per floor
-
-Deterministic seed test
-
-Boss floor always reachable.
+* 100 generated floors → no disconnected rooms
+* ≥ 3 shortest paths validated
+* ≥ 1 treasure room per floor
+* Deterministic seed test
+* Boss floor always reachable.
 
 - [ ] T6.5 – Add combat phase boss mechanics
 
-Boss phases at HP thresholds 75%, 50%, 25%
-
-Elemental shift per phase
-
-Add environmental hazard rotation (lava bursts, frost spikes, storm pulses)
-
-Integrate Summoner career bonuses into boss phase calculations
+* Boss phases at HP thresholds 75%, 50%, 25%
+* Elemental shift per phase
+* Add environmental hazard rotation (lava bursts, frost spikes, storm pulses)
+* Integrate Summoner career bonuses into boss phase calculations
 
 - [ ] T6.6 – Implement “Scan” ability for boss weakness discovery
 
-Add SCAN skill to creature ability pool
-
-Correct guess → reveal elemental weakness
-
-Wrong guess → −70% damage penalty for 3 turns
-
-Add UI feedback: “Weakness Identified” overlay..
+* Add SCAN skill to creature ability pool
+* Correct guess → reveal elemental weakness
+* Wrong guess → −70% damage penalty for 3 turns
+* Add UI feedback: “Weakness Identified” overlay
 
 - [ ] T6.7 – Add dungeon room types (trap, puzzle, treasure, elite, vendor)
 
-Trap rooms: text‑based minigame (avoid, disarm, endure)
-
-Puzzle rooms: logic riddles, pattern matching, rune alignment
-
-Elite rooms: mini‑boss encounters with rare drops
-
-Vendor rooms: temporary merchant with dungeon‑specific items
-
-Treasure rooms: guaranteed loot chest + rare chance for mythical egg
+* Trap rooms: text‑based minigame (avoid, disarm, endure)
+* Puzzle rooms: logic riddles, pattern matching, rune alignment
+* Elite rooms: mini‑boss encounters with rare drops
+* Vendor rooms: temporary merchant with dungeon‑specific items
+* Treasure rooms: guaranteed loot chest + rare chance for mythical egg
 
 - [ ] T6.8 – Implement dungeon floor count & progression rules
 
-Floor count = BaseFloors + WorldIndex
+* Floor count = BaseFloors + WorldIndex
+* World 1 → 3 floors + boss
+* World 50 → 100 floors + boss
+* Ascending requires defeating floor guardian or using rare teleport item
+* Dungeon exit scales player to minimum viable level (per GDD)
 
-World 1 → 3 floors + boss
-
-World 50 → 100 floors + boss
-
-Ascending requires defeating floor guardian or using rare teleport item
-
-Dungeon exit scales player to minimum viable level (per GDD)
 - [ ] T6.9 – Add "ascending requires defeating floor guardian" rule (or rare teleport item)
 - [ ] T6.10 – Verify dungeon exit scales player to minimum viable level
 - [ ] T6.11 – Add trap/puzzle minigame UI (text-based choices)
@@ -410,3 +372,156 @@ Sprint goal: deployment, CI/CD, analytics, monetization, launch.
 - [ ] T14.10 – Add mod support framework (JSON data mods, optional Lua scripting)
 - [ ] T14.11 – Test full regression (100 world progression simulation, economy stability 30 days)
 - [ ] T14.12 – Prepare launch checklist, beta signup, marketing site integration
+
+T15.1 – World Identity Memory System
+- [ ] T15.1.1 – Create WorldIdentityState model
+* aggression_score
+* ecology_score
+* trade_score
+* exploration_score
+* dungeon_activity_score
+- [ ] T15.1.2 – Add world personality modifiers
+* aggressive worlds → more elite encounters
+* ecological worlds → more Sanctuary events
+* trade worlds → more merchant spawns
+- [ ] T15.1.3 – Add world memory update rules
+* hunting, crafting, trading, dungeon clearing
+* [ ] T15.1.4 – Add world personality UI indicator
+* “World Mood” panel in Status Board
+
+T15.2 – Creature Social Ecosystem (Pack, Herd, Territory AI)
+- [ ] T15.2.1 – Add CreatureBehaviorProfile
+* pack_behavior
+* herd_behavior
+* territorial_behavior
+- [ ] T15.2.2 – Implement pack AI
+* wolves, raptors, thunder hawks
+* pack retaliation on capture
+- [ ] T15.2.3 – Implement herd AI
+* herbivores migrate together
+* panic events when attacked
+- [ ] T15.2.4 – Implement territory AI
+* rare creatures claim tiles
+* entering territory triggers special encounter
+- [ ] T15.2.5 – Add ecosystem tick integration
+* pack/herd migration
+* territory expansion/decline
+
+T15.3 – Dynamic Dungeon Difficulty (Activity‑Based Scaling)
+- [ ] T15.3.1 – Add DungeonActivityState
+* clear_count
+* death_count
+* idle_time
+- [ ] T15.3.2 – Add scaling rules
+* high activity → stronger monsters
+* low activity → calmer floors
+- [ ] T15.3.3 – Add elite spawn probability modifier
+- [ ] T15.3.4 – Add boss adaptive ability unlocks
+* boss gains new ability if defeated > X times
+- [ ] T15.3.5 – Add dungeon activity UI indicator
+
+T15.4 – Career Tree Synergy Events
+- [ ] T15.4.1 – Add cross‑career synergy matrix
+* Explorer + Summoner
+* Blacksmith + Shopkeeper
+* Broker + Official
+- [ ] T15.4.2 – Add synergy event triggers
+* exploration streak
+* crafting streak
+* trade route completion
+- [ ] T15.4.3 – Add synergy bonuses
+* creature loyalty boost
+* masterwork crafting buff
+* settlement tax bonus
+- [ ] T15.4.4 – Add synergy event UI popups
+
+T15.5 – Global World Threats (Procedural Catastrophes)
+- [ ] T15.5.1 – Add WorldThreatEvent model
+* Elemental Storm
+* Crystal Bloom
+* Ecosystem Collapse
+- [ ] T15.5.2 – Add threat generation rules
+* triggered by world personality
+* triggered by ecosystem imbalance
+- [ ] T15.5.3 – Add threat effects
+* encounter tables
+* resource yield
+* creature affinity bonuses
+- [ ] T15.5.4 – Add threat resolution quests
+- [ ] T15.5.5 – Add threat UI banner (global alert)
+
+T15.6 – Creature Personality System
+- [ ] T15.6.1 – Add CreaturePersonality traits
+* Brave
+* Cowardly
+* Curious
+* Lazy
+* Loyal
+- [ ] T15.6.2 – Add personality roll on creature creation
+- [ ] T15.6.3 – Add personality effects
+* flee chance
+* loot discovery
+* XP gain
+* capture synergy
+- [ ] T15.6.4 – Add personality UI in creature panel
+
+T15.7 – Player Reputation System
+- [ ] T15.7.1 – Add ReputationState
+* world_rep
+* faction_rep
+* settlement_rep
+* creature_rep
+- [ ] T15.7.2 – Add reputation gain/loss rules
+* quests
+* trading
+* ecosystem impact
+* dungeon clearing
+- [ ] T15.7.3 – Add reputation effects
+* merchant prices
+* creature capture chance
+* settlement growth
+* dungeon difficulty
+- [ ] T15.7.4 – Add reputation UI panel
+
+T15.8 – Dungeon Lore Memory (Tower History System)
+- [ ] T15.8.1 – Add DungeonHistoryState
+* player deaths
+* boss kills
+* puzzle solves
+- [ ] T15.8.2 – Add persistent floor markers
+* Echo of Defeat
+* Champion’s Mark
+* Solved Puzzle Seal
+- [ ] T15.8.3 – Add lore events
+* special encounters based on history
+- [ ] T15.8.4 – Add tower history UI timeline
+
+T15.9 – Creature Fusion Genealogy
+- [ ] T15.9.1 – Add FusionLineage model
+* parentA
+* parentB
+* lineageDepth
+- [ ] T15.9.2 – Add lineage inheritance rules
+* trait inheritance
+* mutation inheritance
+- [ ] T15.9.3 – Add lineage bonuses
+* rare lineage → cosmetic
+* mythical lineage → stat bonus
+- [ ] T15.9.4 – Add lineage viewer UI
+
+T15.10 – Player‑Driven World Shaping
+- [ ] T15.10.1 – Add buildable world structures
+* roads
+* watchtowers
+* shrines
+* guild fortresses
+- [ ] T15.10.2 – Add structure effects
+* fast travel unlock
+* reduced monster spawns
+* elemental buffs
+* territory control
+- [ ] T15.10.3 – Add world‑shaping missions
+* build road
+* build shrine
+* fortify settlement
+- [ ] T15.10.4 – Add world map visual updates

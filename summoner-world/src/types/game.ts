@@ -312,6 +312,32 @@ export interface NPC {
   quests?: string[];
 }
 
+export type RoomType = 'entrance' | 'boss' | 'treasure' | 'combat' | 'trap' | 'puzzle' | 'rest' | 'elite' | 'vendor';
+
+export interface DungeonRoom {
+  id: string;
+  x: number;
+  y: number;
+  type: RoomType;
+  connections: string[];
+}
+
+export interface DungeonFloorGraph {
+  floorIndex: number;
+  worldIndex: number;
+  seed: number;
+  rooms: DungeonRoom[];
+  entranceRoomId: string;
+  bossRoomId: string;
+  treasureRoomIds: string[];
+}
+
+export interface DungeonMetadata {
+  worldId: number;
+  totalFloors: number;
+  completed: boolean;
+}
+
 export interface DungeonState {
   active: boolean;
   worldId: number;
