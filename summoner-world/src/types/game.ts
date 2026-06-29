@@ -394,6 +394,19 @@ export interface DungeonState {
   inEncounter: boolean;
   encounterType?: 'guardian' | 'trap' | 'treasure' | 'boss';
   encounterName?: string;
+  tower?: DungeonTower;
+}
+
+export interface DungeonRun {
+  runId: string;
+  worldIndex: number;
+  globalSeed: number;
+  totalFloors: number;
+  currentFloor: number;
+  clearedFloors: number[];
+  bossDefeated: boolean;
+  active: boolean;
+  tower: DungeonTower;
 }
 
 export interface DemonlordSkill {

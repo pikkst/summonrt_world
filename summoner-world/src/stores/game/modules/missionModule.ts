@@ -19,6 +19,7 @@ import { inheritSkills } from '../../../data/fusionUtils.ts';
 import { getSoulCrystalTierForClass } from '../../../data/constants.ts';
 import { getSynergyNames, calculateSynergyEffects } from '../../../data/traitSynergy.ts';
 import { generateProceduralIdentity } from '../../../data/proceduralIdentity';
+import { generateDungeonTower, exportDungeonRun } from '../../../core/dungeonGenerator';
 import axios from 'axios';
 
 export const missionActions = (set: SetState<GameStore>, get: () => GameStore) => ({
@@ -833,7 +834,10 @@ finishCapture: () => {
       }));
       return;
     }
-    set({ screen: 'dungeon' });
+    const globalSeed = currentWorldId * 1000 + player.level;
+    const tower = generateDungeonTower(currentWorldId, globalSeed);
+    const dungeonRun = exportDungeonRun(tower);
+    set({ screen: 'dungeon', dungeon: { active: true, worldId: currentWorldId, currentFloor: 0, totalFloors: tower.totalFloors, clearedFloors: [], bossDefeated: false, inEncounter: false, tower } });
   },
 
   descendDungeon: () => {

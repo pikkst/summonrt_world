@@ -4,6 +4,7 @@ import type {
   DungeonEnvironmentalHazard,
   DungeonFloorGraph,
   DungeonRoom,
+  DungeonRun,
   DungeonTower,
   DungeonTowerSafeFloor,
   DungeonTowerVerticalLink,
@@ -600,6 +601,20 @@ export function generateDungeonTower(
     floors,
     verticalLinks,
     safeFloors
+  };
+}
+
+export function exportDungeonRun(tower: DungeonTower, runId?: string): DungeonRun {
+  return {
+    runId: runId || `run_${tower.worldIndex}_${tower.globalSeed}_${Date.now()}`,
+    worldIndex: tower.worldIndex,
+    globalSeed: tower.globalSeed,
+    totalFloors: tower.totalFloors,
+    currentFloor: 1,
+    clearedFloors: [],
+    bossDefeated: false,
+    active: true,
+    tower
   };
 }
 

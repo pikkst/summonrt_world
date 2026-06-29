@@ -10,6 +10,7 @@ import type {
    Screen,
    CombatState,
    DungeonState,
+   DungeonRun,
    DemonlordState,
    DemonlordSkill,
    CreatureInstance,
@@ -29,7 +30,7 @@ import type {
    QuestStatus,
    CombatPhase,
    CommunityTab,
- } from '../../types/game.ts';
+  } from '../../types/game.ts';
  import type { ActiveMission } from '../../core/missionQueue.ts';
  import type { MissionType, MissionModifiers } from '../../core/missionQueue.ts';
  import type { HeartbeatInstance } from '../../core/heartbeat.ts';
@@ -43,6 +44,7 @@ export type {
   Screen,
   CombatState,
   DungeonState,
+  DungeonRun,
   DemonlordState,
   DemonlordSkill,
   CreatureInstance,

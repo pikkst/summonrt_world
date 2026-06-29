@@ -181,7 +181,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * Guarantee identical dungeon layout for all players
 * Add unit test: same seed → identical floor graph
 
-- [ ] T6.4.8 – Add dungeon metadata export
+- [x] T6.4.8 – Add dungeon metadata export
 
 * Store floor graph, room types, treasure locations, boss room ID
 * Save into DungeonRun.state for persistence
