@@ -445,10 +445,18 @@ export interface DemonlordState {
 
 export type CombatPhase = 'player_turn' | 'enemy_turn' | 'victory' | 'defeat';
 
+export interface BossHazard {
+  key: string;
+  name: string;
+  element: Element;
+  description: string;
+  baseDamage: number;
+}
+
 export interface BossPhase {
   threshold: number;
   elementalShift?: Element;
-  hazard?: string;
+  hazard?: BossHazard;
 }
 
 export interface MissionResult {
@@ -472,7 +480,7 @@ export interface CombatState {
   isBoss?: boolean;
   bossPhasesTriggered?: boolean[];
   activeBossElement?: Element;
-  activeHazard?: string;
+  activeHazard?: BossHazard;
   scanResult?: {
     weaknesses: Element[];
     resistances: Element[];

@@ -202,7 +202,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * [x] Deterministic seed test
 * [x] Boss floor always reachable.
 
-- [ ] T6.5 – Extend completed combat phase boss mechanics
+- [x] T6.5 – Extend completed combat phase boss mechanics
 
 * T6.2 already completed base boss phases at HP thresholds 75%, 50%, 25%
 * T6.2 already completed elemental shift per phase

@@ -198,6 +198,7 @@ export interface GameActions {
     fleeCombat: () => void;
     selectCreatureForCombat: (creatureId: string) => void;
      applyBossPhaseMechanics: () => void;
+      applyEnvironmentalHazardDamage: () => void;
     useItem: (itemKey: string) => void;
     updateSettings: (patch: Partial<PlayerState['settings']>) => void;
      scanEnemy: () => void;

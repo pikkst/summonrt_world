@@ -1,4 +1,4 @@
-import type { GameStore, GameStoreState, CombatState, CreatureTemplate, CreatureInstance, DungeonState, LogEntry, PlayerState, QuestInstance, Element, SetState } from '../types.ts';
+import type { GameStore, GameStoreState, CombatState, CreatureTemplate, CreatureInstance, DungeonState, LogEntry, PlayerState, QuestInstance, Element, SetState, BossHazard } from '../types.ts';
 import { createLog, addPlayerXP, getWorldModifier, getPlayerElements } from '../helpers.ts';
 import { generateCreatureTemplate } from '../../../modules/creatures/creatureFactory.ts';
 import { SKILL_TEMPLATES } from '../../../modules/creatures/creatureFactory.ts';
@@ -171,19 +171,19 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
     const hpPercent = (combat.enemyHp || 0) / combat.enemyMaxHp;
 
     const allElements: Element[] = ['fire', 'water', 'earth', 'air', 'lightning', 'iron', 'nature', 'ice', 'light', 'darkness'];
-    const hazards = [
-      'Poisonous fumes fill the air!',
-      'The ground cracks open with lava!',
-      'A blizzard rages across the arena!',
-      'Acidic rain pours down from above!',
-      'Scorching heat radiates from the walls!',
-      'Shadowy miasma saps the will to fight!',
+    const bossHazards: BossHazard[] = [
+      { key: 'lava_burst', name: 'Lava Burst', element: 'fire', description: 'Lava bursts erupt from the ground!', baseDamage: 8 },
+      { key: 'frost_spikes', name: 'Frost Spikes', element: 'ice', description: 'Frost spikes shoot up from the floor!', baseDamage: 6 },
+      { key: 'storm_pulse', name: 'Storm Pulse', element: 'lightning', description: 'A storm pulse electrifies the arena!', baseDamage: 7 },
+      { key: 'poisonous_fumes', name: 'Poisonous Fumes', element: 'nature', description: 'Poisonous fumes fill the air!', baseDamage: 5 },
+      { key: 'shadow_miasma', name: 'Shadow Miasma', element: 'darkness', description: 'Shadowy miasma saps your will!', baseDamage: 5 },
+      { key: 'scorching_heat', name: 'Scorching Heat', element: 'fire', description: 'Scorching heat radiates from all directions!', baseDamage: 5 },
     ];
 
     const newTriggered = [...triggered];
     const logMessages: string[] = [];
     let activeBossElement: Element | undefined;
-    let activeHazard: string | undefined;
+    let activeHazard: BossHazard | undefined;
     let changed = false;
 
     thresholds.forEach((threshold, index) => {
@@ -192,10 +192,11 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
         changed = true;
 
         const newElement = allElements[Math.floor(Math.random() * allElements.length)];
-        const hazard = hazards[Math.floor(Math.random() * hazards.length)];
+        const phaseIndex = newTriggered.filter(Boolean).length - 1;
+        const hazard = bossHazards[phaseIndex % bossHazards.length];
 
         logMessages.push(`⚠️ BOSS PHASE CHANGE! ${combat.enemyName} shifts to ${newElement} element!`);
-        logMessages.push(`🌍 Environmental hazard: ${hazard}`);
+        logMessages.push(`🌍 Environmental hazard: ${hazard.description}`);
 
         activeBossElement = newElement;
         activeHazard = hazard;
@@ -212,6 +213,70 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
           activeHazard,
         },
       }));
+    }
+  },
+
+  applyEnvironmentalHazardDamage: () => {
+    const { combat, player } = get();
+    if (!combat.active || !combat.isBoss || !combat.activeHazard || !player) return;
+
+    const activeCreature = player.creatures.find((c: any) => c.id === combat.playerCreatureId);
+    if (!activeCreature || activeCreature.currentHealth <= 0) return;
+
+    const hazard = combat.activeHazard;
+    const treeData = getAllNodes();
+    const aggregatedStats = getAggregateStats(player, treeData);
+    const careerBonuses = getCareerSystemBonuses(aggregatedStats);
+
+    const baseHazardDamage = hazard.baseDamage + Math.floor(Math.random() * 3);
+    const finalDamage = applyDamageTakenReduction(baseHazardDamage, careerBonuses);
+
+    const updatedPlayerCreatures = player.creatures.map((c: any) =>
+      c.id === activeCreature.id ? { ...c, currentHealth: Math.max(0, c.currentHealth - finalDamage) } : c
+    );
+
+    const updatedCreature = updatedPlayerCreatures.find((c: any) => c.id === activeCreature.id);
+    const hazardLog = `${hazard.name} deals ${finalDamage} ${hazard.element} damage to ${activeCreature.nickname || 'your creature'}!`;
+
+    set((s: any) => ({
+      combat: {
+        ...s.combat,
+        log: [...s.combat.log, hazardLog],
+      },
+      player: {
+        ...s.player,
+        creatures: updatedPlayerCreatures,
+      },
+    }));
+
+    if (updatedCreature && updatedCreature.currentHealth <= 0) {
+      const hasHealthySummon = updatedPlayerCreatures.some((c: any) => c.currentHealth > 0 && c.id !== activeCreature.id);
+      const enemyLog = [...combat.log, hazardLog, `${activeCreature.nickname || 'Creature'} has fainted!`];
+
+      if (hasHealthySummon) {
+        enemyLog.push(`Choose another healthy summon from your Soul Deck to continue fighting.`);
+        set((s: any) => ({
+          combat: {
+            ...s.combat,
+            log: enemyLog,
+            phase: 'player_turn',
+            playerCreatureId: '',
+          },
+          player: {
+            ...s.player,
+            creatures: s.player.creatures.map((c: any) => c.id === activeCreature.id ? { ...c, currentHealth: 0 } : c),
+          },
+        }));
+      } else {
+        enemyLog.push(`All your summons have fainted!`);
+        set((s: any) => ({
+          combat: { ...s.combat, log: enemyLog, phase: 'defeat' },
+          player: {
+            ...s.player,
+            creatures: s.player.creatures.map((c: any) => c.id === activeCreature.id ? { ...c, currentHealth: 0 } : c),
+          },
+        }));
+      }
     }
   },
 
@@ -388,6 +453,10 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
 
       const activeCreature = player.creatures.find((cr: any) => cr.id === combat.playerCreatureId);
       if (!activeCreature || activeCreature.currentHealth <= 0) return;
+
+      get().applyEnvironmentalHazardDamage();
+
+      if (!combat.active) return;
 
       const rng = new SeededRandom(Date.now() + combat.turns * 11);
 
