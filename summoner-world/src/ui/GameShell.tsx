@@ -1394,9 +1394,21 @@ function CombatPanel() {
                       </div>
                     </div>
                   )}
-                  {combat.scanResult.guessCorrect !== undefined && (
-                    <div className={`text-[10px] font-black uppercase tracking-widest ${combat.scanResult.guessCorrect ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {combat.scanResult.guessCorrect ? '✅ Correct guess active — Damage amplified +30%' : '❌ Wrong guess active — Damage penalized -70%'}
+                  {combat.scanResult.guessCorrect === true && (
+                    <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3 animate-pulse">
+                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest block">🔍 Weakness Identified</span>
+                      <span className="text-[9px] text-emerald-300 uppercase tracking-widest block mt-1">
+                        {combat.scanResult.guessedElement ? `${combat.scanResult.guessedElement.replace(/_/g, ' ')} is the primary weakness — Damage amplified +30%` : 'Correct guess active — Damage amplified +30%'}
+                      </span>
+                    </div>
+                  )}
+                  {combat.scanResult.guessCorrect === false && (
+                    <div className={`rounded-lg p-3 ${combat.scanResult.penaltyTurnsRemaining && combat.scanResult.penaltyTurnsRemaining > 0 ? 'bg-rose-500/10 border border-rose-500/30 animate-pulse' : 'bg-gray-500/10 border border-gray-500/30'}`}>
+                      <span className={`text-[10px] font-black uppercase tracking-widest block ${combat.scanResult.penaltyTurnsRemaining && combat.scanResult.penaltyTurnsRemaining > 0 ? 'text-rose-400' : 'text-gray-400'}`}>
+                        {combat.scanResult.penaltyTurnsRemaining && combat.scanResult.penaltyTurnsRemaining > 0
+                          ? `❌ Wrong guess — Damage penalized -70% (${combat.scanResult.penaltyTurnsRemaining} turns remaining)`
+                          : '❌ Wrong guess penalty expired'}
+                      </span>
                     </div>
                   )}
                 </div>

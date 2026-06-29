@@ -487,6 +487,7 @@ export interface CombatState {
     guessedElement?: Element;
     guessCorrect?: boolean;
     scannedAtTurn: number;
+    penaltyTurnsRemaining?: number;
   };
 }
 

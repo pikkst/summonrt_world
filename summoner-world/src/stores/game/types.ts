@@ -30,6 +30,7 @@ import type {
    QuestStatus,
    CombatPhase,
    CommunityTab,
+   BossHazard,
   } from '../../types/game.ts';
  import type { ActiveMission } from '../../core/missionQueue.ts';
  import type { MissionType, MissionModifiers } from '../../core/missionQueue.ts';
@@ -64,6 +65,7 @@ export type {
   QuestStatus,
   CombatPhase,
   CommunityTab,
+  BossHazard,
 ActiveMission,
    MissionType,
    MissionModifiers,

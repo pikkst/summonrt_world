@@ -196,7 +196,7 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
         const hazard = bossHazards[phaseIndex % bossHazards.length];
 
         logMessages.push(`⚠️ BOSS PHASE CHANGE! ${combat.enemyName} shifts to ${newElement} element!`);
-        logMessages.push(`🌍 Environmental hazard: ${hazard.description}`);
+        logMessages.push(`🌍 Environmental hazard: ${hazard!.description}`);
 
         activeBossElement = newElement;
         activeHazard = hazard;
@@ -316,18 +316,27 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
     if (!combat.active || combat.phase !== 'player_turn' || !combat.scanResult) return;
 
     const isCorrect = combat.scanResult.weaknesses.includes(element);
+    const penaltyTurnsRemaining = isCorrect ? 0 : 3;
     const resultMessage = isCorrect
       ? `✅ CORRECT! ${element} is a weakness of ${combat.enemyName}! Your damage is amplified by +30%.`
-      : `❌ WRONG! ${element} is NOT a weakness! Your damage is penalized by -70%.`;
+      : `❌ WRONG! ${element} is NOT a weakness! Your damage is penalized by -70% for 3 turns.`;
+
+    const logMessages = isCorrect
+      ? [
+          `🎯 GUESS: ${element.toUpperCase()} — ${resultMessage}`,
+          `🔍 WEAKNESS IDENTIFIED: ${element} is the primary weakness of ${combat.enemyName}!`,
+        ]
+      : [`🎯 GUESS: ${element.toUpperCase()} — ${resultMessage}`];
 
     set((s: any) => ({
       combat: {
         ...s.combat,
-        log: [...s.combat.log, `🎯 GUESS: ${element.toUpperCase()} — ${resultMessage}`],
+        log: [...s.combat.log, ...logMessages],
         scanResult: {
           ...s.combat.scanResult,
           guessedElement: element,
           guessCorrect: isCorrect,
+          penaltyTurnsRemaining,
         },
       },
     }));
@@ -361,7 +370,8 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
 
     let guessText = '';
     if (combat.scanResult?.guessCorrect === true) guessText = ' (Weakness hit! +30%)';
-    else if (combat.scanResult?.guessCorrect === false) guessText = ' (Wrong guess! -70% damage)';
+    else if (combat.scanResult?.guessCorrect === false && combat.scanResult.penaltyTurnsRemaining && combat.scanResult.penaltyTurnsRemaining > 0) guessText = ` (Wrong guess! -70% damage, ${combat.scanResult.penaltyTurnsRemaining} turns remaining)`;
+    else if (combat.scanResult?.guessCorrect === false) guessText = ' (Wrong guess penalty expired)';
 
     let combatLog = [...combat.log, `${creature.nickname || 'Your creature'} attacks for ${playerDamage} damage!${eff.msg}${guessText}`];
 
@@ -373,6 +383,18 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
     set((s: any) => ({
       combat: { ...s.combat, log: combatLog, enemyHp: newEnemyHp, phase: 'enemy_turn', turns: s.combat.turns + 1 },
     }));
+
+    if (combat.scanResult?.penaltyTurnsRemaining && combat.scanResult.penaltyTurnsRemaining > 0) {
+      const newPenalty = combat.scanResult.penaltyTurnsRemaining - 1;
+      set((s: any) => ({
+        combat: {
+          ...s.combat,
+          scanResult: newPenalty > 0
+            ? { ...s.combat.scanResult, penaltyTurnsRemaining: newPenalty }
+            : { ...s.combat.scanResult, penaltyTurnsRemaining: 0 },
+        },
+      }));
+    }
 
     get().applyBossPhaseMechanics();
     get().triggerEnemyTurn(enemyTemplate, combatLog, newEnemyHp);
@@ -421,7 +443,8 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
 
     let guessText = '';
     if (combat.scanResult?.guessCorrect === true) guessText = ' (Weakness hit! +30%)';
-    else if (combat.scanResult?.guessCorrect === false) guessText = ' (Wrong guess! -70% damage)';
+    else if (combat.scanResult?.guessCorrect === false && combat.scanResult.penaltyTurnsRemaining && combat.scanResult.penaltyTurnsRemaining > 0) guessText = ` (Wrong guess! -70% damage, ${combat.scanResult.penaltyTurnsRemaining} turns remaining)`;
+    else if (combat.scanResult?.guessCorrect === false) guessText = ' (Wrong guess penalty expired)';
 
     let combatLog = [...combat.log, `${creature.nickname || 'Your creature'} uses ${skill.name} for ${skillDamage} damage!${eff.msg}${guessText}`];
 
@@ -440,6 +463,18 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
     set((s: any) => ({
       combat: { ...s.combat, log: combatLog, enemyHp: newEnemyHp, phase: 'enemy_turn', turns: s.combat.turns + 1 },
     }));
+
+    if (combat.scanResult?.penaltyTurnsRemaining && combat.scanResult.penaltyTurnsRemaining > 0) {
+      const newPenalty = combat.scanResult.penaltyTurnsRemaining - 1;
+      set((s: any) => ({
+        combat: {
+          ...s.combat,
+          scanResult: newPenalty > 0
+            ? { ...s.combat.scanResult, penaltyTurnsRemaining: newPenalty }
+            : { ...s.combat.scanResult, penaltyTurnsRemaining: 0 },
+        },
+      }));
+    }
 
     get().applyBossPhaseMechanics();
     get().triggerEnemyTurn(enemyTemplate, combatLog, newEnemyHp);
@@ -722,6 +757,8 @@ export const computeBossResistances = (defElements: Element[]): Element[] => {
 };
 
 export const getGuessDamageMultiplier = (scanResult: CombatState['scanResult']): number => {
-  if (!scanResult || scanResult.guessCorrect === undefined) return 1;
-  return scanResult.guessCorrect ? 1.3 : 0.3;
+  if (!scanResult) return 1;
+  if (scanResult.guessCorrect === true) return 1.3;
+  if (scanResult.guessCorrect === false && scanResult.penaltyTurnsRemaining && scanResult.penaltyTurnsRemaining > 0) return 0.3;
+  return 1;
 };
