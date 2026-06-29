@@ -1,6 +1,38 @@
 import type { CreatureTemplate, CreatureInstance, InventoryStack, Element, CreatureClass } from '../../types/game.ts';
 import { SeededRandom } from '../../utils/SeededRandom.ts';
 
+const ELEMENTAL_ADVANTAGES: Record<string, string[]> = {
+  fire: ['nature', 'ice', 'iron'],
+  water: ['fire', 'earth'],
+  earth: ['lightning', 'iron'],
+  air: ['earth', 'nature'],
+  lightning: ['water', 'air'],
+  nature: ['water', 'earth'],
+  ice: ['nature', 'air'],
+  light: ['darkness', 'void'],
+  darkness: ['light', 'starlight'],
+};
+
+const ELEMENTAL_DISADVANTAGES: Record<string, string[]> = {
+  fire: ['water', 'fire'],
+  water: ['water', 'nature'],
+  earth: ['air', 'nature'],
+  air: ['iron'],
+  lightning: ['earth', 'lightning'],
+  nature: ['fire', 'nature'],
+  ice: ['fire', 'water'],
+  light: ['light'],
+  darkness: ['darkness'],
+};
+
+function getElementalEffectiveness(atkElement: string | undefined, defElements: string[] | undefined): number {
+  if (!atkElement || !defElements || defElements.length === 0) return 1;
+  let factor = 1;
+  if (ELEMENTAL_ADVANTAGES[atkElement]?.some(e => defElements.includes(e))) factor = 1.5;
+  else if (ELEMENTAL_DISADVANTAGES[atkElement]?.some(e => defElements.includes(e))) factor = 0.5;
+  return factor;
+}
+
 export interface CombatResult {
   victory: boolean;
   damageDealt: number;
@@ -19,18 +51,20 @@ export function runCombat(attacker: CreatureInstance, defender: CreatureInstance
   let totalDMG = 0;
 
   while (aHP > 0 && dHP > 0) {
-    const aPower = aTemplate.baseAttack + attacker.level * 2 + (rng.next() * 4 | 0);
+    const aPower = aTemplate.baseAttack + attacker.level * 2;
     const dDefense = dTemplate.baseDefense + defender.level * 1.5;
-    const damage = Math.max(1, Math.floor(aPower - dDefense * 0.5));
+    const aEff = getElementalEffectiveness(aTemplate.elements?.[0], dTemplate.elements);
+    const damage = Math.max(1, Math.floor((aPower - dDefense * 0.5) * aEff + (Math.floor(rng.next() * 5) - 2)));
     dHP -= damage;
     totalDMG += Math.max(0, damage);
     log.push(`${attacker.nickname || 'Creature'} attacked and dealt ${damage} damage.`);
 
     if (dHP <= 0) break;
 
-    const dPower = dTemplate.baseAttack + defender.level * 2 + (rng.next() * 4 | 0);
+    const dPower = dTemplate.baseAttack + defender.level * 2;
     const aDefense = aTemplate.baseDefense + attacker.level * 1.5;
-    const dDamage = Math.max(1, Math.floor(dPower - aDefense * 0.5));
+    const dEff = getElementalEffectiveness(dTemplate.elements?.[0], aTemplate.elements);
+    const dDamage = Math.max(1, Math.floor((dPower - aDefense * 0.5) * dEff + (Math.floor(rng.next() * 5) - 2)));
     aHP -= dDamage;
     log.push(`${defender.nickname || 'Enemy'} attacked and dealt ${dDamage} damage.`);
   }

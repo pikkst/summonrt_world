@@ -175,9 +175,9 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
     const aggregatedStats = getAggregateStats(player, treeData);
     const careerBonuses = getCareerSystemBonuses(aggregatedStats);
 
-    let damageRaw = (creature.attack || 10) - (enemyTemplate.baseDefense || 5) + Math.floor(Math.random() * 5);
+    let damageRaw = (creature.attack || 10) - (enemyTemplate.baseDefense || 5) * 0.5;
     const damageMult = creatureElement ? getElementDamageMultiplier(player) : 1;
-    let playerDamage = Math.max(1, Math.floor(damageRaw * eff.factor * damageMult * affectionMult));
+    let playerDamage = Math.max(1, Math.floor(damageRaw * eff.factor * damageMult * affectionMult + (Math.floor(Math.random() * 5) - 2)));
     playerDamage = applyCombatCareerBonuses(playerDamage, careerBonuses);
 
     const newEnemyHp = Math.max(0, (combat.enemyHp || 50) - playerDamage);
@@ -224,9 +224,9 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
     const aggregatedStats = getAggregateStats(player, treeData);
     const careerBonuses = getCareerSystemBonuses(aggregatedStats);
 
-    let damageRaw = (baseAtk * skillMult) - (enemyTemplate.baseDefense || 5) + Math.floor(Math.random() * 5);
+    let damageRaw = (baseAtk * skillMult) - (enemyTemplate.baseDefense || 5) * 0.5;
     const damageMult = skill.element ? getElementDamageMultiplier(player) : 1;
-    let skillDamage = Math.max(1, Math.floor(damageRaw * eff.factor * damageMult * affectionMult));
+    let skillDamage = Math.max(1, Math.floor(damageRaw * eff.factor * damageMult * affectionMult + (Math.floor(Math.random() * 5) - 2)));
     skillDamage = applyCombatCareerBonuses(skillDamage, careerBonuses);
 
     const newEnemyHp = Math.max(0, (combat.enemyHp || 50) - skillDamage);
@@ -284,12 +284,12 @@ export const combatActions = (set: SetState<GameStore>, get: () => GameStore) =>
          effMsg = eff.msg;
          const skillMult = (useSkillObj.power || 10) / 10;
          const baseAtk = enemyTemplate?.baseAttack || 8;
-         enemyDamage = Math.max(1, Math.floor((baseAtk * skillMult - (activeCreature.defense || 5) + Math.floor(rng.next() * 4)) * eff.factor));
+          enemyDamage = Math.max(1, Math.floor((baseAtk * skillMult - (activeCreature.defense || 5) * 0.5) * eff.factor + (Math.floor(rng.next() * 5) - 2)));
        } else {
          const enemyElement = enemyTemplate?.elements?.[0];
          const eff = getElementalEffectiveness(enemyElement, activeCreature.elements);
          effMsg = eff.msg;
-         enemyDamage = Math.max(1, Math.floor(((enemyTemplate?.baseAttack || 8) - (activeCreature.defense || 5) + Math.floor(rng.next() * 4)) * eff.factor));
+          enemyDamage = Math.max(1, Math.floor(((enemyTemplate?.baseAttack || 8) - (activeCreature.defense || 5) * 0.5) * eff.factor + (Math.floor(rng.next() * 5) - 2)));
        }
 
        const treeData = getAllNodes();
