@@ -322,6 +322,24 @@ export interface DungeonRoom {
   connections: string[];
 }
 
+export type DungeonFloorLayoutType = 'maze' | 'boss_arena';
+
+export interface DungeonEnvironmentalHazard {
+  key: string;
+  name: string;
+  element: Element;
+  description: string;
+  damageMultiplier: number;
+  triggerRate: number;
+}
+
+export interface DungeonBossScaling {
+  baseBossHp: number;
+  hpMultiplier: number;
+  scaledBossHp: number;
+  signatureAbilityCount: number;
+}
+
 export interface DungeonFloorGraph {
   floorIndex: number;
   worldIndex: number;
@@ -330,6 +348,34 @@ export interface DungeonFloorGraph {
   entranceRoomId: string;
   bossRoomId: string;
   treasureRoomIds: string[];
+  layoutType?: DungeonFloorLayoutType;
+  isBossFloor?: boolean;
+  worldElement?: Element;
+  environmentalHazards?: DungeonEnvironmentalHazard[];
+  bossScaling?: DungeonBossScaling;
+}
+
+export interface DungeonTowerVerticalLink {
+  fromFloorIndex: number;
+  fromRoomId: string;
+  toFloorIndex: number;
+  toRoomId: string;
+}
+
+export interface DungeonTowerSafeFloor {
+  floorIndex: number;
+  restRoomId: string;
+  vendorRoomId: string;
+  teleportUnlockRoomId: string;
+}
+
+export interface DungeonTower {
+  worldIndex: number;
+  globalSeed: number;
+  totalFloors: number;
+  floors: DungeonFloorGraph[];
+  verticalLinks: DungeonTowerVerticalLink[];
+  safeFloors: DungeonTowerSafeFloor[];
 }
 
 export interface DungeonMetadata {
@@ -525,4 +571,3 @@ export interface CommunityState {
   guilds: CommunityGuild[];
   trades: CommunityTrade[];
 }
-
