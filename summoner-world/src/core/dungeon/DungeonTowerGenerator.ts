@@ -17,7 +17,7 @@ export function generateDungeonTower(
       ? generateBossFloor(worldIndex, floorIndex, globalSeed)
       : generateDungeonFloor(worldIndex, floorIndex, globalSeed);
 
-    if (isSafeTowerFloor(floorIndex) && !floor.isBossFloor) {
+    if (isSafeTowerFloor(floorIndex) && floorIndex !== totalFloors) {
       const safeFloor = markSafeTowerFloor(floor);
       if (safeFloor) safeFloors.push(safeFloor);
     }
