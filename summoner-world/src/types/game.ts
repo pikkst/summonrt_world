@@ -322,6 +322,15 @@ export interface DungeonRoom {
   connections: string[];
 }
 
+export interface DungeonEnvironmentalHazard {
+  key: string;
+  name: string;
+  element: Element;
+  description: string;
+  damageMultiplier: number;
+  triggerRate: number;
+}
+
 export interface DungeonFloorGraph {
   floorIndex: number;
   worldIndex: number;
@@ -529,15 +538,6 @@ export interface CommunityState {
   parties: CommunityParty[];
   guilds: CommunityGuild[];
   trades: CommunityTrade[];
-}
-
-export interface DungeonEnvironmentalHazard {
-  key: string;
-  name: string;
-  element: Element;
-  description: string;
-  damageMultiplier: number;
-  triggerRate: number;
 }
 
 export interface DungeonBossScaling {
