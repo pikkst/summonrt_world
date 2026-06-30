@@ -1,24 +1,30 @@
 import { describe, it, expect } from 'vitest';
 import {
-  BASE_BOSS_HP,
-  calculateBossScaling,
   getDungeonFloorSeed,
   getDungeonTowerFloorCount,
-  getWorldElement,
-  generateBossFloor,
+  DUNGEON_BASE_FLOORS,
+} from '../core/dungeon/DungeonSeeds';
+import {
+  createMaze,
+  mazeToGraph,
   generateDungeonFloor,
-  generateDungeonTower,
+} from '../core/dungeon/MazeGenerator';
+import {
   findShortestPath,
   findAllShortestPaths,
   calculateRoomDistanceMap,
-  createMaze,
-  mazeToGraph,
-  assignRoomTypes,
   ensureMultipleShortestPaths,
-  assignTreasureRooms,
-} from '../core/dungeonGenerator';
+} from '../core/dungeon/Pathfinding';
+import { assignRoomTypes, assignTreasureRooms } from '../core/dungeon/RoomAssignment';
+import {
+  BASE_BOSS_HP,
+  calculateBossScaling,
+  getWorldElement,
+} from '../core/dungeon/BossScaling';
+import { generateBossFloor } from '../core/dungeon/BossArenaGenerator';
+import { generateDungeonTower } from '../core/dungeon/DungeonTowerGenerator';
 import { SeededRandom } from '../utils/SeededRandom';
-import type { DungeonFloorGraph, RoomType } from '../types/game';
+import type { DungeonFloorGraph, DungeonRun, RoomType } from '../types/game';
 
 describe('getDungeonFloorSeed', () => {
   it('generates deterministic seed from world seed + floor seed', () => {
