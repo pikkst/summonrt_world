@@ -889,6 +889,7 @@ const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(cu
 
     set((s: any) => ({
       player: { ...s.player, life: updatedLife },
+      dungeon: { ...s.dungeon, clearedFloors: [...s.dungeon.clearedFloors, s.dungeon.currentFloor] },
       combat: { 
         ...s.combat, 
         roomInteraction: { 
@@ -910,6 +911,7 @@ const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(cu
     const result = resolveRoomPuzzle(choice, rng);
     
     set((s: any) => ({
+      dungeon: { ...s.dungeon, clearedFloors: [...s.dungeon.clearedFloors, s.dungeon.currentFloor] },
       combat: { 
         ...s.combat, 
         roomInteraction: { 
@@ -990,7 +992,8 @@ const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(cu
         ...s.player, 
         money: s.player.money - item.price,
         inventory: updatedInventory 
-      }
+      },
+      dungeon: { ...s.dungeon, clearedFloors: [...s.dungeon.clearedFloors, s.dungeon.currentFloor] }
     }));
     
     appendLog(`Purchased ${item.name} for ${item.price} stones!`, 'success');

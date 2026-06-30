@@ -72,6 +72,9 @@ Completed Sprint 6 dungeon/combat foundation:
 - Scan ability for boss weakness discovery
 - Demonlord floor range and challenge flow
 - Dungeon metadata export for persistence, online sync, and party runs
+- Ascension requires defeating floor guardian (or consuming a rare Teleport Scroll)
+- Floor 0 entrance lobby exempt from guardian requirement
+- Trap, puzzle, and vendor rooms now mark floors as cleared on resolution
 
 ## Remaining Sprint 6 Tasks
 
@@ -84,7 +87,6 @@ Remaining:
 - T6.6 - Extend Scan ability with creature ability pool integration and final UI feedback
 - T6.7 - Add trap, puzzle, treasure, elite, and vendor room interactions/UI
 - T6.8 - Dungeon floor count and progression rules
-- T6.9 - Ascending requires floor guardian defeat or rare teleport item
 - T6.10 - Dungeon exit scales player to minimum viable level
 - T6.11 - Trap/puzzle minigame UI
 - T6.12 - Full clear World 10 dungeon simulation

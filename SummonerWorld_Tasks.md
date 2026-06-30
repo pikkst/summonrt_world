@@ -234,7 +234,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * Ascending requires defeating floor guardian or using rare teleport item
 * Dungeon exit scales player to minimum viable level (per GDD)
 
-- [ ] T6.9 – Add "ascending requires defeating floor guardian" rule (or rare teleport item)
+- [x] T6.9 – Add "ascending requires defeating floor guardian" rule (or rare teleport item)
 - [x] T6.10 – Verify dungeon exit scales player to minimum viable level
 - [ ] T6.11 – Add trap/puzzle minigame UI (text-based choices)
 - [ ] T6.12 – Test full clear World 10 dungeon simulation (integration test)

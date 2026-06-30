@@ -1,7 +1,7 @@
 import type { GameStore, GameStoreState, PlayerState, WorldData, LogEntry, QuestInstance, Element, CreatureInstance, SetState, CreatureTemplate } from '../types.ts';
 import { createLog, calculateMovementModifiers, processTileDiscovery, getPlayerElements, addPlayerXP, getWorldModifier, applyMinViableLevelScaling, calculateMinViableLevel } from '../helpers.ts';
 import { generateTile } from '../../../core/worldGenerator.ts';
-import { getTileKey, getAffinityWeight, calculateBaseCaptureProbability } from '../../../data/constants.ts';
+import { getTileKey, getAffinityWeight, calculateBaseCaptureProbability, DUNGEON_ASCEND_SCROLL } from '../../../data/constants.ts';
 import { QUEST_TEMPLATES } from '../../../data/quests.ts';
 import { generateCreatureTemplate, SKILL_TEMPLATES } from '../../../modules/creatures/creatureFactory.ts';
 import { SeededRandom } from '../../../utils/SeededRandom.ts';
@@ -850,6 +850,19 @@ finishCapture: () => {
     if (dungeon.currentFloor >= dungeon.totalFloors) {
       appendLog('You have reached the boss floor!', 'system');
       return;
+    }
+
+    if (dungeon.currentFloor > 0 && !dungeon.clearedFloors.includes(dungeon.currentFloor)) {
+      const hasTeleportScroll = player.inventory.some(i => i.templateKey === DUNGEON_ASCEND_SCROLL);
+      if (!hasTeleportScroll) {
+        appendLog('The floor guardian blocks your path! Defeat it to ascend, or find a rare Teleport Scroll to bypass.', 'warning');
+        return;
+      }
+      const updatedInventory = player.inventory.filter(i => i.templateKey !== DUNGEON_ASCEND_SCROLL);
+      set((state) => ({
+        player: { ...state.player!, inventory: updatedInventory }
+      }));
+      appendLog('You burned a Teleport Scroll to bypass the guardian and ascend!', 'success');
     }
 
     const nextFloor = dungeon.currentFloor + 1;
