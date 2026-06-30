@@ -6,7 +6,7 @@ import { QUEST_TEMPLATES } from '../../../data/quests.ts';
 import { generateCreatureTemplate, SKILL_TEMPLATES } from '../../../modules/creatures/creatureFactory.ts';
 import { SeededRandom } from '../../../utils/SeededRandom.ts';
 import type { MissionStatus, MissionModifiers, ActiveMission } from '../../../core/missionQueue.ts';
-import { createActiveMission, getCreatureAgilityMod, MissionType } from '../../../core/missionQueue.ts';
+import { createActiveMission, getCreatureAgilityMod, MissionType, resolveAutomatedCombat, type AutomatedCombatOutcome } from '../../../core/missionQueue.ts';
 import type { HeartbeatInstance } from '../../../core/heartbeat.ts';
 import { grantPartyXP, applyCreatureXP } from '../../../core/xpCurve.ts';
 import { applyAffectionGain } from '../../../core/affection.ts';
@@ -207,9 +207,35 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
       const effectiveTier = currentWorldId + Math.floor(proximityFactor * 10);
       const enemy = generateCreatureTemplate(effectiveTier, encounterRng);
 
-      setTimeout(() => {
-        get().startCombat(enemy, `Wild ${enemy.name}`);
-      }, 500);
+      const encounterDuration = 10 + Math.floor(Math.random() * 15);
+      const encounterMission = get().addMissionWithModifiers({
+        type: 'WILD_ENCOUNTER',
+        assigned_creatures: [],
+        world_layer: currentWorldId,
+        duration_seconds: encounterDuration,
+        extraModifiers: {
+          encounter_data: JSON.stringify({
+            templateKey: enemy.key,
+            name: enemy.name,
+            class: enemy.class,
+            type: enemy.type,
+            elements: enemy.elements,
+            baseHealth: enemy.baseHealth,
+            baseAttack: enemy.baseAttack,
+            baseDefense: enemy.baseDefense,
+            baseSpeed: enemy.baseSpeed,
+            baseMana: enemy.baseMana,
+            baseExpValue: enemy.baseExpValue,
+            skills: enemy.skills,
+            description: enemy.description,
+            isBoss: enemy.isBoss,
+          }),
+        },
+      });
+
+      if (encounterMission) {
+        appendLog(`A wild ${enemy.name} appears! Combat will resolve automatically in ${encounterDuration}s...`, 'info');
+      }
     }
   },
 
@@ -1494,6 +1520,7 @@ const modifiers: MissionModifiers = {
         SEARCH_AREA: 15,
         GATHER_RESOURCE: 20,
         CAPTURE_CREATURE: 25,
+        WILD_ENCOUNTER: 20,
       };
       return Math.floor((baseByType[mission.type] || 10) * worldScale);
     };
@@ -1554,21 +1581,46 @@ const modifiers: MissionModifiers = {
             }
             get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
           },
-CAPTURE_CREATURE: (mission) => {
-             const state = get();
-             if (state.capturing) {
-               state.finishCapture();
-             }
-             get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
-           },
-           DEMONLORD_ENCOUNTER: (mission) => {
-             const state = get();
-             if (state.demonlordState?.activeChallenge) {
-               state.appendLog('A Demonlord encounter mission requires direct combat resolution.', 'info');
-             }
-             get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
-           },
-         },
+            CAPTURE_CREATURE: (mission) => {
+              const state = get();
+              if (state.capturing) {
+                state.finishCapture();
+              }
+              get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+            },
+            WILD_ENCOUNTER: (mission) => {
+              const state = get();
+              const encounterData = mission.modifiers?.encounter_data as string | undefined;
+              if (encounterData) {
+                try {
+                  const enemyTemplate = JSON.parse(encounterData);
+                  const partyCreatures = state.player?.creatures.filter((c: any) => c.currentHealth > 0) || [];
+                  if (partyCreatures.length > 0) {
+                    const outcome = resolveAutomatedCombat(partyCreatures, [enemyTemplate], {
+                      worldLayer: mission.world_layer,
+                    });
+                    if (outcome.result.victory) {
+                      get().grantMissionXP(partyCreatures.map((c: any) => c.id), getBaseXP(mission));
+                    }
+                    if (outcome.result.battle_log.length > 0) {
+                      state.appendLog(`[Wild Encounter] ${outcome.result.battle_log[outcome.result.battle_log.length - 1]}`, 'combat');
+                    }
+                  }
+                } catch (e) {
+                  get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+                }
+              } else {
+                get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+              }
+            },
+            DEMONLORD_ENCOUNTER: (mission) => {
+              const state = get();
+              if (state.demonlordState?.activeChallenge) {
+                state.appendLog('A Demonlord encounter mission requires direct combat resolution.', 'info');
+              }
+              get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+            },
+          },
       });
 
     const beforeCount = get().missions.length;
@@ -1592,22 +1644,23 @@ CAPTURE_CREATURE: (mission) => {
      const { heartbeat } = get();
      if (heartbeat) return;
 
-     const getBaseXP = (mission: ActiveMission): number => {
-       const worldScale = 1 + (mission.world_layer - 1) * 0.05;
-       const baseByType: Record<string, number> = {
-         EXPLORE_TIER_1: 15,
-         SCOUT_DUNGEON: 30,
-         SMELT_ORE: 20,
-         CRAFT_ITEM: 30,
-         STORE_VISIT: 15,
-         TAX_EDICT: 40,
-         CARAVAN_ROUTE: 35,
-         SEARCH_AREA: 15,
-         GATHER_RESOURCE: 20,
-         CAPTURE_CREATURE: 25,
-       };
-       return Math.floor((baseByType[mission.type] || 10) * worldScale);
-     };
+      const getBaseXP = (mission: ActiveMission): number => {
+        const worldScale = 1 + (mission.world_layer - 1) * 0.05;
+        const baseByType: Record<string, number> = {
+          EXPLORE_TIER_1: 15,
+          SCOUT_DUNGEON: 30,
+          SMELT_ORE: 20,
+          CRAFT_ITEM: 30,
+          STORE_VISIT: 15,
+          TAX_EDICT: 40,
+          CARAVAN_ROUTE: 35,
+          SEARCH_AREA: 15,
+          GATHER_RESOURCE: 20,
+          CAPTURE_CREATURE: 25,
+          WILD_ENCOUNTER: 20,
+        };
+        return Math.floor((baseByType[mission.type] || 10) * worldScale);
+      };
 
      const applyWorldTickCareerBonuses = (): void => {
        const state = get();
@@ -1712,17 +1765,42 @@ CAPTURE_CREATURE: (mission) => {
              }
              get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
            },
-           CAPTURE_CREATURE: (mission) => {
-             const state = get();
-             if (state.capturing) {
-               state.finishCapture();
-             }
-             get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
-           },
-           DEMONLORD_ENCOUNTER: (_mission) => {
-             get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], 0);
-           },
-         },
+            CAPTURE_CREATURE: (mission) => {
+              const state = get();
+              if (state.capturing) {
+                state.finishCapture();
+              }
+              get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+            },
+            WILD_ENCOUNTER: (mission) => {
+              const state = get();
+              const encounterData = mission.modifiers?.encounter_data as string | undefined;
+              if (encounterData) {
+                try {
+                  const enemyTemplate = JSON.parse(encounterData);
+                  const partyCreatures = state.player?.creatures.filter((c: any) => c.currentHealth > 0) || [];
+                  if (partyCreatures.length > 0) {
+                    const outcome = resolveAutomatedCombat(partyCreatures, [enemyTemplate], {
+                      worldLayer: mission.world_layer,
+                    });
+                    if (outcome.result.victory) {
+                      get().grantMissionXP(partyCreatures.map((c: any) => c.id), getBaseXP(mission));
+                    }
+                    if (outcome.result.battle_log.length > 0) {
+                      state.appendLog(`[Wild Encounter] ${outcome.result.battle_log[outcome.result.battle_log.length - 1]}`, 'combat');
+                    }
+                  }
+                } catch (e) {
+                  get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+                }
+              } else {
+                get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+              }
+            },
+            DEMONLORD_ENCOUNTER: (_mission) => {
+              get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], 0);
+            },
+          },
        });
 
     instance.start();

@@ -17,19 +17,20 @@ const createEmptyCallbacks = (): HeartbeatCallbacks => ({
   setDayCount: vi.fn(),
   onWorldTick: vi.fn(),
   onMissionsProgress: vi.fn(),
-  resolveMissionCallbacks: {
-    EXPLORE_TIER_1: vi.fn(),
-    SCOUT_DUNGEON: vi.fn(),
-    SMELT_ORE: vi.fn(),
-    CRAFT_ITEM: vi.fn(),
-    STORE_VISIT: vi.fn(),
-    TAX_EDICT: vi.fn(),
-    CARAVAN_ROUTE: vi.fn(),
-    SEARCH_AREA: vi.fn(),
-    GATHER_RESOURCE: vi.fn(),
-    CAPTURE_CREATURE: vi.fn(),
-    DEMONLORD_ENCOUNTER: vi.fn(),
-  },
+        resolveMissionCallbacks: {
+          EXPLORE_TIER_1: vi.fn(),
+          SCOUT_DUNGEON: vi.fn(),
+          SMELT_ORE: vi.fn(),
+          CRAFT_ITEM: vi.fn(),
+          STORE_VISIT: vi.fn(),
+          TAX_EDICT: vi.fn(),
+          CARAVAN_ROUTE: vi.fn(),
+          SEARCH_AREA: vi.fn(),
+          GATHER_RESOURCE: vi.fn(),
+          CAPTURE_CREATURE: vi.fn(),
+          DEMONLORD_ENCOUNTER: vi.fn(),
+          WILD_ENCOUNTER: vi.fn(),
+        },
 });
 
 describe('createHeartbeat', () => {

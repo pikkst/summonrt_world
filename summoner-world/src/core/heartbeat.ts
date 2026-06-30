@@ -29,6 +29,7 @@ export interface HeartbeatCallbacks {
     GATHER_RESOURCE: (mission: ActiveMission) => void;
     CAPTURE_CREATURE: (mission: ActiveMission) => void;
     DEMONLORD_ENCOUNTER: (mission: ActiveMission) => void;
+    WILD_ENCOUNTER: (mission: ActiveMission) => void;
   };
 }
 
