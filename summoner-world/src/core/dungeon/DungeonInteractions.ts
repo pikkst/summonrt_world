@@ -1,5 +1,4 @@
 import { SeededRandom } from '../../utils/SeededRandom';
-import type { RoomInteractionChoice } from '../../types/game';
 
 export interface TrapRoomInteraction {
   description: string;
@@ -99,7 +98,7 @@ export const generatePuzzleInteraction = (rng: SeededRandom, worldIndex: number)
 
 export const generateEliteInteraction = (rng: SeededRandom, worldIndex: number): EliteRoomInteraction => {
   const elitePrefixes = ['Alpha', 'Beta', 'Gamma', 'Prime', 'Elder', 'Ancient', 'Void', 'Chaos'];
-  const eliteSuffixes = ['Warden', 'Guardian', 'Sentinel', 'Protector', 'Keeper', 'Watcher', 'Sentinel'];
+  const eliteSuffixes = ['Warden', 'Guardian', 'Sentinel', 'Protector', 'Keeper', 'Watcher'];
 
   const prefix = elitePrefixes[rng.int(0, elitePrefixes.length - 1)];
   const suffix = eliteSuffixes[rng.int(0, eliteSuffixes.length - 1)];
@@ -156,7 +155,6 @@ export const generateTreasureInteraction = (rng: SeededRandom, worldIndex: numbe
 
 export const resolveTrapRoom = (
   choice: string,
-  playerSpeed: number,
   playerDexterity: number,
   playerDefense: number,
   rng: SeededRandom

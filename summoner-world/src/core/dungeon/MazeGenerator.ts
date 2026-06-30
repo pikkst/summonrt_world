@@ -132,8 +132,7 @@ export function mazeToGraph(maze: MazeCell[][], seed: number): DungeonFloorGraph
     rooms,
     entranceRoomId: `room_0_0`,
     bossRoomId,
-    treasureRoomIds: [],
-    layoutType: 'maze'
+    treasureRoomIds: []
   };
 }
 
@@ -150,7 +149,6 @@ export function generateDungeonFloor(
 
   graph.floorIndex = floorIndex;
   graph.worldIndex = worldIndex;
-  graph.layoutType = 'maze';
 
   assignRoomTypes(graph, rng, worldIndex, floorIndex);
   ensureMultipleShortestPaths(graph, rng);

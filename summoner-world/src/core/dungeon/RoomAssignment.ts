@@ -102,24 +102,28 @@ export function assignTreasureRooms(
 export function assignOtherRoomTypes(
   graph: DungeonFloorGraph,
   rng: SeededRandom,
-  _worldIndex: number,
-  _floorIndex: number
+  _worldIndex: number
 ): void {
   const worldTier = Math.max(1, Math.floor(_worldIndex / 10) + 1);
-  const biome = getBiomeForCoords(0, 0, _worldIndex);
 
-  const theme = (BIOME_ROOM_THEMES[biome] || BIOME_ROOM_THEMES.default) as RoomTypeTheme;
   const weightedTypes: RoomType[] = [];
 
-  for (let i = 0; i < theme.roomTypes.length; i++) {
-    const type = theme.roomTypes[i];
-    const baseWeight = theme.weights[i] ?? 0.1;
-    const modifier = type && TIER_MODIFIERS[type as keyof typeof TIER_MODIFIERS];
-    const finalWeight = typeof modifier === 'function' ? modifier(worldTier) : baseWeight;
-    const count = Math.max(1, Math.floor(finalWeight * graph.rooms.length));
-    for (let j = 0; j < count; j++) {
-      if (type) weightedTypes.push(type);
+  const biomes = new Map<string, RoomType[]>();
+  for (const room of graph.rooms) {
+    const biome = getBiomeForCoords(room.x, room.y, _worldIndex);
+    const theme = (BIOME_ROOM_THEMES[biome] || BIOME_ROOM_THEMES.default) as RoomTypeTheme;
+    const types: RoomType[] = [];
+    for (let i = 0; i < theme.roomTypes.length; i++) {
+      const type = theme.roomTypes[i];
+      const baseWeight = theme.weights[i] ?? 0.1;
+      const modifier = type && TIER_MODIFIERS[type as keyof typeof TIER_MODIFIERS];
+      const finalWeight = typeof modifier === 'function' ? modifier(worldTier) : baseWeight;
+      const count = Math.max(1, Math.floor(finalWeight * graph.rooms.length));
+      for (let j = 0; j < count; j++) {
+        if (type) types.push(type);
+      }
     }
+    biomes.set(room.id, types);
   }
 
   const assignableRooms = graph.rooms.filter(r =>
@@ -137,7 +141,8 @@ export function assignOtherRoomTypes(
 
   for (const room of assignableRooms) {
     if (room.type === 'rest') continue;
-    const type = rng.pick(weightedTypes);
+    const roomTypes = biomes.get(room.id) || [];
+    const type = rng.pick(roomTypes);
     if (type) room.type = type;
   }
 }
@@ -157,5 +162,5 @@ export function assignRoomTypes(
   if (bossRoom) bossRoom.type = 'boss';
 
   assignTreasureRooms(graph, rng, worldIndex, floorIndex);
-  assignOtherRoomTypes(graph, rng, worldIndex, floorIndex);
+  assignOtherRoomTypes(graph, rng, worldIndex);
 }

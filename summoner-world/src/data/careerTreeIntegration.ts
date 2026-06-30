@@ -120,7 +120,7 @@ export function applyDamageTakenReduction(
   incomingDamage: number,
   bonuses: CareerSystemBonuses
 ): number {
-  const damageTakenMult = 1 - ((bonuses.damage_taken_pct || 0) / 100);
+  const damageTakenMult = 1 + ((bonuses.damage_taken_pct || 0) / 100);
   return Math.max(1, Math.floor(incomingDamage * damageTakenMult));
 }
 
