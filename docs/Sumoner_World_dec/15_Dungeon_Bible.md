@@ -49,6 +49,8 @@ Completed Sprint 6 dungeon/combat foundation:
 - T6.4.6 - Boss floor generation rules
 - T6.4.7 - Deterministic floor seed system
 - T6.4.9 - Pathfinding utilities
+- T6.12 - Full clear World 10 dungeon simulation
+- T6.13 - Timed mission integration (wild encounters resolved via automated combat)
 
 ## Implemented Rules
 
@@ -86,8 +88,6 @@ Remaining:
 - T6.9 - Ascending requires floor guardian defeat or rare teleport item
 - T6.10 - Dungeon exit scales player to minimum viable level
 - T6.11 - Trap/puzzle minigame UI
-- T6.12 - Full clear World 10 dungeon simulation
-- T6.13 - Timed mission integration
 - T6.14 - Career passive integration into combat
 
 ## Tower Rules
