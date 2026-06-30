@@ -29,7 +29,8 @@ describe('resolveAutomatedCombat', () => {
     const teamA = [createCreature({ id: 'a1', attack: 15, defense: 5 })];
     const teamB = [createCreature({ id: 'b1', attack: 5, defense: 3, currentHealth: 20 })];
 
-    const result = resolveAutomatedCombat(teamA, teamB);
+    const outcome = resolveAutomatedCombat(teamA, teamB);
+    const result = outcome.result;
 
     expect(result.victory).toBe(true);
     expect(result.battle_log).toContainEqual(expect.stringContaining('victory'));
@@ -40,7 +41,8 @@ describe('resolveAutomatedCombat', () => {
     const teamA = [createCreature({ id: 'a1', attack: 5, defense: 3, currentHealth: 20 })];
     const teamB = [createCreature({ id: 'b1', attack: 15, defense: 5 })];
 
-    const result = resolveAutomatedCombat(teamA, teamB);
+    const outcome = resolveAutomatedCombat(teamA, teamB);
+    const result = outcome.result;
 
     expect(result.victory).toBe(false);
     expect(result.battle_log.some(l => l.includes('defeated'))).toBe(true);
@@ -50,7 +52,8 @@ describe('resolveAutomatedCombat', () => {
     const teamA = [createCreature({ id: 'a1', attack: 1, defense: 5, currentHealth: 100 })];
     const teamB = [createCreature({ id: 'b1', attack: 1, defense: 5, currentHealth: 100 })];
 
-    const result = resolveAutomatedCombat(teamA, teamB, { rngSeed: 12345 });
+    const outcome = resolveAutomatedCombat(teamA, teamB, { rngSeed: 12345 });
+    const result = outcome.result;
 
     expect(result.battle_log.filter(l => l.startsWith('--- Turn')).length).toBeLessThanOrEqual(30);
   });
@@ -59,7 +62,8 @@ describe('resolveAutomatedCombat', () => {
     const teamA = [createCreature({ id: 'a1', attack: 10, defense: 5 })];
     const teamB = [createCreature({ id: 'b1', attack: 5, defense: 5, currentHealth: 20 })];
 
-    const result = resolveAutomatedCombat(teamA, teamB);
+    const outcome = resolveAutomatedCombat(teamA, teamB);
+    const result = outcome.result;
 
     expect(result.battle_log[0]).toBe('=== Automated Combat Initiated ===');
     expect(result.battle_log.some(l => l.includes('Turn'))).toBe(true);
@@ -69,7 +73,8 @@ describe('resolveAutomatedCombat', () => {
     const teamA = [createCreature({ id: 'a1', elements: ['fire'], attack: 20, defense: 5 })];
     const teamB = [createCreature({ id: 'b1', elements: ['nature'], currentHealth: 100 })];
 
-    const result = resolveAutomatedCombat(teamA, teamB, { rngSeed: 500 });
+    const outcome = resolveAutomatedCombat(teamA, teamB, { rngSeed: 500 });
+    const result = outcome.result;
 
     expect(result.victory).toBe(true);
     expect(result.battle_log.some(l => l.includes('damage'))).toBe(true);
@@ -79,13 +84,15 @@ describe('resolveAutomatedCombat', () => {
     const teamA = [createCreature({ id: 'a1', attack: 20, defense: 5 })];
     const teamB = [createCreature({ id: 'b1', attack: 5, defense: 5, currentHealth: 20 })];
 
-    const result = resolveAutomatedCombat(teamA, teamB, { rngSeed: 0.2 });
+    const outcome = resolveAutomatedCombat(teamA, teamB, { rngSeed: 0.2 });
+    const result = outcome.result;
 
     expect(result.xp).toBeGreaterThan(0);
   });
 
   it('handles empty teams', () => {
-    const result = resolveAutomatedCombat([], [createCreature({ id: 'b1' })]);
+    const outcome = resolveAutomatedCombat([], [createCreature({ id: 'b1' })]);
+    const result = outcome.result;
 
     expect(result.victory).toBe(false);
   });
@@ -100,7 +107,8 @@ describe('resolveAutomatedCombat', () => {
       createCreature({ id: 'b2', attack: 5, defense: 5, currentHealth: 20 }),
     ];
 
-    const result = resolveAutomatedCombat(teamA, teamB);
+    const outcome = resolveAutomatedCombat(teamA, teamB);
+    const result = outcome.result;
 
     expect(result.battle_log.some(l => l.includes('a1') || l.includes('a2'))).toBe(true);
   });
