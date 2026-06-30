@@ -1,8 +1,7 @@
 import { getDungeonFloorSeed } from './DungeonSeeds';
 import { getWorldElement, calculateBossScaling } from './BossScaling';
 import { getBossFloorEnvironmentalHazards } from './DungeonHazards';
-import type { DungeonFloorGraph, DungeonRoom, RoomType, Element } from '../../types/game';
-import type { DungeonEnvironmentalHazard } from '../../types/game';
+import type { DungeonFloorGraph, DungeonRoom, RoomType } from '../../types/game';
 
 export function generateBossFloor(
   worldIndex: number,
