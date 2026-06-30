@@ -2,23 +2,25 @@ import { describe, it, expect } from 'vitest';
 import {
   BASE_BOSS_HP,
   calculateBossScaling,
-  getDungeonFloorSeed,
-  getDungeonTowerFloorCount,
   getWorldElement,
-  generateBossFloor,
-  generateDungeonFloor,
-  generateDungeonTower,
+} from '../core/dungeon/BossScaling';
+import { generateBossFloor } from '../core/dungeon/BossArenaGenerator';
+import {
+  calculateRoomDistanceMap,
   findShortestPath,
   findAllShortestPaths,
-  calculateRoomDistanceMap,
+  ensureMultipleShortestPaths,
+} from '../core/dungeon/Pathfinding';
+import { assignRoomTypes, assignTreasureRooms } from '../core/dungeon/RoomAssignment';
+import {
   createMaze,
   mazeToGraph,
-  assignRoomTypes,
-  ensureMultipleShortestPaths,
-  assignTreasureRooms,
-} from '../core/dungeonGenerator';
+  generateDungeonFloor,
+} from '../core/dungeon/MazeGenerator';
+import { exportDungeonRun, generateDungeonTower } from '../core/dungeon/DungeonTowerGenerator';
+import { getDungeonFloorSeed, getDungeonTowerFloorCount } from '../core/dungeon/DungeonSeeds';
 import { SeededRandom } from '../utils/SeededRandom';
-import type { DungeonFloorGraph, RoomType } from '../types/game';
+import type { DungeonFloorGraph, DungeonRun, RoomType } from '../types/game';
 
 describe('getDungeonFloorSeed', () => {
   it('generates deterministic seed from world seed + floor seed', () => {
@@ -281,15 +283,27 @@ describe('findAllShortestPaths', () => {
 });
 
 describe('No disconnected rooms', () => {
-  it('all rooms reachable from entrance', () => {
-    const graph = generateDungeonFloor(1, 1, 12345);
-    const distances = calculateRoomDistanceMap(graph, graph.entranceRoomId);
+   it('all rooms reachable from entrance', () => {
+     const graph = generateDungeonFloor(1, 1, 12345);
+     const distances = calculateRoomDistanceMap(graph, graph.entranceRoomId);
 
-    for (const room of graph.rooms) {
-      expect(distances.has(room.id), `Room ${room.id} is not reachable from entrance`).toBe(true);
-    }
-  });
-});
+     for (const room of graph.rooms) {
+       expect(distances.has(room.id), `Room ${room.id} is not reachable from entrance`).toBe(true);
+     }
+   });
+
+   it('generates 100 floors without any disconnected rooms', () => {
+     const worldIndex = 97;
+     for (let floorIndex = 1; floorIndex <= 100; floorIndex++) {
+       const graph = generateDungeonFloor(worldIndex, floorIndex, 12345);
+       const distances = calculateRoomDistanceMap(graph, graph.entranceRoomId);
+
+       for (const room of graph.rooms) {
+         expect(distances.has(room.id), `Floor ${floorIndex}: Room ${room.id} is not reachable from entrance`).toBe(true);
+       }
+     }
+   }, 60000);
+ });
 
 describe('Treasure rooms', () => {
   it('has at least 1 treasure room per floor', () => {
@@ -306,6 +320,22 @@ describe('Treasure rooms', () => {
       const room = graph.rooms.find(r => r.id === treasureId);
       expect(room).toBeDefined();
       expect(room?.type).toBe('treasure');
+    }
+  });
+});
+
+describe('Boss floor always reachable', () => {
+  it('has boss room reachable from entrance on every floor in tower', () => {
+    const tower = generateDungeonTower(50, 12345);
+
+    for (const floor of tower.floors) {
+      const path = findShortestPath(floor, floor.entranceRoomId, floor.bossRoomId);
+      expect(path, `Floor ${floor.floorIndex}: boss room not reachable from entrance`).not.toBeNull();
+      if (path) {
+        expect(path.length).toBeGreaterThan(0);
+        expect(path[0]).toBe(floor.entranceRoomId);
+        expect(path[path.length - 1]).toBe(floor.bossRoomId);
+      }
     }
   });
 });
@@ -442,5 +472,84 @@ describe(' themed room type consistency', () => {
     const avgTrapCount = trapCounts.reduce((a, b) => a + b, 0) / trapCounts.length;
     
     expect(avgTrapCount).toBeGreaterThan(0);
+  });
+});
+
+describe('exportDungeonRun', () => {
+  it('creates a DungeonRun with default runId when none provided', () => {
+    const tower = generateDungeonTower(5, 12345);
+    const run = exportDungeonRun(tower);
+
+    expect(run.runId).toBeDefined();
+    expect(run.runId.length).toBeGreaterThan(0);
+    expect(run.worldIndex).toBe(5);
+    expect(run.globalSeed).toBe(12345);
+    expect(run.totalFloors).toBe(tower.totalFloors);
+    expect(run.currentFloor).toBe(1);
+    expect(run.clearedFloors).toEqual([]);
+    expect(run.bossDefeated).toBe(false);
+    expect(run.active).toBe(true);
+    expect(run.tower).toBe(tower);
+  });
+
+  it('uses provided runId', () => {
+    const tower = generateDungeonTower(3, 99999);
+    const customRunId = 'custom_run_001';
+    const run = exportDungeonRun(tower, customRunId);
+
+    expect(run.runId).toBe(customRunId);
+  });
+
+  it('preserves full tower metadata including floor graphs, room types, treasure locations, and boss room IDs', () => {
+    const tower = generateDungeonTower(7, 12345);
+    const run = exportDungeonRun(tower);
+
+    expect(run.tower.floors.length).toBe(tower.totalFloors);
+
+    for (const floor of run.tower.floors) {
+      expect(floor.rooms.length).toBeGreaterThan(0);
+      expect(floor.entranceRoomId).toBeDefined();
+      expect(floor.bossRoomId).toBeDefined();
+      expect(floor.treasureRoomIds.length).toBeGreaterThanOrEqual(0);
+
+      const entranceRoom = floor.rooms.find(r => r.id === floor.entranceRoomId);
+      expect(entranceRoom).toBeDefined();
+
+      const bossRoom = floor.rooms.find(r => r.id === floor.bossRoomId);
+      expect(bossRoom).toBeDefined();
+
+      for (const treasureId of floor.treasureRoomIds) {
+        const treasureRoom = floor.rooms.find(r => r.id === treasureId);
+        expect(treasureRoom).toBeDefined();
+        expect(treasureRoom?.type).toBe('treasure');
+      }
+
+      const validTypes: string[] = ['entrance', 'boss', 'treasure', 'combat', 'trap', 'puzzle', 'rest', 'elite', 'vendor'];
+      for (const room of floor.rooms) {
+        expect(validTypes).toContain(room.type);
+      }
+    }
+  });
+
+  it('is deterministic for identical tower input', () => {
+    const tower1 = generateDungeonTower(10, 55555);
+    const tower2 = generateDungeonTower(10, 55555);
+    const run1 = exportDungeonRun(tower1);
+    const run2 = exportDungeonRun(tower2);
+
+    expect(run1.tower).toEqual(run2.tower);
+  });
+
+  it('supports serialization for online sync', () => {
+    const tower = generateDungeonTower(12, 77777);
+    const run = exportDungeonRun(tower, 'sync_run_123');
+
+    const serialized = JSON.stringify(run);
+    const parsed = JSON.parse(serialized) as DungeonRun;
+
+    expect(parsed.runId).toBe('sync_run_123');
+    expect(parsed.worldIndex).toBe(12);
+    expect(parsed.tower.floors.length).toBe(tower.totalFloors);
+    expect(parsed.tower.verticalLinks.length).toBe(tower.totalFloors - 1);
   });
 });

@@ -2,6 +2,19 @@ import React from 'react';
 import { useGameStore } from '../stores/gameStore';
 import { getXPThreshold } from '../core/xpCurve';
 
+function toBigIntXP(value: unknown): bigint {
+  if (typeof value === 'bigint') return value;
+  if (typeof value === 'number' && Number.isFinite(value)) return BigInt(Math.trunc(value));
+  if (typeof value === 'string' && value.trim().length > 0) {
+    try {
+      return BigInt(value);
+    } catch {
+      return 0n;
+    }
+  }
+  return 0n;
+}
+
 export const ResourcePanel: React.FC = () => {
   const player = useGameStore((state) => state.player);
 
@@ -28,8 +41,11 @@ export const ResourcePanel: React.FC = () => {
     );
   };
 
-const nextLevelXP = Number(getXPThreshold(player.level));
-   const xpPercentage = Math.min(100, Number((player.experience * BigInt(100)) / BigInt(nextLevelXP)));
+  const nextLevelXP = getXPThreshold(player.level);
+  const playerXP = toBigIntXP(player.experience);
+  const xpPercentage = nextLevelXP > 0n
+    ? Math.min(100, Number((playerXP * 100n) / nextLevelXP))
+    : 0;
 
   return (
     <div className="flex gap-1 w-full bg-black/40 p-1 border-t border-gray-800">
