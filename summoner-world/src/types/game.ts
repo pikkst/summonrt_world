@@ -331,6 +331,13 @@ export interface DungeonEnvironmentalHazard {
   triggerRate: number;
 }
 
+export interface DungeonBossScaling {
+  baseBossHp: number;
+  hpMultiplier: number;
+  scaledBossHp: number;
+  signatureAbilityCount: number;
+}
+
 export interface DungeonFloorGraph {
   floorIndex: number;
   worldIndex: number;
@@ -538,12 +545,5 @@ export interface CommunityState {
   parties: CommunityParty[];
   guilds: CommunityGuild[];
   trades: CommunityTrade[];
-}
-
-export interface DungeonBossScaling {
-  baseBossHp: number;
-  hpMultiplier: number;
-  scaledBossHp: number;
-  signatureAbilityCount: number;
 }
 
