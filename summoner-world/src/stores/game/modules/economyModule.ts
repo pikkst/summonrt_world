@@ -2,6 +2,39 @@ import type { GameStore, CommunityState, SetState } from '../types.ts';
 import { createLog } from '../helpers.ts';
 import axios from 'axios';
 
+function buildValidatedUrl(
+  baseUrl: string,
+  playerId?: string,
+  targetId?: string,
+  query?: string
+): string {
+  try {
+    const url = new URL(baseUrl);
+    
+    // Validate path parameters
+    if (playerId && !/^[A-Za-z0-9_-]+$/.test(playerId)) {
+      throw new Error('Invalid parameter');
+    }
+    if (targetId && !/^[A-Za-z0-9_-]+$/.test(targetId)) {
+      throw new Error('Invalid parameter');
+    }
+    
+    // Rebuild pathname from fixed literals + validated segments
+    if (playerId && targetId) {
+      url.pathname = `/api/community/messages/${playerId}/${targetId}`;
+    } else if (playerId) {
+      url.pathname = `/api/community/search/${playerId}`;
+    }
+    
+    // Add query parameters
+    if (query !== undefined) url.searchParams.set('q', query);
+    
+    return url.href;
+  } catch {
+    throw new Error('Invalid URL');
+  }
+}
+
 export const economyActions = (set: SetState<GameStore>, get: () => GameStore) => ({
   openCommunity: (tab?: CommunityState['tab']) => {
     const { community } = get();
@@ -25,7 +58,7 @@ export const economyActions = (set: SetState<GameStore>, get: () => GameStore) =
     const { player } = get();
     if (!player) return;
     try {
-      const res = await axios.get(`http://localhost:5000/api/community/search/${player.id}?q=${encodeURIComponent(query || '')}`);
+      const res = await axios.get(buildValidatedUrl('http://localhost:5000', player.id, undefined, query || ''));
       set((state: any) => ({
         community: { ...state.community, players: res.data.players || [] }
       }));
@@ -55,7 +88,7 @@ export const economyActions = (set: SetState<GameStore>, get: () => GameStore) =
     const { player } = get();
     if (!player) return;
     try {
-      const res = await axios.get(`http://localhost:5000/api/community/messages/${player.id}/${targetId}`);
+      const res = await axios.get(buildValidatedUrl('http://localhost:5000', player.id, targetId));
       set((state: any) => ({
         community: { ...state.community, messages: res.data.messages || [] }
       }));
