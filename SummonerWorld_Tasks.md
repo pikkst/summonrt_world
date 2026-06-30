@@ -236,7 +236,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 
 - [x] T6.9 – Add "ascending requires defeating floor guardian" rule (or rare teleport item)
 - [x] T6.10 – Verify dungeon exit scales player to minimum viable level
-- [ ] T6.11 – Add trap/puzzle minigame UI (text-based choices)
+- [x] T6.11 – Add trap/puzzle minigame UI (text-based choices)
 - [ ] T6.12 – Test full clear World 10 dungeon simulation (integration test)
 - [ ] T6.13 – Integrate automated combat engine with timed missions: dungeon scouting and wild encounters resolved via `resolveAutomatedCombat()`
 - [ ] T6.14 – Integrate career passives into combat: Summoner path `capture_bonus_pct`, Warrior path `damage_dealt_pct`, Guardian path `damage_taken_pct`

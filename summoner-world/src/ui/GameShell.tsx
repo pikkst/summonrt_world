@@ -1136,6 +1136,8 @@ function DungeonPanel() {
   const descendDungeon = useGameStore((s) => s.descendDungeon);
   const fleeDungeon = useGameStore((s) => s.fleeDungeon);
   const closeModal = useGameStore((s) => s.closeModal);
+  const resolveTrapRoom = useGameStore((s) => s.resolveTrapRoom);
+  const resolvePuzzleRoom = useGameStore((s) => s.resolvePuzzleRoom);
 
   if (!player) return null;
 
@@ -1182,7 +1184,68 @@ function DungeonPanel() {
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {combat.active ? (
+        {combat.roomInteraction?.active && (combat.roomInteraction.roomType === 'trap' || combat.roomInteraction.roomType === 'puzzle') ? (
+          <div className="bg-gray-900/40 border border-gray-800 rounded-3xl p-8">
+            <div className="flex items-center gap-6 mb-8">
+              <div className="w-16 h-16 bg-gray-950 rounded-2xl flex items-center justify-center border border-gray-800">
+                <span className="text-3xl">{combat.roomInteraction.roomType === 'trap' ? '⚠️' : '🧩'}</span>
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-white italic tracking-tighter uppercase">
+                  {combat.roomInteraction.roomType === 'trap' ? 'Hazard Encounter' : 'Puzzle Room'}
+                </h3>
+                <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">
+                  {combat.roomInteraction.roomType === 'trap' ? 'Danger detected — choose your action carefully' : 'Logic challenge awaits — solve to proceed'}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-black/30 border border-gray-800 rounded-2xl p-6 mb-6">
+              <p className="text-gray-300 font-serif italic leading-relaxed mb-4">{combat.roomInteraction.message}</p>
+              {combat.roomInteraction.roomType === 'trap' && (
+                <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Choose an evasion or defense maneuver:</p>
+              )}
+              {combat.roomInteraction.roomType === 'puzzle' && (
+                <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Select your answer:</p>
+              )}
+            </div>
+
+            {combat.roomInteraction.choices && !combat.roomInteraction.result && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+                {combat.roomInteraction.choices.map((choice) => (
+                  <button
+                    key={choice.id}
+                    onClick={() => {
+                      if (combat.roomInteraction?.roomType === 'trap') resolveTrapRoom(choice.id);
+                      if (combat.roomInteraction?.roomType === 'puzzle') resolvePuzzleRoom(choice.id);
+                    }}
+                    className="bg-gray-950 hover:bg-emerald-600/20 text-emerald-400 border border-gray-800 hover:border-emerald-500/30 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all text-left px-4"
+                  >
+                    <div className="font-bold text-white mb-1">{choice.label}</div>
+                    <div className="text-[9px] text-gray-500">{choice.description}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {combat.roomInteraction.result && (
+              <div className={`mt-4 text-center p-4 rounded-2xl border ${combat.roomInteraction.result.success ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-rose-500/10 border-rose-500/30'}`}>
+                <p className={`text-sm font-bold ${combat.roomInteraction.result.success ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {combat.roomInteraction.result.message}
+                </p>
+                {combat.roomInteraction.result.damageTaken && (
+                  <p className="text-xs text-rose-500 mt-2 font-bold uppercase">Damage taken: {combat.roomInteraction.result.damageTaken}</p>
+                )}
+                <button
+                  onClick={descendDungeon}
+                  className="mt-4 bg-gray-950 hover:bg-emerald-600/20 text-emerald-400 border border-emerald-500/30 py-3 px-6 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all"
+                >
+                  Continue Descent
+                </button>
+              </div>
+            )}
+          </div>
+        ) : combat.active ? (
           <div className="bg-rose-950/20 border border-rose-500/30 p-8 rounded-3xl text-center animate-pulse">
             <span className="text-4xl mb-4 block">⚔️</span>
             <p className="text-rose-400 font-black uppercase tracking-widest text-sm">Combat Interface Synchronizing...</p>
