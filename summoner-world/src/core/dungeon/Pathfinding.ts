@@ -1,5 +1,5 @@
-import type { DungeonFloorGraph } from '../../types/game';
 import { SeededRandom } from '../../utils/SeededRandom';
+import type { DungeonFloorGraph } from '../../types/game';
 
 export function calculateRoomDistanceMap(
   graph: DungeonFloorGraph,
