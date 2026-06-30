@@ -1,4 +1,4 @@
-import type { GameStore, GameStoreState, LogEntry, ElementalAffinity, Element, InventoryStack, PlayerState, WorldData, QuestInstance, CreatureInstance, CommunityState, SetState } from '../types.ts';
+import type { GameStore, GameStoreState, LogEntry, ElementalAffinity, Element, InventoryStack, PlayerState, WorldData, QuestInstance, CreatureInstance, CommunityState, SetState, CreatureTemplate } from '../types.ts';
 import { createLog, rollAffinity, getPlayerElements, addPlayerXP, calculateMovementModifiers, processTileDiscovery, getWorldModifier, applyResourceRegeneration } from '../helpers.ts';
 import { generateWorld, generateTile } from '../../../core/worldGenerator.ts';
 import { getTileKey, getNeighbors } from '../../../data/constants.ts';
@@ -9,6 +9,42 @@ import axios from 'axios';
 import { QUEST_TEMPLATES } from '../../../data/quests.ts';
 import { applyCreatureXP } from '../../../core/xpCurve.ts';
 import { applyAffectionGain } from '../../../core/affection.ts';
+import {
+  generateTrapInteraction,
+  generatePuzzleInteraction,
+  generateEliteInteraction,
+  generateVendorInteraction,
+  generateTreasureInteraction,
+  resolveTrapRoom as resolveRoomTrap,
+  resolvePuzzleRoom as resolveRoomPuzzle,
+  EliteRoomInteraction,
+  VendorRoomInteraction,
+} from '../../../core/dungeon/DungeonInteractions';
+
+function toBigIntXP(value: unknown): bigint {
+  if (typeof value === 'bigint') return value;
+  if (typeof value === 'number' && Number.isFinite(value)) return BigInt(Math.trunc(value));
+  if (typeof value === 'string' && value.trim().length > 0) {
+    try {
+      return BigInt(value);
+    } catch {
+      return 0n;
+    }
+  }
+  return 0n;
+}
+
+function serializeXP(value: unknown): number {
+  return Number(toBigIntXP(value));
+}
+
+function normalizeCreatures(creatures: unknown): CreatureInstance[] {
+  if (!Array.isArray(creatures)) return [];
+  return creatures.map((creature) => ({
+    ...(creature as CreatureInstance),
+    experience: toBigIntXP((creature as CreatureInstance).experience),
+  }));
+}
 
 export const playerActions = (set: SetState<GameStore>, get: () => GameStore) => ({
   initGame: (playerName: string, archetype: string = 'fighter') => {
@@ -183,7 +219,8 @@ set({
              currentWorldId: serverPlayer.currentWorld || 1,
              tileX: typeof serverPlayer.posX === 'number' ? serverPlayer.posX : 10,
              tileY: typeof serverPlayer.posY === 'number' ? serverPlayer.posY : 10,
-             creatures: serverPlayer.creatures || [],
+             experience: toBigIntXP(serverPlayer.experience),
+             creatures: normalizeCreatures(serverPlayer.creatures),
              inventory: serverPlayer.inventory || [],
              activeQuests: serverPlayer.activeQuests || [],
              completedQuests: serverPlayer.completedQuests || [],
@@ -265,7 +302,8 @@ set({
           tileX: typeof serverPlayer.posX === 'number' && !isNaN(serverPlayer.posX) ? serverPlayer.posX : startWorld.startTile.x,
           tileY: typeof serverPlayer.posY === 'number' && !isNaN(serverPlayer.posY) ? serverPlayer.posY : startWorld.startTile.y,
           gameTimeMinutes: typeof serverPlayer.gameTimeMinutes === 'number' && !isNaN(serverPlayer.gameTimeMinutes) ? serverPlayer.gameTimeMinutes : 420,
-          creatures: serverPlayer.creatures || [],
+          experience: toBigIntXP(serverPlayer.experience),
+          creatures: normalizeCreatures(serverPlayer.creatures),
           inventory: serverPlayer.inventory || [],
           activeQuests: serverPlayer.activeQuests || [],
           completedQuests: serverPlayer.completedQuests || [],
@@ -332,7 +370,14 @@ set({
     try {
       const res = await axios.post(`${'http://localhost:5000/api'}/train`, { playerId: player.id, stat, energyCost });
       if (res.data.success) {
-        set({ player: { ...res.data.player, id: res.data.player._id } });
+        set({
+          player: {
+            ...res.data.player,
+            id: res.data.player._id,
+            experience: toBigIntXP(res.data.player.experience),
+            creatures: normalizeCreatures(res.data.player.creatures),
+          },
+        });
         appendLog(`Trained ${stat}! Gained ${res.data.gain.toFixed(2)} points.`, 'success');
       }
     } catch (err: any) {
@@ -346,10 +391,24 @@ set({
     try {
       const res = await axios.post(`${'http://localhost:5000/api'}/summon-act`, { playerId: player.id, actType, nerveCost });
       if (res.data.success) {
-        set({ player: { ...res.data.player, id: res.data.player._id } });
+        set({
+          player: {
+            ...res.data.player,
+            id: res.data.player._id,
+            experience: toBigIntXP(res.data.player.experience),
+            creatures: normalizeCreatures(res.data.player.creatures),
+          },
+        });
         appendLog(`Summon Act Successful! Gained ${res.data.reward} stones and ${res.data.xp} XP.`, 'success');
       } else {
-        set({ player: { ...res.data.player, id: res.data.player._id } });
+        set({
+          player: {
+            ...res.data.player,
+            id: res.data.player._id,
+            experience: toBigIntXP(res.data.player.experience),
+            creatures: normalizeCreatures(res.data.player.creatures),
+          },
+        });
         appendLog(`Summon Act Failed! You lost some spirit.`, 'warning');
       }
     } catch (err: any) {
@@ -391,7 +450,8 @@ set({
            unspent_passive_points: serverPlayer.unspent_passive_points ?? 0,
            unlocked_node_ids: serverPlayer.unlocked_node_ids ?? ['root_hub'],
            discoveredTiles: discoveredTilesSet,
-           creatures: serverPlayer.creatures || [],
+           experience: toBigIntXP(serverPlayer.experience),
+           creatures: normalizeCreatures(serverPlayer.creatures),
            inventory: serverPlayer.inventory || [],
            activeQuests: serverPlayer.activeQuests || [],
            completedQuests: serverPlayer.completedQuests || [],
@@ -420,6 +480,11 @@ set({
 
     const serializedPlayer = {
       ...state.player,
+      experience: serializeXP(state.player.experience),
+      creatures: state.player.creatures.map((creature) => ({
+        ...creature,
+        experience: serializeXP(creature.experience),
+      })),
       discoveredTiles: Array.from(state.player.discoveredTiles || []),
     };
 
@@ -508,7 +573,8 @@ set({
         tileY: typeof rawPlayer.tileY === 'number' && !isNaN(rawPlayer.tileY) ? rawPlayer.tileY : 10,
         discoveredTiles: new Set(rawPlayer.discoveredTiles || []),
         affinity: rawPlayer.affinity || { primary: 'fire' as Element, learned: [] as Element[] },
-        creatures: rawPlayer.creatures || [],
+        experience: toBigIntXP(rawPlayer.experience),
+        creatures: normalizeCreatures(rawPlayer.creatures),
         inventory: rawPlayer.inventory || [],
         activeQuests: rawPlayer.activeQuests || [],
         completedQuests: rawPlayer.completedQuests || [],
@@ -747,7 +813,7 @@ const newCreature: any = {
     let message = `Your ${activity.type.replace(/_/g, ' ')} is complete!`;
 
     switch (activity.type) {
-case 'creature_training': {
+      case 'creature_training': {
          const creature = player.creatures.find(c => c.id === activity.creatureId);
          if (creature) {
            const creatureXp = Math.floor(activity.duration / 1000) * 0.5;
@@ -804,9 +870,178 @@ case 'creature_training': {
         break;
     }
 
-    const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(currentWorldId));
+const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(currentWorldId));
 
     set({ player: updatedPlayer, activity: null });
     appendLog(message, 'success');
+  },
+
+  resolveTrapRoom: (choice: string) => {
+    const { player, combat, appendLog } = get();
+    if (!player || !combat.roomInteraction?.active) return;
+
+    const rng = new SeededRandom(Date.now());
+    const result = resolveRoomTrap(choice, player.speed, player.dexterity, player.defense, rng);
+    
+    const updatedLife = result.success 
+      ? player.life 
+      : { ...player.life, current: Math.max(1, player.life.current - (result.damageTaken || 0)) };
+
+    set((s: any) => ({
+      player: { ...s.player, life: updatedLife },
+      dungeon: { ...s.dungeon, clearedFloors: [...s.dungeon.clearedFloors, s.dungeon.currentFloor] },
+      combat: { 
+        ...s.combat, 
+        roomInteraction: { 
+          ...s.combat.roomInteraction, 
+          active: false, 
+          result: { success: result.success, damageTaken: result.damageTaken, message: result.message } 
+        } 
+      }
+    }));
+    
+    appendLog(result.message, result.success ? 'success' : 'warning');
+  },
+
+  resolvePuzzleRoom: (choice: string) => {
+    const { player, combat, appendLog } = get();
+    if (!player || !combat.roomInteraction?.active) return;
+
+    const rng = new SeededRandom(Date.now());
+    const result = resolveRoomPuzzle(choice, rng);
+    
+    set((s: any) => ({
+      dungeon: { ...s.dungeon, clearedFloors: [...s.dungeon.clearedFloors, s.dungeon.currentFloor] },
+      combat: { 
+        ...s.combat, 
+        roomInteraction: { 
+          ...s.combat.roomInteraction, 
+          active: false, 
+          result: { success: result.success, message: result.message } 
+        } 
+      }
+    }));
+    
+    appendLog(result.message, result.success ? 'success' : 'warning');
+  },
+
+  resolveEliteRoom: () => {
+    const { player, dungeon, currentWorldId, startCombat, appendLog } = get();
+    if (!player) return;
+
+    const rng = new SeededRandom(Date.now());
+    const eliteInteraction = generateEliteInteraction(rng, currentWorldId);
+    const enemyLevel = eliteInteraction.enemyLevel;
+    
+    const eliteTemplate: CreatureTemplate = {
+      key: 'elite_guardian',
+      name: eliteInteraction.enemyName,
+      class: 'rare',
+      type: 'construct',
+      elements: ['earth'],
+      baseHealth: 50 + (enemyLevel * 8),
+      baseAttack: 10 + (enemyLevel * 2),
+      baseDefense: 8 + (enemyLevel * 1.5),
+      baseSpeed: 5 + enemyLevel,
+      baseMana: 20,
+      baseExpValue: 30 + (enemyLevel * 2),
+      skills: [{ key: 'earth_slash', name: 'Earth Slash', description: 'A powerful earth attack', power: 15, cost: 5 }],
+      description: 'An elite guardian of the dungeon.',
+      isBoss: false,
+    };
+
+    startCombat(eliteTemplate, eliteInteraction.enemyName, 'normal');
+    set((s: any) => ({
+      dungeon: { ...s.dungeon, inEncounter: true, encounterType: 'guardian' }
+    }));
+    appendLog(`An elite ${eliteInteraction.enemyName} appears!`, 'warning');
+  },
+
+  resolveVendorRoom: (itemId: string) => {
+    const { player, combat, appendLog } = get();
+    if (!player || !combat.roomInteraction?.active) return;
+
+    const vendorInteraction = combat.roomInteraction.vendorData as VendorRoomInteraction;
+    const items = vendorInteraction?.items;
+    if (!items) {
+      appendLog('No vendor data available.', 'error');
+      return;
+    }
+    const item = items.find(i => i.key === itemId);
+    
+    if (!item) {
+      appendLog('Item not found in vendor stock.', 'error');
+      return;
+    }
+
+    if (player.money < item.price) {
+      appendLog('Insufficient stones for purchase.', 'warning');
+      return;
+    }
+
+    const updatedInventory = [...player.inventory];
+    const existing = updatedInventory.find(i => i.templateKey === itemId);
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      updatedInventory.push({ templateKey: itemId, quantity: 1 });
+    }
+
+    set((s: any) => ({
+      player: { 
+        ...s.player, 
+        money: s.player.money - item.price,
+        inventory: updatedInventory 
+      },
+      dungeon: { ...s.dungeon, clearedFloors: [...s.dungeon.clearedFloors, s.dungeon.currentFloor] }
+    }));
+    
+    appendLog(`Purchased ${item.name} for ${item.price} stones!`, 'success');
+  },
+
+  resolveTreasureRoom: () => {
+    const { player, dungeon, currentWorldId, combat, appendLog } = get();
+    if (!player) return;
+
+    const rng = new SeededRandom(Date.now());
+    const treasureInteraction = generateTreasureInteraction(rng, currentWorldId);
+    const updatedInventory = [...player.inventory];
+
+    let itemKey = 'resource_shard';
+    let itemName = 'Essence Shard';
+    let fortuneMessage = treasureInteraction.hasMythicalEgg
+      ? 'An ornate chest pulses with ethereal light! You found a Mythical Egg!'
+      : 'You found valuable treasure!';
+
+    if (treasureInteraction.hasMythicalEgg) {
+      itemKey = 'mythical_egg';
+      itemName = 'Mythical Egg';
+      updatedInventory.push({ templateKey: itemKey, quantity: 1 });
+    } else {
+      const lootTables = [
+        { key: 'resource_shard', name: 'Essence Shard' },
+        { key: 'essence', name: 'Pure Essence' },
+        { key: 'crystal', name: 'Prismatic Crystal' },
+      ];
+      const lootIndex = rng.int(0, lootTables.length - 1);
+      const loot = lootTables[lootIndex];
+      if (loot) {
+        itemName = loot.name;
+        updatedInventory.push({ templateKey: loot.key, quantity: 1 + rng.int(0, 2) });
+      }
+    }
+
+    set((s: any) => ({
+      player: { ...s.player, inventory: updatedInventory },
+      dungeon: { 
+        ...s.dungeon, 
+        inEncounter: false, 
+        encounterType: undefined,
+        clearedFloors: [...s.dungeon.clearedFloors, s.dungeon.currentFloor] 
+      },
+      combat: { ...s.combat, roomInteraction: undefined, active: false }
+    }));
+
+    appendLog(`${fortuneMessage} Found: ${itemName}`, 'success');
   },
 });

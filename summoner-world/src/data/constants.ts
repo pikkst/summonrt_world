@@ -1,3 +1,5 @@
+export const DUNGEON_ASCEND_SCROLL = 'dungeon_ascend_scroll';
+
 export const ELEMENTS = ['fire','water','earth','air','lightning','iron','nature','ice','light','darkness'] as const;
 
 export const AFFINITY_WEIGHT = {
