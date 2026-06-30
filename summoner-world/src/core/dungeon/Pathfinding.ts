@@ -149,25 +149,3 @@ export function ensureMultipleShortestPaths(graph: DungeonFloorGraph, rng: Seede
     paths = findAllShortestPaths(graph, startId, endId);
   }
 }
-
-function isOnShortestPath(
-  graph: DungeonFloorGraph,
-  startId: string,
-  endId: string,
-  roomId: string
-): boolean {
-  const bossDist = calculateRoomDistanceMap(graph, endId);
-  const roomDist = bossDist.get(roomId) ?? Infinity;
-
-  const room = graph.rooms.find(r => r.id === roomId);
-  if (!room) return false;
-
-  for (const neighborId of room.connections) {
-    const neighborDist = bossDist.get(neighborId) ?? Infinity;
-    if (neighborDist === roomDist - 1) {
-      return true;
-    }
-  }
-
-  return false;
-}
