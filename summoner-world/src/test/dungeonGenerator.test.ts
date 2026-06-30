@@ -22,9 +22,9 @@ import {
   getWorldElement,
 } from '../core/dungeon/BossScaling';
 import { generateBossFloor } from '../core/dungeon/BossArenaGenerator';
-import { generateDungeonTower } from '../core/dungeon/DungeonTowerGenerator';
+import { generateDungeonTower, exportDungeonRun } from '../core/dungeon/DungeonTowerGenerator';
 import { SeededRandom } from '../utils/SeededRandom';
-import type { DungeonFloorGraph, DungeonRun, RoomType } from '../types/game';
+import type { DungeonFloorGraph, DungeonRun, DungeonRoom, RoomType } from '../types/game';
 
 describe('getDungeonFloorSeed', () => {
   it('generates deterministic seed from world seed + floor seed', () => {
@@ -150,8 +150,8 @@ describe('generateBossFloor', () => {
     expect(floor.bossRoomId).toBe('arena_2_2');
     expect(floor.treasureRoomIds).toHaveLength(0);
 
-    const centerRoom = floor.rooms.find(room => room.id === floor.bossRoomId);
-    const cornerRoom = floor.rooms.find(room => room.id === 'arena_0_0');
+    const centerRoom = floor.rooms.find((room: DungeonRoom) => room.id === floor.bossRoomId);
+    const cornerRoom = floor.rooms.find((room: DungeonRoom) => room.id === 'arena_0_0');
 
     expect(centerRoom?.connections).toHaveLength(4);
     expect(cornerRoom?.connections).toHaveLength(2);
@@ -516,14 +516,14 @@ describe('exportDungeonRun', () => {
       expect(floor.bossRoomId).toBeDefined();
       expect(floor.treasureRoomIds.length).toBeGreaterThanOrEqual(0);
 
-      const entranceRoom = floor.rooms.find(r => r.id === floor.entranceRoomId);
+      const entranceRoom = floor.rooms.find((r: DungeonRoom) => r.id === floor.entranceRoomId);
       expect(entranceRoom).toBeDefined();
 
-      const bossRoom = floor.rooms.find(r => r.id === floor.bossRoomId);
+      const bossRoom = floor.rooms.find((r: DungeonRoom) => r.id === floor.bossRoomId);
       expect(bossRoom).toBeDefined();
 
       for (const treasureId of floor.treasureRoomIds) {
-        const treasureRoom = floor.rooms.find(r => r.id === treasureId);
+        const treasureRoom = floor.rooms.find((r: DungeonRoom) => r.id === treasureId);
         expect(treasureRoom).toBeDefined();
         expect(treasureRoom?.type).toBe('treasure');
       }
