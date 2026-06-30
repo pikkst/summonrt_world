@@ -1,5 +1,4 @@
 import { SeededRandom } from '../../utils/SeededRandom';
-import type { RoomInteractionChoice } from '../../types/game';
 
 export interface TrapRoomInteraction {
   description: string;
