@@ -64,6 +64,19 @@ export function getCreatureXPForLevel(startLevel: number, endLevel: number): big
   return getCreatureCumulativeXP(endLevel) - getCreatureCumulativeXP(startLevel);
 }
 
+function toBigIntXP(value: unknown): bigint {
+  if (typeof value === 'bigint') return value;
+  if (typeof value === 'number' && Number.isFinite(value)) return BigInt(Math.trunc(value));
+  if (typeof value === 'string' && value.trim().length > 0) {
+    try {
+      return BigInt(value);
+    } catch {
+      return 0n;
+    }
+  }
+  return 0n;
+}
+
 export function getWorldModifier(worldIndex: number): number {
   if (worldIndex < 1) throw new Error('World index must be at least 1');
   return 1 + (worldIndex * 0.05);
@@ -228,7 +241,7 @@ export function applyCreatureXP(
   xp: bigint | number,
   maxLevel: number = 1000
 ): CreatureXPResult {
-  let newExp = (creature.experience ?? 0n) + BigInt(xp);
+  let newExp = toBigIntXP(creature.experience) + BigInt(xp);
   let newLevel = creature.level;
   let leveledUp = false;
   let statsGained = { hp: 0, attack: 0, defense: 0, speed: 0 };

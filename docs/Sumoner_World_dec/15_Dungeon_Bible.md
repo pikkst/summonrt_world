@@ -28,9 +28,10 @@ Aligned source:
 
 Completed through:
 - T6.4.6 - Boss floor generation rules
+- T6.4.7 - Deterministic floor seed system
+- T6.4.8 - Dungeon metadata export
 
 Completed ahead of sequence:
-- T6.4.7 - Deterministic floor seed system
 - T6.4.9 - Pathfinding utilities
 
 Partially completed:
@@ -72,20 +73,22 @@ Completed Sprint 6 dungeon/combat foundation:
 - Boss phase mechanics
 - Scan ability for boss weakness discovery
 - Demonlord floor range and challenge flow
+- Dungeon metadata export for persistence, online sync, and party runs
+- Ascension requires defeating floor guardian (or consuming a rare Teleport Scroll)
+- Floor 0 entrance lobby exempt from guardian requirement
+- Trap, puzzle, and vendor rooms now mark floors as cleared on resolution
 
 ## Remaining Sprint 6 Tasks
 
 Next:
-- T6.4.8 - Dungeon metadata export
+- T6.4.10 - Remaining dungeon generation tests: 100-floor simulation and boss-floor reachability
 
 Remaining:
-- T6.4.8 - Dungeon metadata export
 - T6.4.10 - Remaining dungeon generation tests: 100-floor simulation and boss-floor reachability
 - T6.5 - Extend boss phase mechanics with environmental hazard rotation and Summoner career bonuses
 - T6.6 - Extend Scan ability with creature ability pool integration and final UI feedback
 - T6.7 - Add trap, puzzle, treasure, elite, and vendor room interactions/UI
 - T6.8 - Dungeon floor count and progression rules
-- T6.9 - Ascending requires floor guardian defeat or rare teleport item
 - T6.10 - Dungeon exit scales player to minimum viable level
 - T6.11 - Trap/puzzle minigame UI
 - T6.14 - Career passive integration into combat
