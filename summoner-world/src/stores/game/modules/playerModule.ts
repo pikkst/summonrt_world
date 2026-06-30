@@ -813,7 +813,7 @@ const newCreature: any = {
     let message = `Your ${activity.type.replace(/_/g, ' ')} is complete!`;
 
     switch (activity.type) {
-case 'creature_training': {
+      case 'creature_training': {
          const creature = player.creatures.find(c => c.id === activity.creatureId);
          if (creature) {
            const creatureXp = Math.floor(activity.duration / 1000) * 0.5;
@@ -872,9 +872,9 @@ case 'creature_training': {
 
 const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(currentWorldId));
 
-     set({ player: updatedPlayer, activity: null });
-     appendLog(message, 'success');
-   },
+    set({ player: updatedPlayer, activity: null });
+    appendLog(message, 'success');
+  },
 
   resolveTrapRoom: (choice: string) => {
     const { player, combat, appendLog } = get();
