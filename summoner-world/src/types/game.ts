@@ -330,6 +330,11 @@ export interface DungeonFloorGraph {
   entranceRoomId: string;
   bossRoomId: string;
   treasureRoomIds: string[];
+  layoutType?: string;
+  isBossFloor?: boolean;
+  worldElement?: Element;
+  environmentalHazards?: DungeonEnvironmentalHazard[];
+  bossScaling?: DungeonBossScaling;
 }
 
 export interface DungeonMetadata {
@@ -524,5 +529,21 @@ export interface CommunityState {
   parties: CommunityParty[];
   guilds: CommunityGuild[];
   trades: CommunityTrade[];
+}
+
+export interface DungeonEnvironmentalHazard {
+  key: string;
+  name: string;
+  element: Element;
+  description: string;
+  damageMultiplier: number;
+  triggerRate: number;
+}
+
+export interface DungeonBossScaling {
+  baseBossHp: number;
+  hpMultiplier: number;
+  scaledBossHp: number;
+  signatureAbilityCount: number;
 }
 

@@ -145,40 +145,40 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * Ensure biome/tier‑themed consistency
 * Guarantee at least 1 rest room 
 
-- [ ] T6.4.5 – Create generateDungeonTower(worldIndex) (Sword Art Online–style central tower)
+- [x] T6.4.5 – Create generateDungeonTower(worldIndex) (Sword Art Online–style central tower)
 
 * Build continuous vertical tower
 * Floor count = BaseFloors + WorldIndex
 * Link floors vertically (exit → next entrance)
 * Mark safe floors (every 10th): rest area + vendor + teleport unlock
 
-- [ ] T6.4.6 – Add boss floor generation rules
+- [x] T6.4.6 – Add boss floor generation rules
 
 * Final floor of each world contains a boss arena
 * Arena layout must be open, non‑maze
 * Add environmental hazards based on world element
 * Integrate boss scaling formula from GDD
 
-- [ ] T6.4.7 – Add deterministic floor seed system (FLOOR_SEEDS)
+- [x] T6.4.7 – Add deterministic floor seed system (FLOOR_SEEDS)
 
 * Each floor uses hash(worldIndex, floorIndex, globalSeed)
 * Guarantee identical dungeon layout for all players
 * Add unit test: same seed → identical floor graph
 
-- [ ] T6.4.8 – Add dungeon metadata export
+- [x] T6.4.8 – Add dungeon metadata export
 
 * Store floor graph, room types, treasure locations, boss room ID
 * Save into DungeonRun.state for persistence
 * Required for online synchronization and party dungeon runs
 
-- [ ] T6.4.9 – Add pathfinding utilities
+- [x] T6.4.9 – Add pathfinding utilities
 
 * findShortestPath()
 * findAllShortestPaths()
 * calculateRoomDistanceMap()
 * Used for treasure placement, shortcut injection, boss logic.
 
-- [ ] T6.4.10 – Add dungeon generation tests
+- [x] T6.4.10 – Add dungeon generation tests
 
 * 100 generated floors → no disconnected rooms
 * ≥ 3 shortest paths validated
@@ -186,21 +186,21 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * Deterministic seed test
 * Boss floor always reachable.
 
-- [ ] T6.5 – Add combat phase boss mechanics
+- [x] T6.5 – Add combat phase boss mechanics
 
 * Boss phases at HP thresholds 75%, 50%, 25%
 * Elemental shift per phase
 * Add environmental hazard rotation (lava bursts, frost spikes, storm pulses)
 * Integrate Summoner career bonuses into boss phase calculations
 
-- [ ] T6.6 – Implement “Scan” ability for boss weakness discovery
+- [x] T6.6 – Implement “Scan” ability for boss weakness discovery
 
 * Add SCAN skill to creature ability pool
 * Correct guess → reveal elemental weakness
 * Wrong guess → −70% damage penalty for 3 turns
 * Add UI feedback: “Weakness Identified” overlay
 
-- [ ] T6.7 – Add dungeon room types (trap, puzzle, treasure, elite, vendor)
+- [x] T6.7 – Add dungeon room types (trap, puzzle, treasure, elite, vendor)
 
 * Trap rooms: text‑based minigame (avoid, disarm, endure)
 * Puzzle rooms: logic riddles, pattern matching, rune alignment
@@ -208,7 +208,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * Vendor rooms: temporary merchant with dungeon‑specific items
 * Treasure rooms: guaranteed loot chest + rare chance for mythical egg
 
-- [ ] T6.8 – Implement dungeon floor count & progression rules
+- [x] T6.8 – Implement dungeon floor count & progression rules
 
 * Floor count = BaseFloors + WorldIndex
 * World 1 → 3 floors + boss
@@ -216,10 +216,10 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * Ascending requires defeating floor guardian or using rare teleport item
 * Dungeon exit scales player to minimum viable level (per GDD)
 
-- [ ] T6.9 – Add "ascending requires defeating floor guardian" rule (or rare teleport item)
-- [ ] T6.10 – Verify dungeon exit scales player to minimum viable level
-- [ ] T6.11 – Add trap/puzzle minigame UI (text-based choices)
-- [ ] T6.12 – Test full clear World 10 dungeon simulation (integration test)
+- [x] T6.9 – Add "ascending requires defeating floor guardian" rule (or rare teleport item)
+- [x] T6.10 – Verify dungeon exit scales player to minimum viable level
+- [x] T6.11 – Add trap/puzzle minigame UI (text-based choices)
+- [x] T6.12 – Test full clear World 10 dungeon simulation (integration test)
 - [ ] T6.13 – Integrate automated combat engine with timed missions: dungeon scouting and wild encounters resolved via `resolveAutomatedCombat()`
 - [ ] T6.14 – Integrate career passives into combat: Summoner path `capture_bonus_pct`, Warrior path `damage_dealt_pct`, Guardian path `damage_taken_pct`
 
