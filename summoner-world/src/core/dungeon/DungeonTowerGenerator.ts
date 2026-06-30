@@ -81,7 +81,9 @@ function markSafeTowerFloor(floor: DungeonFloorGraph): DungeonTowerSafeFloor | n
   if (!restRoom || !vendorRoom || !teleportRoom) return null;
 
   restRoom.type = 'rest';
-  vendorRoom.type = 'vendor';
+  if (vendorRoom !== restRoom) {
+    vendorRoom.type = 'vendor';
+  }
 
   return {
     floorIndex: floor.floorIndex,
