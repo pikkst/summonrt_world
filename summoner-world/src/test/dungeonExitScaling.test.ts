@@ -100,21 +100,21 @@ describe('applyMinViableLevelScaling', () => {
     expect(scaledPlayer.energy.max).toBe(100 + (9 * 5));
   });
 
-it('scales player creatures stats on dungeon exit', () => {
-     const creatures = [createTestCreature(1)];
-     const player = createTestPlayer(1);
-     const { player: scaledPlayer, creatures: scaledCreatures } = applyMinViableLevelScaling(player, 3, creatures);
-     
-     expect(scaledPlayer.level).toBe(5);
-     const originalCreature = creatures[0];
-     const scaledCreature = scaledCreatures[0];
-     expect(scaledCreature).toBeDefined();
-     expect(originalCreature).toBeDefined();
-     if (scaledCreature && originalCreature) {
-       expect(scaledCreature.maxHealth).toBeGreaterThan(originalCreature.maxHealth);
-       expect(scaledCreature.attack).toBeGreaterThan(originalCreature.attack);
-     }
-   });
+  it('scales player creatures stats on dungeon exit', () => {
+    const creatures = [createTestCreature(1)];
+    const player = createTestPlayer(1);
+    const { player: scaledPlayer, creatures: scaledCreatures } = applyMinViableLevelScaling(player, 3, creatures);
+
+    expect(scaledPlayer.level).toBe(5);
+    const originalCreature = creatures[0];
+    const scaledCreature = scaledCreatures[0];
+    expect(scaledCreature).toBeDefined();
+    expect(originalCreature).toBeDefined();
+    if (scaledCreature && originalCreature) {
+      expect(scaledCreature.maxHealth).toBeGreaterThan(originalCreature.maxHealth);
+      expect(scaledCreature.attack).toBeGreaterThan(originalCreature.attack);
+    }
+  });
 
   it('preserves existing player stats not affected by scaling', () => {
     const player = createTestPlayer(1);
