@@ -19,7 +19,8 @@ import { inheritSkills } from '../../../data/fusionUtils.ts';
 import { getSoulCrystalTierForClass } from '../../../data/constants.ts';
 import { getSynergyNames, calculateSynergyEffects } from '../../../data/traitSynergy.ts';
 import { generateProceduralIdentity } from '../../../data/proceduralIdentity';
-import { generateDungeonTower, exportDungeonRun, generateTrapInteraction, generatePuzzleInteraction, generateEliteInteraction, generateVendorInteraction, generateTreasureInteraction, TrapRoomInteraction, PuzzleRoomInteraction, EliteRoomInteraction, VendorRoomInteraction, TreasureRoomInteraction } from '../../../core/dungeonGenerator';
+import { generateDungeonTower, exportDungeonRun } from '../../../core/dungeon/DungeonTowerGenerator';
+import { generateTrapInteraction, generatePuzzleInteraction, generateEliteInteraction, generateVendorInteraction, generateTreasureInteraction, TrapRoomInteraction, PuzzleRoomInteraction, EliteRoomInteraction, VendorRoomInteraction, TreasureRoomInteraction } from '../../../core/dungeon/DungeonInteractions';
 import type { RoomInteractionState } from '../../../types/game.ts';
 import axios from 'axios';
 

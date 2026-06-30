@@ -19,7 +19,7 @@ import {
   resolvePuzzleRoom as resolveRoomPuzzle,
   EliteRoomInteraction,
   VendorRoomInteraction,
-} from '../../../core/dungeonGenerator.ts';
+} from '../../../core/dungeon/DungeonInteractions';
 
 function toBigIntXP(value: unknown): bigint {
   if (typeof value === 'bigint') return value;

@@ -2,22 +2,23 @@ import { describe, it, expect } from 'vitest';
 import {
   BASE_BOSS_HP,
   calculateBossScaling,
-  exportDungeonRun,
-  getDungeonFloorSeed,
-  getDungeonTowerFloorCount,
   getWorldElement,
-  generateBossFloor,
-  generateDungeonFloor,
-  generateDungeonTower,
+} from '../core/dungeon/BossScaling';
+import { generateBossFloor } from '../core/dungeon/BossArenaGenerator';
+import {
+  calculateRoomDistanceMap,
   findShortestPath,
   findAllShortestPaths,
-  calculateRoomDistanceMap,
+  ensureMultipleShortestPaths,
+} from '../core/dungeon/Pathfinding';
+import { assignRoomTypes, assignTreasureRooms } from '../core/dungeon/RoomAssignment';
+import {
   createMaze,
   mazeToGraph,
-  assignRoomTypes,
-  ensureMultipleShortestPaths,
-  assignTreasureRooms,
-} from '../core/dungeonGenerator';
+  generateDungeonFloor,
+} from '../core/dungeon/MazeGenerator';
+import { exportDungeonRun, generateDungeonTower } from '../core/dungeon/DungeonTowerGenerator';
+import { getDungeonFloorSeed, getDungeonTowerFloorCount } from '../core/dungeon/DungeonSeeds';
 import { SeededRandom } from '../utils/SeededRandom';
 import type { DungeonFloorGraph, DungeonRun, RoomType } from '../types/game';
 

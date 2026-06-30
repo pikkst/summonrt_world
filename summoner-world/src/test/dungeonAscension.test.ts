@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useGameStore } from '../stores/gameStore';
-import { generateDungeonTower } from '../core/dungeonGenerator';
+import { generateDungeonTower } from '../core/dungeon/DungeonTowerGenerator';
 import type { WorldData, TileData } from '../types/game';
 
 function createTestPlayer(overrides: { inventory?: { templateKey: string; quantity: number }[] } = {}) {

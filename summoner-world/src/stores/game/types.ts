@@ -39,7 +39,7 @@ import type {
  import type { MissionType, MissionModifiers } from '../../core/missionQueue.ts';
  import type { HeartbeatInstance } from '../../core/heartbeat.ts';
  import type { FloorActivity } from '../../core/demonlord';
- import type { TrapRoomInteraction, PuzzleRoomInteraction, EliteRoomInteraction, VendorRoomInteraction, TreasureRoomInteraction } from '../../core/dungeonGenerator';
+  import type { TrapRoomInteraction, PuzzleRoomInteraction, EliteRoomInteraction, VendorRoomInteraction, TreasureRoomInteraction } from '../../core/dungeon/DungeonInteractions';
 
 export type {
   PlayerState,
