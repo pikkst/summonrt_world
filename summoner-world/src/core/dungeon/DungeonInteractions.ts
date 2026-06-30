@@ -155,7 +155,6 @@ export const generateTreasureInteraction = (rng: SeededRandom, worldIndex: numbe
 
 export const resolveTrapRoom = (
   choice: string,
-  playerSpeed: number,
   playerDexterity: number,
   playerDefense: number,
   rng: SeededRandom
