@@ -74,16 +74,16 @@ function markSafeTowerFloor(floor: DungeonFloorGraph): DungeonTowerSafeFloor | n
       return a.x - b.x;
     });
 
-  const restRoom = serviceRooms[0];
-  const vendorRoom = serviceRooms[1] ?? serviceRooms[0];
-  const teleportRoom = serviceRooms[2] ?? serviceRooms[1] ?? serviceRooms[0];
+  if (serviceRooms.length === 0) return null;
 
-  if (!restRoom || !vendorRoom || !teleportRoom) return null;
+  const restRoom = serviceRooms[0];
+  if (!restRoom) return null;
+
+  const vendorRoom: DungeonRoom = serviceRooms.length > 1 && serviceRooms[1] ? serviceRooms[1] : restRoom;
+  const teleportRoom: DungeonRoom = serviceRooms.length > 2 && serviceRooms[2] ? serviceRooms[2] : (vendorRoom !== restRoom ? vendorRoom : restRoom);
 
   restRoom.type = 'rest';
-  if (vendorRoom !== restRoom) {
-    vendorRoom.type = 'vendor';
-  }
+  vendorRoom.type = 'vendor';
 
   return {
     floorIndex: floor.floorIndex,
