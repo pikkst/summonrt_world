@@ -15,6 +15,7 @@ A task is complete only when:
 - documentation impact was handled
 - PR notes are accurate
 - known limitations are listed
+- Guardian pass summary is completed before PR readiness
 
 ## Code Task Criteria
 
@@ -26,6 +27,16 @@ For code changes, check:
 - `npm run build`
 
 If a command is not run, explain why.
+
+## User-Facing Feature Criteria
+
+For UI or player-facing changes, check:
+
+- the new UI is reachable from the actual app flow
+- the UI action reaches the intended store or core logic
+- the user can complete the intended flow normally
+- input bounds are enforced in code
+- validation confirms the reachable flow
 
 ## Documentation Task Criteria
 
@@ -46,8 +57,23 @@ For architecture changes:
 - future online compatibility is considered
 - relevant ADR or memory file is updated when needed
 
+## Required Guardian Pass Summary
+
+Before opening or updating a PR, add a short Guardian pass summary to the PR notes or task report:
+
+```text
+Guardian pass:
+- Architecture:
+- Gameplay or UI reachability:
+- Save/load impact:
+- Quality and validation:
+- Merge readiness:
+```
+
+If any line is uncertain, resolve it or document it as follow-up work before calling the task PR-ready.
+
 ## Rule
 
 Do not call work complete only because files were changed.
 
-Work is complete when the requested outcome is delivered and review criteria are satisfied.
+Work is complete when the requested outcome is delivered and review criteria are satisfied, including Guardian pass for PR-ready work.
