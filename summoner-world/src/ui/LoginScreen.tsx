@@ -4,19 +4,28 @@ import axios from 'axios';
 import loginBackground from '../../images/bacround_Sumoner_World.png';
 import logoImage from '../../images/logo_Sumoner_World.png';
 
-export const LoginScreen: React.FC = () => {
+interface LoginScreenProps {
+  onCreateCharacter?: () => void;
+}
+
+export const LoginScreen: React.FC<LoginScreenProps> = ({ onCreateCharacter }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isRegister, setIsRegister] = useState(false);
   const login = useGameStore((s) => s.login);
+  const loadGame = useGameStore((s) => s.loadGame);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isRegister) {
       try {
         await axios.post('http://localhost:5000/api/register', { username, password });
-        alert('Registered successfully! Now login.');
-        setIsRegister(false);
+        if (onCreateCharacter) {
+          onCreateCharacter();
+        } else {
+          alert('Registered successfully! Now login.');
+          setIsRegister(false);
+        }
       } catch (err: any) {
         alert(err.response?.data?.error || 'Registration failed');
       }
@@ -25,6 +34,13 @@ export const LoginScreen: React.FC = () => {
       if (!success) {
         alert('Login failed: Invalid username or password');
       }
+    }
+  };
+
+  const handleLoadSave = () => {
+    const loaded = loadGame();
+    if (!loaded) {
+      alert('No save data found.');
     }
   };
 
@@ -83,6 +99,23 @@ export const LoginScreen: React.FC = () => {
               {isRegister ? 'ESTABLISH LINK' : 'AUTHORIZE SESSION'}
             </button>
           </form>
+          
+          <div className="mt-6 space-y-3">
+            <button 
+              onClick={handleLoadSave}
+              className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-3 rounded-2xl transition-colors border border-gray-700 text-xs font-bold uppercase tracking-widest"
+            >
+              Load Save
+            </button>
+            {onCreateCharacter && (
+              <button 
+                onClick={onCreateCharacter}
+                className="w-full bg-indigo-900/50 hover:bg-indigo-800/50 text-indigo-300 py-3 rounded-2xl transition-colors border border-indigo-700 text-xs font-bold uppercase tracking-widest"
+              >
+                Create New Character
+              </button>
+            )}
+          </div>
           
           <div className="mt-8 text-center border-t border-gray-800 pt-8">
             <button 

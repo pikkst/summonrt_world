@@ -7,6 +7,7 @@ import { SeededRandom } from '../utils/SeededRandom.ts';
 import { ResourcePanel } from './ResourcePanel';
 import { GymPanel } from './GymPanel';
 import { SummonActsPanel } from './SummonActsPanel';
+import { LoginScreen } from './LoginScreen';
 import { StartScreen } from './StartScreen';
 import { QuestLogPanel } from './QuestLogPanel.tsx';
 import { FusionPanel } from './FusionPanel';
@@ -161,11 +162,13 @@ export const GameShell: React.FC = () => {
     return names;
   }, [worlds, currentWorldId, player?.tileX, player?.tileY]);
 
-  if (!initialized) {
-    return <StartScreen />;
-  }
+  const loadGame = useGameStore((s) => s.loadGame);
+  const [showCharacterCreation, setShowCharacterCreation] = useState(false);
 
-  if (!player) return <StartScreen />;
+  if (!initialized || !player) {
+    if (showCharacterCreation) return <StartScreen />;
+    return <LoginScreen onCreateCharacter={() => setShowCharacterCreation(true)} />;
+  }
 
   const world = worlds.get(currentWorldId);
   if (!world) return null;
