@@ -40,6 +40,7 @@ import type {
  import type { HeartbeatInstance } from '../../core/heartbeat.ts';
  import type { FloorActivity } from '../../core/demonlord';
   import type { TrapRoomInteraction, PuzzleRoomInteraction, EliteRoomInteraction, VendorRoomInteraction, TreasureRoomInteraction } from '../../core/dungeon/DungeonInteractions';
+  import type { SummonerClassId, ContractPath } from '../../core/playerCore/characterCreation.ts';
 
 export type {
   PlayerState,
@@ -264,10 +265,10 @@ showLevelUpNotification: (notifications: Array<{ creatureName: string; newLevel:
     createCharacter: (options: {
       name: string;
       appearance?: Record<string, any>;
-      className?: string;
-      startingElement?: string;
+      className?: SummonerClassId;
+      startingElement?: Element;
       startingWorldId?: number;
-      contractPathKey?: string;
+      contractPathKey?: ContractPath;
     }) => void;
   }
 

@@ -169,7 +169,8 @@ export function createCharacter(options: CharacterCreationOptions): CharacterCre
   if (!contractPath) throw new Error(`Unknown contract path: ${contractPathKey}`);
 
   registerSpeciesLine(contractPath.speciesKey, 1);
-  const rng = new SeededRandom(Date.now());
+  const stableSeed = `${className}-${options.startingElement ?? contractPath.defaultAffinity.primary}-${contractPathKey}`;
+  const rng = new SeededRandom(stableSeed);
   const startingTemplate = generateCreatureTemplate(1, rng, false, contractPath.speciesKey, contractPath.stage);
 
   const affinity: ElementalAffinity = { primary: options.startingElement ?? contractPath.defaultAffinity.primary };

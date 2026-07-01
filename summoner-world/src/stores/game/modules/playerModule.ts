@@ -20,7 +20,7 @@ import {
   EliteRoomInteraction,
   VendorRoomInteraction,
 } from '../../../core/dungeon/DungeonInteractions';
-import { createCharacter, SUMMONER_CLASSES, CONTRACT_PATHS } from '../../../core/playerCore/characterCreation.ts';
+import { createCharacter, SUMMONER_CLASSES, CONTRACT_PATHS, type SummonerClassId, type ContractPath } from '../../../core/playerCore/characterCreation.ts';
 
 function toBigIntXP(value: unknown): bigint {
   if (typeof value === 'bigint') return value;
@@ -197,18 +197,18 @@ export const playerActions = (set: SetState<GameStore>, get: () => GameStore) =>
   createCharacter: (options: {
     name: string;
     appearance?: Record<string, any>;
-    className?: string;
-    startingElement?: string;
+    className?: SummonerClassId;
+    startingElement?: Element;
     startingWorldId?: number;
-    contractPathKey?: string;
+    contractPathKey?: ContractPath;
   }) => {
     const result = createCharacter({
       name: options.name,
       appearance: options.appearance,
-      className: options.className as any,
-      startingElement: options.startingElement as any,
+      className: options.className,
+      startingElement: options.startingElement,
       startingWorldId: options.startingWorldId,
-      contractPathKey: options.contractPathKey as any,
+      contractPathKey: options.contractPathKey,
     });
 
     const { playerCore, startingCreature, affinity, classDef, contractPath } = result;
@@ -263,6 +263,9 @@ export const playerActions = (set: SetState<GameStore>, get: () => GameStore) =>
         musicVolume: 0.5,
         sfxVolume: 0.5,
         showLogTimestamps: true,
+        textSpeed: 30,
+        fontSize: 15,
+        highContrast: false,
       },
     };
 
