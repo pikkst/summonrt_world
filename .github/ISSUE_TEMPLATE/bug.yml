@@ -43,6 +43,7 @@ body:
         - Save/load
         - UI
         - Documentation
+        - AI Framework
         - Other
     validations:
       required: true
