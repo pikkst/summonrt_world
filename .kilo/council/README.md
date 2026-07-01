@@ -4,6 +4,14 @@ This folder defines the AI decision layer for SummonerWorld.
 
 The council does not replace the orchestrator or specialist agents. It gives structured expert viewpoints for tasks that need cross-role judgment.
 
+## Framework Position
+
+Read `.kilo/SYSTEM_MAP.md` first.
+
+The Council owns expert decision viewpoints.
+
+Do not create another expert-review layer. Update this folder if expert routing or council roles need to improve.
+
 ## Purpose
 
 Use the council to improve decisions before implementation or review.
@@ -25,9 +33,9 @@ Small tasks should not invoke the full council.
 
 ```text
 Task
-  -> Orchestrator
-    -> Context Engine
-      -> Council Routing
+  -> Context Engine
+    -> Orchestrator
+      -> Council Routing when needed
         -> Relevant Council Views
           -> Implementation Plan
 ```
