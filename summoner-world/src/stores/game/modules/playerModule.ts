@@ -22,7 +22,6 @@ import {
 } from '../../../core/dungeon/DungeonInteractions';
 import { createCharacter, CONTRACT_PATHS, type ContractPath } from '../../../core/playerCore/characterCreation.ts';
 import type { SummonerClassId } from '../../../data/summonerClasses';
-import { getClassModifiers } from '../../../data/summonerClasses';
 
 function toBigIntXP(value: unknown): bigint {
   if (typeof value === 'bigint') return value;

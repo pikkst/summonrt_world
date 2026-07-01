@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { SUMMONER_CLASSES, getAllClasses, getClassById, getClassModifiers } from '../data/summonerClasses';
+import { SUMMONER_CLASSES, getAllClasses, getClassById, getClassModifiers, type ClassModifiers, type SummonerClassId } from '../data/summonerClasses';
 
 describe('summonerClasses data module', () => {
   it('defines all 8 required summoner classes', () => {
@@ -41,18 +41,18 @@ describe('summonerClasses data module', () => {
   });
 
   it('getClassById returns undefined for unknown class', () => {
-    expect(getClassById('unknown_class')).toBeUndefined();
+    expect(getClassById('unknown_class' as SummonerClassId)).toBeUndefined();
   });
 
   it('getClassModifiers returns stat bias and starting bonus', () => {
-    const modifiers = getClassModifiers('alchemist');
+    const modifiers: ClassModifiers | undefined = getClassModifiers('alchemist');
     expect(modifiers).toBeDefined();
     expect(modifiers?.statBias.intelligence).toBe(2);
     expect(modifiers?.startingBonus.money).toBe(500);
   });
 
   it('getClassModifiers returns undefined for unknown class', () => {
-    expect(getClassModifiers('invalid')).toBeUndefined();
+    expect(getClassModifiers('invalid' as SummonerClassId)).toBeUndefined();
   });
 
   it('no class has empty starting bonus', () => {
@@ -62,7 +62,7 @@ describe('summonerClasses data module', () => {
     }
   });
 
-  it('all class icons are single emoji characters', () => {
+  it('all class icons are non-empty strings', () => {
     for (const cls of Object.values(SUMMONER_CLASSES)) {
       expect(cls.icon.length).toBeGreaterThanOrEqual(1);
     }

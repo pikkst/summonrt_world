@@ -1,6 +1,6 @@
-import type { ClassDefinition } from './types';
+import type { ClassDefinition, SummonerClassId } from './types';
 
-export const SUMMONER_CLASSES: Record<string, ClassDefinition> = {
+export const SUMMONER_CLASSES: Record<SummonerClassId, ClassDefinition> = {
   beast_binder: {
     id: 'beast_binder',
     name: 'Beast Binder',
@@ -70,7 +70,7 @@ export const SUMMONER_CLASSES: Record<string, ClassDefinition> = {
 export type { ClassDefinition } from './types';
 export type { SummonerClassId } from './types';
 
-export function getClassById(id: string): ClassDefinition | undefined {
+export function getClassById(id: SummonerClassId): ClassDefinition | undefined {
   return SUMMONER_CLASSES[id];
 }
 
@@ -78,7 +78,12 @@ export function getAllClasses(): ClassDefinition[] {
   return Object.values(SUMMONER_CLASSES);
 }
 
-export function getClassModifiers(classId: string): { statBias: Record<string, number>; startingBonus: { money?: number; items?: Array<{ templateKey: string; quantity: number }> } } | undefined {
+export interface ClassModifiers {
+  statBias: ClassDefinition['statBias'];
+  startingBonus: ClassDefinition['startingBonus'];
+}
+
+export function getClassModifiers(classId: SummonerClassId): ClassModifiers | undefined {
   const cls = SUMMONER_CLASSES[classId];
   if (!cls) return undefined;
   return {
