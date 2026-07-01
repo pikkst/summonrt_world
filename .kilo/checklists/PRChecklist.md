@@ -23,6 +23,16 @@ Use this checklist before opening or updating a Pull Request.
 - [ ] Task or progress docs are updated when needed.
 - [ ] Architecture notes are updated when needed.
 
+## Guardian Pass
+
+- [ ] Guardian Pass is visible in the agent log, PR notes, or task report.
+- [ ] Architecture was checked.
+- [ ] Gameplay or UI reachability was checked when relevant.
+- [ ] API quality was checked when public types, helpers, data modules, or store signatures changed.
+- [ ] Save/load impact was checked when persistent state changed.
+- [ ] Quality and validation were checked.
+- [ ] Merge readiness was checked before opening the PR.
+
 ## Review Readiness
 
 - [ ] Known limitations are listed.
