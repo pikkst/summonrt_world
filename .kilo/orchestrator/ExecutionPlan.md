@@ -37,8 +37,30 @@ Inspect existing code
     -> Add or update tests
       -> Update docs if needed
         -> Run validation
-          -> Prepare PR notes
+          -> Produce visible Guardian Pass
+            -> Prepare PR notes
+              -> Create PR
 ```
+
+## Visible Guardian Pass Requirement
+
+Before running `gh pr create` or opening a Pull Request, print or write a Guardian Pass summary.
+
+Use this format:
+
+```text
+Guardian Pass:
+- Architecture: PASS | WARNING | BLOCKED
+- Gameplay/UI reachability: PASS | WARNING | BLOCKED | N/A
+- API quality: PASS | WARNING | BLOCKED | N/A
+- Save/load impact: PASS | WARNING | BLOCKED | N/A
+- Quality and validation: PASS | WARNING | BLOCKED
+- Merge readiness: READY | NOT READY
+```
+
+If any item is `BLOCKED` or merge readiness is `NOT READY`, do not create the PR yet.
+
+Fix the issue or document an approved follow-up first.
 
 ## Stop Conditions
 
@@ -49,3 +71,4 @@ Stop and re-plan when:
 - scope expands
 - validation fails unexpectedly
 - task touches more systems than expected
+- Guardian Pass has a blocked item
