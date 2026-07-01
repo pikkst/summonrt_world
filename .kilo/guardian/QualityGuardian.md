@@ -2,7 +2,7 @@
 
 ## Mission
 
-Protect validation honesty, test quality, documentation accuracy, user-facing reachability, and PR review readiness.
+Protect validation honesty, test quality, documentation accuracy, user-facing reachability, public API quality, and PR review readiness.
 
 ## Must Check
 
@@ -14,6 +14,8 @@ Protect validation honesty, test quality, documentation accuracy, user-facing re
 - [ ] Follow-up work is separated from current PR scope.
 - [ ] User-facing changes are reachable from the real app flow.
 - [ ] UI actions reach the intended store or core logic.
+- [ ] Public APIs use strong types and named helper return types when practical.
+- [ ] Unused imports and misleading test names are removed before PR readiness.
 
 ## Blocking Risks
 
@@ -26,6 +28,7 @@ Block when:
 - unrelated work is mixed into the PR
 - a new user-facing feature is unreachable in the real app flow
 - a new UI does not call the intended action
+- a public API weakens existing type safety without a documented reason
 
 ## Required References
 
@@ -33,6 +36,7 @@ Block when:
 - `.kilo/checklists/DocumentationChecklist.md`
 - `.kilo/checklists/PRChecklist.md`
 - `.kilo/checklists/FeatureChecklist.md`
+- `.kilo/checklists/APIQualityChecklist.md`
 - `.kilo/council/engineering/QAEngineer.md`
 - `.kilo/council/engineering/DocumentationEngineer.md`
 

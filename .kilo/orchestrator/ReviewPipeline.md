@@ -10,10 +10,11 @@ Review work before opening or updating a Pull Request.
 Scope Review
   -> Architecture Review
     -> Gameplay or UI Review
-      -> Test Review
-        -> Documentation Review
-          -> Guardian Pass
-            -> PR Readiness Review
+      -> API Quality Review when needed
+        -> Test Review
+          -> Documentation Review
+            -> Guardian Pass
+              -> PR Readiness Review
 ```
 
 ## Scope Review
@@ -48,6 +49,23 @@ Check:
 - UI actions call the intended store or core logic
 - input bounds are enforced in code
 
+## API Quality Review
+
+Use `.kilo/checklists/APIQualityChecklist.md` when a task changes:
+
+- exported TypeScript types
+- public helper functions
+- shared data modules
+- store action signatures
+- module indexes or re-exports
+
+Check:
+
+- public constants use the strongest available key type
+- public helpers avoid weaker parameter types when a union exists
+- exported helpers use named or reusable return types when practical
+- unused imports and misleading test names are removed
+
 ## Test Review
 
 Check:
@@ -75,6 +93,7 @@ Before PR readiness, summarize:
 Guardian pass:
 - Architecture:
 - Gameplay or UI reachability:
+- API quality:
 - Save/load impact:
 - Quality and validation:
 - Merge readiness:
