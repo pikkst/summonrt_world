@@ -26,19 +26,22 @@ Validate before committing.
 ```text
 User Task
   -> Task Analyzer
-    -> Context Planner
-      -> Token Budget
-        -> Load Minimum Context
-          -> Need More Context?
-            -> Load Next Layer
+    -> Decision Freeze
+      -> Context Planner
+        -> Token Budget
+          -> Load Minimum Context
+            -> Context Stop Rules
               -> Orchestrator Plan
 ```
 
 ## File Index
 
 - `TaskAnalyzer.md` - classify the task before loading files.
+- `DecisionFreeze.md` - prevent repeated re-analysis after task classification.
 - `ContextPlanner.md` - choose only the needed context.
 - `ContextBudget.md` - manage token limits.
+- `ContextStopRules.md` - stop loading when enough context exists.
+- `ArchitectureTaskScope.md` - keep large architecture tasks focused.
 - `DocumentPriority.md` - rank documents by value.
 - `DependencyResolver.md` - load related systems only when needed.
 - `ContextEscalation.md` - know when to expand context.
@@ -57,3 +60,9 @@ If more context is required:
 2. Identify the next most useful document.
 3. Load only that document or section.
 4. Repeat only if needed.
+
+## Efficiency Rule
+
+After task classification is frozen, move to planning and implementation.
+
+Do not repeatedly reconsider the same task type, risk level, or context level unless new evidence appears.
