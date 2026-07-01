@@ -12,6 +12,7 @@ jobs:
   validate:
     name: Typecheck, lint, test, and build
     runs-on: ubuntu-latest
+    concurrency: ${{ github.workflow }}-${{ github.ref }}
 
     defaults:
       run:
