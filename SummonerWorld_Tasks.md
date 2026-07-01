@@ -249,7 +249,7 @@ Sprint goal: align implementation with the new Player Core Bible before expandin
 * Include identity, summoner profile, level, XP, elements, class, inventory, equipment, skills, talents, titles, achievements, statistics, reputation, quest history, creature contracts, housing references, world unlocks, and save metadata
 * Ensure existing player state migrates without losing completed Sprint 0-6 data
 
-- [ ] T6P.2 – Implement full Character Creation flow from Player Core Bible
+- [x] T6P.2 – Implement full Character Creation flow from Player Core Bible
 
 * Player name
 * Appearance placeholder/model

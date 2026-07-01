@@ -18,3 +18,12 @@ export type {
 } from '../../types/playerCore.ts';
 
 export { createDefaultPlayerCoreState, migratePlayerStateToCore } from './factory.ts';
+export { createCharacter, SUMMONER_CLASSES, CONTRACT_PATHS } from './characterCreation.ts';
+export type {
+  ContractPath,
+  ContractPathDefinition,
+  SummonerClassId,
+  ClassDefinition,
+  CharacterCreationOptions,
+  CharacterCreationResult,
+} from './characterCreation.ts';

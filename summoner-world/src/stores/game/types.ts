@@ -258,9 +258,17 @@ showLevelUpNotification: (notifications: Array<{ creatureName: string; newLevel:
      isOnDemonlordFloor: () => boolean;
      updateDemonlordInfluence: (playerCountDelta: number) => void;
      getDemonlordInfluenceForCombat: () => number;
-     applyDemonlordCombatBonuses: (baseDamage: number, baseDefense: number) => { damage: number; defense: number };
-     setDemonlordFloorActivity: (activity: FloorActivity) => void;
-     getDemonlordFloorActivity: () => FloorActivity;
-   }
+    applyDemonlordCombatBonuses: (baseDamage: number, baseDefense: number) => { damage: number; defense: number };
+    setDemonlordFloorActivity: (activity: FloorActivity) => void;
+    getDemonlordFloorActivity: () => FloorActivity;
+    createCharacter: (options: {
+      name: string;
+      appearance?: Record<string, any>;
+      className?: string;
+      startingElement?: string;
+      startingWorldId?: number;
+      contractPathKey?: string;
+    }) => void;
+  }
 
 export type GameStore = GameStoreState & GameActions;

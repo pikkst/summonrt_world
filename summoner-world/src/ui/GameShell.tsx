@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { useGameStore } from '../stores/gameStore.ts';
-import { getTileKey, DIRECTIONS, BIOME_NAMES, RESOURCES } from '../data/constants.ts';
+import { getTileKey, DIRECTIONS, BIOME_NAMES, RESOURCES, ELEMENTS } from '../data/constants.ts';
 import type { Screen, CreatureInstance, CreatureTemplate } from '../types/game.ts';
 import { generateCreatureTemplate } from '../modules/creatures/creatureFactory.ts';
 import { SeededRandom } from '../utils/SeededRandom.ts';
@@ -13,6 +13,7 @@ import { FusionPanel } from './FusionPanel';
 import { SkillTreePanel } from './SkillTreePanel';
 import { StatAllocationPanel } from './StatAllocationPanel';
 import { MissionProgressPanel } from './MissionProgressPanel';
+import { SUMMONER_CLASSES, CONTRACT_PATHS } from '../core/playerCore/characterCreation.ts';
 
 const ELEMENT_COLORS: Record<string, string> = {
   fire: 'text-orange-400',
@@ -776,29 +777,50 @@ function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-const ARCHETYPES = [
-  { id: 'fighter', name: 'Fighter', icon: '⚔️', desc: 'Close-combat specialist. High strength, tanky.' },
-  { id: 'trader', name: 'Trader', icon: '💰', desc: 'Economic power. Better prices, more money.' },
-  { id: 'explorer', name: 'Explorer', icon: '🗺️', desc: 'Speed & discovery. Fast travel, hidden areas.' },
-  { id: 'spy', name: 'Spy', icon: '🕵️', desc: 'Stealth & info. Dodge, crits, intel.' },
-  { id: 'assassin', name: 'Assassin', icon: '🗡️', desc: 'Burst damage. High crit, first strike.' },
-  { id: 'summoner', name: 'Summoner', icon: '🎴', desc: 'Creature master. Better capture, bonding.' },
-  { id: 'pvp', name: 'PvP Warrior', icon: '🏆', desc: 'Player combat. Arena bonuses, ranking.' },
-  { id: 'pve', name: 'PvE Hunter', icon: '🎯', desc: 'Dungeon specialist. Boss damage, loot.' },
+const CLASSES = Object.values(SUMMONER_CLASSES);
+const CONTRACT_PATHS_LIST = Object.values(CONTRACT_PATHS);
+const ELEMENT_LIST = ELEMENTS as readonly string[];
+
+const APPEARANCE_PRESETS = [
+  { id: 'default', hair: 'brown', eyes: 'brown', skin: 'light' },
+  { id: 'fair', hair: 'blonde', eyes: 'blue', skin: 'fair' },
+  { id: 'dark', hair: 'black', eyes: 'dark', skin: 'olive' },
+  { id: 'ruthless', hair: 'red', eyes: 'green', skin: 'tan' },
+  { id: 'mystic', hair: 'silver', eyes: 'violet', skin: 'pale' },
 ];
 
 const StartScreen: React.FC = () => {
-  const initGame = useGameStore((s) => s.initGame);
+  const createChar = useGameStore((s) => s.createCharacter);
   const [name, setName] = useState('Seeker');
-  const [archetype, setArchetype] = useState('fighter');
+  const [className, setClassName] = useState('elementalist');
+  const [startingElement, setStartingElement] = useState('fire');
+  const [startingWorldId, setStartingWorldId] = useState(1);
+  const [contractPathKey, setContractPathKey] = useState('companion');
+  const [appearanceId, setAppearanceId] = useState('default');
+
+  const selectedClass = SUMMONER_CLASSES[className as keyof typeof SUMMONER_CLASSES];
+  const selectedContract = CONTRACT_PATHS[contractPathKey as keyof typeof CONTRACT_PATHS];
+  const appearance = APPEARANCE_PRESETS.find(p => p.id === appearanceId) || APPEARANCE_PRESETS[0];
+
+  const handleCreate = () => {
+    if (!name.trim()) return;
+    createChar({
+      name: name.trim(),
+      appearance,
+      className,
+      startingElement,
+      startingWorldId: Number(startingWorldId),
+      contractPathKey,
+    });
+  };
 
   return (
     <div className="h-screen w-screen bg-gray-950 text-gray-100 flex items-center justify-center font-mono relative overflow-hidden">
       <div className="absolute inset-0 opacity-5" style={{ background: 'radial-gradient(circle at 30% 40%, #6366f1 0%, transparent 50%), radial-gradient(circle at 70% 60%, #8b5cf6 0%, transparent 50%)' }} />
-      <div className="border border-gray-700 bg-gray-900/95 p-6 rounded-lg max-w-2xl w-full shadow-2xl relative z-10">
+      <div className="border border-gray-700 bg-gray-900/95 p-6 rounded-lg max-w-2xl w-full shadow-2xl relative z-10 max-h-[90vh] overflow-y-auto">
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold mb-1 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">SUMMONERWORLD</h1>
-          <p className="text-xs text-gray-500">Text RPG · Creature Collection · v0.4</p>
+          <p className="text-xs text-gray-500">Text RPG · Creature Collection · v0.5</p>
         </div>
 
         <div className="mb-5">
@@ -813,32 +835,119 @@ const StartScreen: React.FC = () => {
           />
         </div>
 
-        <div className="mb-6">
-          <label className="block text-sm text-gray-300 mb-3 font-semibold">Choose Archetype</label>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {ARCHETYPES.map((arch) => (
+        <div className="mb-5">
+          <label className="block text-sm text-gray-300 mb-2 font-semibold">Appearance</label>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            {APPEARANCE_PRESETS.map((preset) => (
               <button
-                key={arch.id}
-                onClick={() => setArchetype(arch.id)}
-                className={`p-3 rounded-lg border text-left transition-all ${
-                  archetype === arch.id
+                key={preset.id}
+                onClick={() => setAppearanceId(preset.id)}
+                className={`p-2 rounded border text-left transition-all ${
+                  appearanceId === preset.id
                     ? 'border-indigo-500 bg-indigo-500/10 text-white'
                     : 'border-gray-700 bg-gray-950 text-gray-400 hover:border-gray-600'
                 }`}
               >
-                <div className="text-2xl mb-1">{arch.icon}</div>
-                <div className="text-xs font-black uppercase tracking-widest">{arch.name}</div>
-                <div className="text-[10px] text-gray-500 mt-1 leading-tight">{arch.desc}</div>
+                <div className="text-[10px] font-black uppercase tracking-widest">{preset.id}</div>
+                <div className="text-[9px] text-gray-500 leading-tight">
+                  {preset.hair} / {preset.eyes}
+                </div>
               </button>
             ))}
           </div>
         </div>
 
+        <div className="mb-5">
+          <label className="block text-sm text-gray-300 mb-2 font-semibold">Starting Element</label>
+          <div className="flex flex-wrap gap-2">
+            {ELEMENT_LIST.map((el) => (
+              <button
+                key={el}
+                onClick={() => setStartingElement(el)}
+                className={`px-3 py-1.5 rounded border text-xs font-bold uppercase transition-all ${
+                  startingElement === el
+                    ? 'border-indigo-500 bg-indigo-500/10 text-white'
+                    : 'border-gray-700 bg-gray-950 text-gray-400 hover:border-gray-600'
+                }`}
+              >
+                {el}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-5">
+          <label className="block text-sm text-gray-300 mb-2 font-semibold">Summoner Class</label>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            {CLASSES.map((cls) => (
+              <button
+                key={cls.id}
+                onClick={() => setClassName(cls.id)}
+                className={`p-2 rounded border text-left transition-all ${
+                  className === cls.id
+                    ? 'border-indigo-500 bg-indigo-500/10 text-white'
+                    : 'border-gray-700 bg-gray-950 text-gray-400 hover:border-gray-600'
+                }`}
+              >
+                <div className="text-lg mb-1">{cls.icon}</div>
+                <div className="text-[10px] font-black uppercase tracking-widest">{cls.name}</div>
+                <div className="text-[9px] text-gray-500 mt-1 leading-tight">{cls.description}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {selectedClass && (
+          <div className="mb-5 p-3 bg-gray-950 border border-gray-800 rounded">
+            <div className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-2">Class Attribute Bias</div>
+            <div className="flex flex-wrap gap-2 text-[10px] font-bold">
+              {Object.entries(selectedClass.statBias).map(([stat, value]) => (
+                <span key={stat} className="px-2 py-1 bg-gray-900 border border-gray-800 rounded text-gray-300">
+                  {stat} +{value}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="mb-5">
+          <label className="block text-sm text-gray-300 mb-2 font-semibold">First Creature Contract Path</label>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            {CONTRACT_PATHS_LIST.map((path) => (
+              <button
+                key={path.key}
+                onClick={() => setContractPathKey(path.key)}
+                className={`p-2 rounded border text-left transition-all ${
+                  contractPathKey === path.key
+                    ? 'border-indigo-500 bg-indigo-500/10 text-white'
+                    : 'border-gray-700 bg-gray-950 text-gray-400 hover:border-gray-600'
+                }`}
+              >
+                <div className="text-[10px] font-black uppercase tracking-widest">{path.label}</div>
+                <div className="text-[9px] text-gray-500 mt-1 leading-tight">{path.description}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-5">
+          <label className="block text-sm text-gray-300 mb-1.5 font-semibold">Starting World</label>
+          <input
+            type="number"
+            min={1}
+            max={100}
+            value={startingWorldId}
+            onChange={(e) => setStartingWorldId(parseInt(e.target.value) || 1)}
+            className="w-full bg-gray-950 border border-gray-700 rounded px-3 py-2 text-gray-100 focus:outline-none focus:border-blue-500"
+          />
+        </div>
+
         <button
-          onClick={() => initGame(name || 'Seeker', archetype)}
-          className="w-full bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white py-2.5 rounded font-semibold transition-all mb-2"
+          onClick={handleCreate}
+          disabled={!name.trim()}
+          className="w-full bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 disabled:from-gray-700 disabled:to-gray-700 disabled:text-gray-500 text-white py-2.5 rounded font-semibold transition-all mb-2"
         >
-          Begin Journey
+          Create Character
         </button>
         <button
           onClick={() => {
