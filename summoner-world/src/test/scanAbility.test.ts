@@ -53,9 +53,14 @@ describe('getGuessDamageMultiplier', () => {
     expect(getGuessDamageMultiplier(scanResult)).toBe(1.3);
   });
 
-  it('returns 0.3 for wrong guess', () => {
-    const scanResult = { weaknesses: ['water'], resistances: [], guessedElement: 'fire', guessCorrect: false, scannedAtTurn: 1 } as CombatState['scanResult'];
+  it('returns 0.3 for wrong guess with remaining penalty turns', () => {
+    const scanResult = { weaknesses: ['water'], resistances: [], guessedElement: 'fire', guessCorrect: false, scannedAtTurn: 1, penaltyTurnsRemaining: 3 } as CombatState['scanResult'];
     expect(getGuessDamageMultiplier(scanResult)).toBe(0.3);
+  });
+
+  it('returns 1 when wrong guess penalty has expired', () => {
+    const scanResult = { weaknesses: ['water'], resistances: [], guessedElement: 'fire', guessCorrect: false, scannedAtTurn: 1, penaltyTurnsRemaining: 0 } as CombatState['scanResult'];
+    expect(getGuessDamageMultiplier(scanResult)).toBe(1);
   });
 
   it('returns 1 when guess not yet made', () => {

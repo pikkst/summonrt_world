@@ -181,7 +181,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * Guarantee identical dungeon layout for all players
 * Add unit test: same seed → identical floor graph
 
-- [ ] T6.4.8 – Add dungeon metadata export
+- [x] T6.4.8 – Add dungeon metadata export
 
 * Store floor graph, room types, treasure locations, boss room ID
 * Save into DungeonRun.state for persistence
@@ -194,15 +194,15 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * calculateRoomDistanceMap()
 * Used for treasure placement, shortcut injection, boss logic.
 
-- [ ] T6.4.10 – Add dungeon generation tests
+- [x] T6.4.10 – Add dungeon generation tests
 
-* [ ] 100 generated floors → no disconnected rooms
+* [x] 100 generated floors → no disconnected rooms
 * [x] ≥ 3 shortest paths validated
 * [x] ≥ 1 treasure room per floor
 * [x] Deterministic seed test
-* [ ] Boss floor always reachable.
+* [x] Boss floor always reachable.
 
-- [ ] T6.5 – Extend completed combat phase boss mechanics
+- [x] T6.5 – Extend completed combat phase boss mechanics
 
 * T6.2 already completed base boss phases at HP thresholds 75%, 50%, 25%
 * T6.2 already completed elemental shift per phase
@@ -215,9 +215,9 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * Add SCAN skill to creature ability pool
 * Correct guess → reveal elemental weakness
 * Wrong guess → −70% damage penalty for 3 turns
-* Add UI feedback: “Weakness Identified” overlay
+* Add UI feedback: "Weakness Identified" overlay
 
-- [ ] T6.7 – Add dungeon room type interactions and UI
+- [x] T6.7 – Add dungeon room type interactions and UI
 
 * T6.4.4 already completed room type assignment for trap, puzzle, treasure, rest, elite, and vendor
 * Trap rooms: text‑based minigame (avoid, disarm, endure)
@@ -226,7 +226,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * Vendor rooms: temporary merchant with dungeon‑specific items
 * Treasure rooms: guaranteed loot chest + rare chance for mythical egg
 
-- [ ] T6.8 – Implement dungeon floor count & progression rules
+- [x] T6.8 – Implement dungeon floor count & progression rules
 
 * Floor count = BaseFloors + WorldIndex
 * World 1 → 3 floors + boss
@@ -234,12 +234,12 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * Ascending requires defeating floor guardian or using rare teleport item
 * Dungeon exit scales player to minimum viable level (per GDD)
 
-- [ ] T6.9 – Add "ascending requires defeating floor guardian" rule (or rare teleport item)
-- [ ] T6.10 – Verify dungeon exit scales player to minimum viable level
-- [ ] T6.11 – Add trap/puzzle minigame UI (text-based choices)
-- [ ] T6.12 – Test full clear World 10 dungeon simulation (integration test)
-- [ ] T6.13 – Integrate automated combat engine with timed missions: dungeon scouting and wild encounters resolved via `resolveAutomatedCombat()`
-- [x] T6.14 – Integrate career passives into combat: Summoner path `capture_bonus_pct`, Warrior path `damage_dealt_pct`, Guardian path `damage_taken_pct`
+- [x] T6.9 – Add "ascending requires defeating floor guardian" rule (or rare teleport item)
+- [x] T6.10 – Verify dungeon exit scales player to minimum viable level
+- [x] T6.11 – Add trap/puzzle minigame UI (text-based choices)
+- [x] T6.12 – Test full clear World 10 dungeon simulation (integration test)
+- [x] T6.13 – Integrate automated combat engine with timed missions: dungeon scouting and wild encounters resolved via `resolveAutomatedCombat()`
+- [ ] T6.14 – Integrate career passives into combat: Summoner path `capture_bonus_pct`, Warrior path `damage_dealt_pct`, Guardian path `damage_taken_pct`
 
 ## Sprint 6.5 – Player Core Architecture Alignment (Pre-World Refactor)
 Sprint goal: align implementation with the new Player Core Bible before expanding world, economy, NPC, and MMO systems. Player must become the root aggregate for progression, inventory, equipment, contracts, statistics, reputation, and save/load.

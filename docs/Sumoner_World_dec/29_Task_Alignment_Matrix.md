@@ -13,6 +13,7 @@ Current sprint:
 
 Completed through:
 - T6.4.4 - Dungeon Room Assignment System
+- T6.4.8 - Dungeon Metadata Export
 
 Completed ahead of sequence:
 - T6.4.7 - Deterministic floor seed system
@@ -47,6 +48,7 @@ Implementation notes already exist in root `docs/` for:
 - T6.4.3
 - T6.4.4
 - T6.4.7
+- T6.4.8
 - T6.4.9
 
 ## Documentation Volume Mapping

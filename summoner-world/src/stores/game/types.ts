@@ -10,6 +10,7 @@ import type {
    Screen,
    CombatState,
    DungeonState,
+   DungeonRun,
    DemonlordState,
    DemonlordSkill,
    CreatureInstance,
@@ -29,11 +30,16 @@ import type {
    QuestStatus,
    CombatPhase,
    CommunityTab,
- } from '../../types/game.ts';
+   BossHazard,
+   RoomInteractionState,
+   RoomInteractionChoice,
+   RoomInteractionResult,
+  } from '../../types/game.ts';
  import type { ActiveMission } from '../../core/missionQueue.ts';
  import type { MissionType, MissionModifiers } from '../../core/missionQueue.ts';
  import type { HeartbeatInstance } from '../../core/heartbeat.ts';
  import type { FloorActivity } from '../../core/demonlord';
+  import type { TrapRoomInteraction, PuzzleRoomInteraction, EliteRoomInteraction, VendorRoomInteraction, TreasureRoomInteraction } from '../../core/dungeon/DungeonInteractions';
 
 export type {
   PlayerState,
@@ -43,6 +49,7 @@ export type {
   Screen,
   CombatState,
   DungeonState,
+  DungeonRun,
   DemonlordState,
   DemonlordSkill,
   CreatureInstance,
@@ -62,11 +69,20 @@ export type {
   QuestStatus,
   CombatPhase,
   CommunityTab,
+  BossHazard,
+  RoomInteractionState,
+  RoomInteractionChoice,
+  RoomInteractionResult,
 ActiveMission,
    MissionType,
    MissionModifiers,
    HeartbeatInstance,
    FloorActivity,
+   TrapRoomInteraction,
+   PuzzleRoomInteraction,
+   EliteRoomInteraction,
+   VendorRoomInteraction,
+   TreasureRoomInteraction,
  };
 
 export interface GameStoreState {
@@ -196,6 +212,7 @@ export interface GameActions {
     fleeCombat: () => void;
     selectCreatureForCombat: (creatureId: string) => void;
      applyBossPhaseMechanics: () => void;
+      applyEnvironmentalHazardDamage: () => void;
     useItem: (itemKey: string) => void;
     updateSettings: (patch: Partial<PlayerState['settings']>) => void;
      scanEnemy: () => void;
@@ -204,6 +221,11 @@ export interface GameActions {
    descendDungeon: () => void;
    resolveDungeonEncounter: (victory: boolean) => void;
    fleeDungeon: () => void;
+   resolveTrapRoom: (choice: string) => void;
+   resolvePuzzleRoom: (choice: string) => void;
+   resolveEliteRoom: () => void;
+   resolveVendorRoom: (itemId: string) => void;
+   resolveTreasureRoom: () => void;
    exploreTile: () => void;
    cancelExploration: () => void;
    createMapScroll: () => void;
@@ -242,4 +264,3 @@ showLevelUpNotification: (notifications: Array<{ creatureName: string; newLevel:
    }
 
 export type GameStore = GameStoreState & GameActions;
-

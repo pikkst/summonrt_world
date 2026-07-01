@@ -27,6 +27,7 @@ export interface MissionModifiers {
   tree_speed_pct?: number;
   creature_agility_mod?: number;
   resource_type?: string;
+  encounter_data?: string;
   [key: string]: number | string | undefined;
 }
 
@@ -134,11 +135,17 @@ export interface AutomatedCombatOutcome {
   teamB: CombatTeamMember[];
 }
 
+export interface AutomatedCombatOutcome {
+  result: MissionResult;
+  teamA: CombatTeamMember[];
+  teamB: CombatTeamMember[];
+}
+
 export function resolveAutomatedCombat(
   teamA: CreatureInstance[],
   teamB: CreatureInstance[],
-  options?: { rngSeed?: number; worldLayer?: number; atkElements?: Element[]; primordialPct?: number; omniPct?: number; damageDealtPct?: number; damageTakenPct?: number }
-): MissionResult {
+  options?: { rngSeed?: number; worldLayer?: number; atkElements?: Element[]; primordialPct?: number; omniPct?: number }
+): AutomatedCombatOutcome {
   const log: string[] = [];
   const rewards: InventoryStack[] = [];
   let totalXp = 0;
@@ -244,9 +251,13 @@ const target = pick(targets)!;
   }
 
   return {
-    victory,
-    battle_log: log,
-    rewards,
-    xp: totalXp,
+    result: {
+      victory,
+      battle_log: log,
+      rewards,
+      xp: totalXp,
+    },
+    teamA: aliveTeamA,
+    teamB: aliveTeamB,
   };
 }

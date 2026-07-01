@@ -379,13 +379,52 @@ export interface DungeonTower {
   safeFloors: DungeonTowerSafeFloor[];
 }
 
+export interface DungeonBossScaling {
+  baseBossHp: number;
+  hpMultiplier: number;
+  scaledBossHp: number;
+  signatureAbilityCount: number;
+}
+
+export interface DungeonEnvironmentalHazard {
+  key: string;
+  name: string;
+  element: Element;
+  description: string;
+  damageMultiplier: number;
+  triggerRate: number;
+}
+
+export interface DungeonTower {
+  worldIndex: number;
+  globalSeed: number;
+  totalFloors: number;
+  floors: DungeonFloorGraph[];
+  verticalLinks: DungeonTowerVerticalLink[];
+  safeFloors: DungeonTowerSafeFloor[];
+}
+
+export interface DungeonTowerSafeFloor {
+  floorIndex: number;
+  restRoomId: string;
+  vendorRoomId: string;
+  teleportUnlockRoomId: string;
+}
+
+export interface DungeonTowerVerticalLink {
+  fromFloorIndex: number;
+  fromRoomId: string;
+  toFloorIndex: number;
+  toRoomId: string;
+}
+
 export interface DungeonRun {
   runId: string;
   worldIndex: number;
   globalSeed: number;
   totalFloors: number;
   currentFloor: number;
-  clearedFloors: string[];
+  clearedFloors: number[];
   bossDefeated: boolean;
   active: boolean;
   tower: DungeonTower;
@@ -405,8 +444,21 @@ export interface DungeonState {
   clearedFloors: number[];
   bossDefeated: boolean;
   inEncounter: boolean;
-  encounterType?: 'guardian' | 'trap' | 'treasure' | 'boss';
+  encounterType?: 'guardian' | 'trap' | 'treasure' | 'boss' | 'puzzle' | 'elite' | 'vendor' | 'rest';
   encounterName?: string;
+  tower?: DungeonTower;
+}
+
+export interface DungeonRun {
+  runId: string;
+  worldIndex: number;
+  globalSeed: number;
+  totalFloors: number;
+  currentFloor: number;
+  clearedFloors: number[];
+  bossDefeated: boolean;
+  active: boolean;
+  tower: DungeonTower;
 }
 
 export interface DemonlordSkill {
@@ -445,10 +497,18 @@ export interface DemonlordState {
 
 export type CombatPhase = 'player_turn' | 'enemy_turn' | 'victory' | 'defeat';
 
+export interface BossHazard {
+  key: string;
+  name: string;
+  element: Element;
+  description: string;
+  baseDamage: number;
+}
+
 export interface BossPhase {
   threshold: number;
   elementalShift?: Element;
-  hazard?: string;
+  hazard?: BossHazard;
 }
 
 export interface MissionResult {
@@ -472,14 +532,46 @@ export interface CombatState {
   isBoss?: boolean;
   bossPhasesTriggered?: boolean[];
   activeBossElement?: Element;
-  activeHazard?: string;
+  activeHazard?: BossHazard;
   scanResult?: {
     weaknesses: Element[];
     resistances: Element[];
     guessedElement?: Element;
     guessCorrect?: boolean;
     scannedAtTurn: number;
+    penaltyTurnsRemaining?: number;
   };
+  roomInteraction?: RoomInteractionState;
+}
+
+export interface RoomInteractionState {
+  active: boolean;
+  roomType: RoomType;
+  roomId?: string;
+  choices?: RoomInteractionChoice[];
+  selectedChoice?: string;
+  result?: RoomInteractionResult;
+  message?: string;
+  vendorData?: {
+    description: string;
+    items: { key: string; name: string; price: number; stock: number }[];
+  };
+  treasureData?: {
+    hasMythicalEgg: boolean;
+  };
+}
+
+export interface RoomInteractionChoice {
+  id: string;
+  label: string;
+  description?: string;
+}
+
+export interface RoomInteractionResult {
+  success: boolean;
+  damageTaken?: number;
+  rewards?: InventoryStack[];
+  message: string;
 }
 
 export interface CommunityPlayer {

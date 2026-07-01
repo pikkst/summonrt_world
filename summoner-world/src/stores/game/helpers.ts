@@ -1,4 +1,4 @@
-import type { Element, ElementalAffinity, LogEntry, PlayerState, WorldData } from './types.ts';
+import type { Element, ElementalAffinity, LogEntry, PlayerState, WorldData, CreatureInstance } from './types.ts';
 import { getNeighbors } from '../../data/constants.ts';
 import { generateTile } from '../../core/worldGenerator.ts';
 import { getXPThreshold, getWorldModifier } from '../../core/xpCurve.ts';
@@ -144,35 +144,102 @@ export function processTileDiscovery(x: number, y: number, currentWorldId: numbe
 }
 
 export function applyResourceRegeneration(player: PlayerState, now: number): PlayerState {
-  const updatedPlayer = { ...player };
-  const regenTimestamp = new Date(now).toISOString();
+   const updatedPlayer = { ...player };
+   const regenTimestamp = new Date(now).toISOString();
 
-  const updateResource = <K extends keyof Pick<PlayerState, 'energy' | 'nerve' | 'happy' | 'life'>>(
-    resource: K,
-    rate: number,
-  ): void => {
-    const res = player[resource];
-    const lastUpdateTime = res.lastUpdate ? new Date(res.lastUpdate).getTime() : NaN;
-    if (isNaN(lastUpdateTime)) return;
+   const updateResource = <K extends keyof Pick<PlayerState, 'energy' | 'nerve' | 'happy' | 'life'>>(
+     resource: K,
+     rate: number,
+   ): void => {
+     const res = player[resource];
+     const lastUpdateTime = res.lastUpdate ? new Date(res.lastUpdate).getTime() : NaN;
+     if (isNaN(lastUpdateTime)) return;
 
-    const elapsedMs = Math.max(0, now - lastUpdateTime);
-    const elapsedMinutes = elapsedMs / (1000 * 60);
-    if (elapsedMinutes < 1) return;
+     const elapsedMs = Math.max(0, now - lastUpdateTime);
+     const elapsedMinutes = elapsedMs / (1000 * 60);
+     if (elapsedMinutes < 1) return;
 
-    const gain = Math.floor(elapsedMinutes * rate);
-    if (gain <= 0) return;
+     const gain = Math.floor(elapsedMinutes * rate);
+     if (gain <= 0) return;
 
-    updatedPlayer[resource] = {
-      ...res,
-      current: Math.min(res.max, Math.max(0, res.current + gain)),
-      lastUpdate: regenTimestamp,
-    };
-  };
+     updatedPlayer[resource] = {
+       ...res,
+       current: Math.min(res.max, Math.max(0, res.current + gain)),
+       lastUpdate: regenTimestamp,
+     };
+   };
 
-  updateResource('energy', 1);
-  updateResource('nerve', 1 / 3);
-  updateResource('happy', 1 / 2);
-  updateResource('life', 1 / 5);
+   updateResource('energy', 1);
+   updateResource('nerve', 1 / 3);
+   updateResource('happy', 1 / 2);
+   updateResource('life', 1 / 5);
 
-  return updatedPlayer;
+   return updatedPlayer;
+}
+
+export function calculateMinViableLevel(worldIndex: number): number {
+   if (worldIndex < 1) return 1;
+   const baseLevel = 1;
+   const perWorldIncrement = 2;
+   return Math.max(1, baseLevel + Math.floor((worldIndex - 1) * perWorldIncrement));
+}
+
+export interface LevelScalingResult {
+   scaled: boolean;
+   originalLevel: number;
+   scaledLevel: number;
+   statsApplied: {
+     health: number;
+     attack: number;
+     defense: number;
+     speed: number;
+     level: number;
+   };
+}
+
+export function applyMinViableLevelScaling(
+   player: PlayerState,
+   worldIndex: number,
+   creatures: CreatureInstance[]
+): { player: PlayerState; creatures: CreatureInstance[] } {
+   const minLevel = calculateMinViableLevel(worldIndex);
+   
+   if (player.level >= minLevel) {
+     return { player, creatures };
+   }
+
+   const levelsToAdd = minLevel - player.level;
+   const newLevel = minLevel;
+   
+   const baseHealth = 100 + (newLevel * 10);
+   const baseAttack = player.strength || 10;
+   const baseDefense = player.defense || 10;
+   const baseSpeed = player.speed || 10;
+
+   const scaledCreatures = creatures.map(creature => {
+     const healthBoost = Math.min(levelsToAdd * 5, 50);
+     const attackBoost = Math.min(levelsToAdd, 10);
+     const defenseBoost = Math.min(levelsToAdd, 5);
+     const speedBoost = Math.min(levelsToAdd, 5);
+     
+     return {
+       ...creature,
+       maxHealth: creature.maxHealth + healthBoost,
+       currentHealth: Math.min(creature.currentHealth + healthBoost, creature.maxHealth + healthBoost),
+       maxMana: creature.maxMana + (levelsToAdd * 2),
+       currentMana: Math.min(creature.currentMana + (levelsToAdd * 2), creature.maxMana + (levelsToAdd * 2)),
+       attack: creature.attack + attackBoost,
+       defense: creature.defense + defenseBoost,
+       speed: creature.speed + speedBoost,
+     };
+   });
+
+   const scaledPlayer: PlayerState = {
+     ...player,
+     level: newLevel,
+     life: { ...player.life, max: baseHealth, current: baseHealth },
+     energy: { ...player.energy, max: 100 + (newLevel * 5), current: 100 + (newLevel * 5) },
+   };
+
+   return { player: scaledPlayer, creatures: scaledCreatures };
 }
