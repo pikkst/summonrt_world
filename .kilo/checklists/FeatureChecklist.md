@@ -16,6 +16,15 @@ Use this checklist for new gameplay, UI, technical, or framework features.
 - [ ] Time-as-gameplay was considered if the feature is duration-based.
 - [ ] Reports are considered when outcomes should be summarized.
 
+## User-Facing Flow
+
+For UI or player-facing features:
+
+- [ ] The feature is reachable from the real app flow.
+- [ ] The UI calls the intended store or core action.
+- [ ] Required inputs have code-level validation or bounds.
+- [ ] A test or manual validation confirms the flow can be completed.
+
 ## Architecture
 
 - [ ] Relevant agent role was selected.
