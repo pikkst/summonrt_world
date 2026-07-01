@@ -379,45 +379,6 @@ export interface DungeonTower {
   safeFloors: DungeonTowerSafeFloor[];
 }
 
-export interface DungeonBossScaling {
-  baseBossHp: number;
-  hpMultiplier: number;
-  scaledBossHp: number;
-  signatureAbilityCount: number;
-}
-
-export interface DungeonEnvironmentalHazard {
-  key: string;
-  name: string;
-  element: Element;
-  description: string;
-  damageMultiplier: number;
-  triggerRate: number;
-}
-
-export interface DungeonTower {
-  worldIndex: number;
-  globalSeed: number;
-  totalFloors: number;
-  floors: DungeonFloorGraph[];
-  verticalLinks: DungeonTowerVerticalLink[];
-  safeFloors: DungeonTowerSafeFloor[];
-}
-
-export interface DungeonTowerSafeFloor {
-  floorIndex: number;
-  restRoomId: string;
-  vendorRoomId: string;
-  teleportUnlockRoomId: string;
-}
-
-export interface DungeonTowerVerticalLink {
-  fromFloorIndex: number;
-  fromRoomId: string;
-  toFloorIndex: number;
-  toRoomId: string;
-}
-
 export interface DungeonRun {
   runId: string;
   worldIndex: number;
@@ -447,18 +408,6 @@ export interface DungeonState {
   encounterType?: 'guardian' | 'trap' | 'treasure' | 'boss' | 'puzzle' | 'elite' | 'vendor' | 'rest';
   encounterName?: string;
   tower?: DungeonTower;
-}
-
-export interface DungeonRun {
-  runId: string;
-  worldIndex: number;
-  globalSeed: number;
-  totalFloors: number;
-  currentFloor: number;
-  clearedFloors: number[];
-  bossDefeated: boolean;
-  active: boolean;
-  tower: DungeonTower;
 }
 
 export interface DemonlordSkill {

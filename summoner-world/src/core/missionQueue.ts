@@ -135,12 +135,6 @@ export interface AutomatedCombatOutcome {
   teamB: CombatTeamMember[];
 }
 
-export interface AutomatedCombatOutcome {
-  result: MissionResult;
-  teamA: CombatTeamMember[];
-  teamB: CombatTeamMember[];
-}
-
 export function resolveAutomatedCombat(
   teamA: CreatureInstance[],
   teamB: CreatureInstance[],
