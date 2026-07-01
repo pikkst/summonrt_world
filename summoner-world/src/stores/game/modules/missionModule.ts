@@ -1336,15 +1336,18 @@ CAPTURE_CREATURE: (mission) => {
              }
              get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
            },
-           DEMONLORD_ENCOUNTER: (mission) => {
-             const state = get();
-             if (state.demonlordState?.activeChallenge) {
-               state.appendLog('A Demonlord encounter mission requires direct combat resolution.', 'info');
-             }
-             get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
-           },
-         },
-      });
+            DEMONLORD_ENCOUNTER: (mission) => {
+              const state = get();
+              if (state.demonlordState?.activeChallenge) {
+                state.appendLog('A Demonlord encounter mission requires direct combat resolution.', 'info');
+              }
+              get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+            },
+            WILD_ENCOUNTER: (mission) => {
+              get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+            },
+          },
+       });
 
     const beforeCount = get().missions.length;
     heartbeat.tick();
@@ -1494,11 +1497,14 @@ CAPTURE_CREATURE: (mission) => {
              }
              get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
            },
-           DEMONLORD_ENCOUNTER: (_mission) => {
-             get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], 0);
-           },
-         },
-       });
+            DEMONLORD_ENCOUNTER: (_mission) => {
+              get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], 0);
+            },
+            WILD_ENCOUNTER: (_mission) => {
+              get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], 0);
+            },
+          },
+        });
 
     instance.start();
     set({ heartbeat: instance });

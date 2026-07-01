@@ -131,6 +131,7 @@ export interface CreatureInstance {
     parentAKey: string;
     parentBKey: string;
   };
+  instanceId?: string;
 }
 
 export type ItemType = 'material' | 'equipment' | 'consumable' | 'special' | 'egg';
@@ -376,6 +377,18 @@ export interface DungeonTower {
   floors: DungeonFloorGraph[];
   verticalLinks: DungeonTowerVerticalLink[];
   safeFloors: DungeonTowerSafeFloor[];
+}
+
+export interface DungeonRun {
+  runId: string;
+  worldIndex: number;
+  globalSeed: number;
+  totalFloors: number;
+  currentFloor: number;
+  clearedFloors: string[];
+  bossDefeated: boolean;
+  active: boolean;
+  tower: DungeonTower;
 }
 
 export interface DungeonMetadata {

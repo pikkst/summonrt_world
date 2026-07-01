@@ -15,7 +15,8 @@ export type MissionType =
   | 'SEARCH_AREA'
   | 'GATHER_RESOURCE'
   | 'CAPTURE_CREATURE'
-  | 'DEMONLORD_ENCOUNTER';
+  | 'DEMONLORD_ENCOUNTER'
+  | 'WILD_ENCOUNTER';
 
 export type MissionStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
@@ -125,6 +126,12 @@ function getElementalFactor(atkElement: string | undefined, defElements: string[
 export interface CombatTeamMember {
   creature: CreatureInstance;
   isAlive: boolean;
+}
+
+export interface AutomatedCombatOutcome {
+  result: MissionResult;
+  teamA: CombatTeamMember[];
+  teamB: CombatTeamMember[];
 }
 
 export function resolveAutomatedCombat(

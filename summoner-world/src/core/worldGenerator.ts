@@ -1,6 +1,7 @@
 import { SeededRandom } from '../utils/SeededRandom.ts';
 import type { TileData, WorldData, ElementalAffinity, NPC } from '../types/game.ts';
-import { RESOURCES, getBiomeForCoords, getWorldName, getFloorSeed, getTileKey, getNeighbors } from '../data/constants.ts';
+import { RESOURCES, getWorldName, getFloorSeed, getTileKey, getNeighbors } from '../data/constants.ts';
+import { getBiomeForCoords } from './dungeon/Biome';
 
 const WORLD_SIZE = 2000; // 2000x2000 = 4 million sectors
 

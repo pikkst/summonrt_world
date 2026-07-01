@@ -209,7 +209,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 * Add environmental hazard rotation (lava bursts, frost spikes, storm pulses)
 * Integrate Summoner career bonuses into boss phase calculations
 
-- [ ] T6.6 – Extend completed “Scan” ability for boss weakness discovery
+- [x] T6.6 – Extend completed “Scan” ability for boss weakness discovery
 
 * T6.3 already completed the base Scan ability and wrong-guess damage penalty
 * Add SCAN skill to creature ability pool

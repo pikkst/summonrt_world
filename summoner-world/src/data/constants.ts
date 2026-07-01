@@ -132,23 +132,7 @@ export function getMaxMutationsForClass(creatureClass: string): number {
   return MAX_MUTATIONS_PER_CLASS[creatureClass] || 0;
 }
 
-export function getBiomeForCoords(x: number, y: number, seed: number): string {
-  // Natural gradient: Edge (0,0 or 2000,2000) is Water/Coast, moving towards center (1000,1000)
-  const centerX = 1000;
-  const centerY = 1000;
-  const dist = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
-  const maxDist = 1414; // sqrt(1000^2 + 1000^2)
 
-  const noise = Math.abs(Math.sin(x * 0.01 + y * 0.01 + seed) * 0.5);
-  const normalizedDist = (dist / maxDist) + (noise * 0.1);
-
-  if (normalizedDist > 0.8) return 'coast';
-  if (normalizedDist > 0.6) return 'plains';
-  if (normalizedDist > 0.4) return 'forest';
-  if (normalizedDist > 0.2) return 'mountains';
-  if (normalizedDist > 0.05) return 'volcanic';
-  return 'crystal_caves';
-}
 
 export function getWorldName(worldId: number): string {
   const prefixes = ['Shadow','Flame','Aqua','Stone','Storm','Frost','Ember','Wind','Terra','Crystal'];

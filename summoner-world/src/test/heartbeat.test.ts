@@ -29,6 +29,7 @@ const createEmptyCallbacks = (): HeartbeatCallbacks => ({
     GATHER_RESOURCE: vi.fn(),
     CAPTURE_CREATURE: vi.fn(),
     DEMONLORD_ENCOUNTER: vi.fn(),
+    WILD_ENCOUNTER: vi.fn(),
   },
 });
 
@@ -106,6 +107,7 @@ describe('createHeartbeat', () => {
         GATHER_RESOURCE: vi.fn(),
         CAPTURE_CREATURE: vi.fn(),
         DEMONLORD_ENCOUNTER: vi.fn(),
+        WILD_ENCOUNTER: vi.fn(),
       },
     };
 
@@ -169,6 +171,7 @@ describe('createHeartbeat', () => {
         GATHER_RESOURCE: vi.fn(),
         CAPTURE_CREATURE: vi.fn(),
         DEMONLORD_ENCOUNTER: vi.fn(),
+        WILD_ENCOUNTER: vi.fn(),
       },
     };
 
@@ -235,6 +238,7 @@ describe('createHeartbeat', () => {
         GATHER_RESOURCE: vi.fn(),
         CAPTURE_CREATURE: vi.fn(),
         DEMONLORD_ENCOUNTER: vi.fn(),
+        WILD_ENCOUNTER: vi.fn(),
       },
     };
 
@@ -286,6 +290,7 @@ describe('createHeartbeat', () => {
         GATHER_RESOURCE: vi.fn(),
         CAPTURE_CREATURE: vi.fn(),
         DEMONLORD_ENCOUNTER: vi.fn(),
+        WILD_ENCOUNTER: vi.fn(),
       },
     };
     const heartbeat = createHeartbeat(callbacks);
@@ -381,6 +386,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
         GATHER_RESOURCE: () => {},
         CAPTURE_CREATURE: () => {},
         DEMONLORD_ENCOUNTER: () => {},
+        WILD_ENCOUNTER: () => {},
       },
     };
 
@@ -446,6 +452,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
         GATHER_RESOURCE: () => {},
         CAPTURE_CREATURE: () => {},
         DEMONLORD_ENCOUNTER: () => {},
+        WILD_ENCOUNTER: () => {},
       },
     };
 
@@ -517,6 +524,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
         GATHER_RESOURCE: () => {},
         CAPTURE_CREATURE: () => {},
         DEMONLORD_ENCOUNTER: () => {},
+        WILD_ENCOUNTER: () => {},
       },
     };
 
@@ -581,6 +589,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
         GATHER_RESOURCE: () => {},
         CAPTURE_CREATURE: () => {},
         DEMONLORD_ENCOUNTER: () => {},
+        WILD_ENCOUNTER: () => {},
       },
     };
 
@@ -683,6 +692,7 @@ describe('T2.11 - Offline catch-up with reward accumulation', () => {
         GATHER_RESOURCE: () => {},
         CAPTURE_CREATURE: () => {},
         DEMONLORD_ENCOUNTER: () => {},
+        WILD_ENCOUNTER: () => {},
       },
     };
 
@@ -736,6 +746,7 @@ describe('resolveMission', () => {
         GATHER_RESOURCE: vi.fn(),
         CAPTURE_CREATURE: vi.fn(),
         DEMONLORD_ENCOUNTER: vi.fn(),
+        WILD_ENCOUNTER: vi.fn(),
       },
     };
     
@@ -787,6 +798,7 @@ describe('resolveMission', () => {
         GATHER_RESOURCE: vi.fn(),
         CAPTURE_CREATURE: vi.fn(),
         DEMONLORD_ENCOUNTER: vi.fn(),
+        WILD_ENCOUNTER: vi.fn(),
       },
     };
 
@@ -915,6 +927,7 @@ describe('offline catch-up scenarios', () => {
         GATHER_RESOURCE: vi.fn(),
         CAPTURE_CREATURE: vi.fn(),
         DEMONLORD_ENCOUNTER: vi.fn(),
+        WILD_ENCOUNTER: vi.fn(),
       },
     };
 
@@ -968,6 +981,7 @@ describe('offline catch-up scenarios', () => {
         GATHER_RESOURCE: vi.fn(),
         CAPTURE_CREATURE: vi.fn(),
         DEMONLORD_ENCOUNTER: vi.fn(),
+        WILD_ENCOUNTER: vi.fn(),
       },
     };
 
@@ -1017,6 +1031,7 @@ describe('offline catch-up scenarios', () => {
         GATHER_RESOURCE: vi.fn(),
         CAPTURE_CREATURE: vi.fn(),
         DEMONLORD_ENCOUNTER: vi.fn(),
+        WILD_ENCOUNTER: vi.fn(),
       },
     };
 

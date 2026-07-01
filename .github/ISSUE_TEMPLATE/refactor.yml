@@ -1,0 +1,41 @@
+name: Refactor
+description: Propose a focused refactor task
+title: "[Refactor]: "
+labels: ["refactor"]
+body:
+  - type: textarea
+    id: target
+    attributes:
+      label: Refactor target
+      description: Which file, folder, or system should be refactored?
+    validations:
+      required: true
+  - type: textarea
+    id: reason
+    attributes:
+      label: Reason
+      description: Why is this refactor needed?
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Behavior compatibility
+      description: What behavior must remain unchanged?
+    validations:
+      required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: Test requirements
+      placeholder: |
+        - [ ] Existing behavior is covered
+        - [ ] Tests pass after refactor
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks
+    validations:
+      required: false
