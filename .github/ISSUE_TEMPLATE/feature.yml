@@ -1,0 +1,52 @@
+name: Feature request
+description: Propose a SummonerWorld feature
+title: "[Feature]: "
+labels: ["feature"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Describe the feature.
+    validations:
+      required: true
+  - type: textarea
+    id: player_value
+    attributes:
+      label: Player value
+      description: How does this help the player do, become, own, command, remember, trade, build, or overcome something?
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Primary area
+      options:
+        - Player
+        - Creature
+        - Combat
+        - Dungeon
+        - World
+        - NPC
+        - Economy
+        - Save/load
+        - UI
+        - AI Framework
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: |
+        - [ ] 
+        - [ ] 
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+    validations:
+      required: false
