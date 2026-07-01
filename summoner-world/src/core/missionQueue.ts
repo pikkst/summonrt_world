@@ -189,7 +189,7 @@ const atkElem = atkr.creature.elements?.[0];
        const primordialMult = (atkElem && options?.primordialPct) ? 1 + (options.primordialPct / 100) : 1;
        const omniMult = (atkElem && options?.omniPct) ? 1 + (options.omniPct / 100) : 1;
 
-        const dmg = Math.max(1, Math.floor((atkr.creature.attack - target.creature.defense * 0.5) * eff * primordialMult * omniMult * (1 + ((options?.damageDealtPct || 0) / 100)) + Math.floor(random() * 5) - 2));
+         const dmg = Math.max(1, Math.floor((atkr.creature.attack - target.creature.defense * 0.5) * eff * primordialMult * omniMult + Math.floor(random() * 5) - 2));
       target.creature.currentHealth = Math.max(0, target.creature.currentHealth - dmg);
 
       if (target.creature.currentHealth <= 0) {
@@ -222,7 +222,7 @@ const target = pick(targets)!;
       const defElems = target.creature.elements;
       const eff = getElementalFactor(atkElem, defElems);
 
-      const dmg = Math.max(1, Math.floor((atkr.creature.attack - target.creature.defense * 0.5) * eff * (1 + ((options?.damageTakenPct || 0) / 100)) + Math.floor(random() * 5) - 2));
+       const dmg = Math.max(1, Math.floor((atkr.creature.attack - target.creature.defense * 0.5) * eff + Math.floor(random() * 5) - 2));
       target.creature.currentHealth = Math.max(0, target.creature.currentHealth - dmg);
 
       if (target.creature.currentHealth <= 0) {

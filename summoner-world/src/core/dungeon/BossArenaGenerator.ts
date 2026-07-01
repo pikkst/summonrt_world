@@ -12,6 +12,7 @@ export function generateBossFloor(
 ): DungeonFloorGraph {
   const seed = getDungeonFloorSeed(worldIndex, floorIndex, globalSeed);
   const rooms = createOpenBossArenaRooms();
+  const worldElement = getWorldElement(worldIndex);
 
   return {
     floorIndex,
@@ -20,7 +21,12 @@ export function generateBossFloor(
     rooms,
     entranceRoomId: 'arena_2_0',
     bossRoomId: 'arena_2_2',
-    treasureRoomIds: []
+    treasureRoomIds: [],
+    isBossFloor: true,
+    layoutType: 'boss_arena',
+    worldElement,
+    environmentalHazards: getBossFloorEnvironmentalHazards(worldElement),
+    bossScaling: calculateBossScaling(worldIndex),
   };
 }
 
