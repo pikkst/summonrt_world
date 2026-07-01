@@ -305,39 +305,6 @@ export const playerActions = (set: SetState<GameStore>, get: () => GameStore) =>
         archetype: options.archetype || 'summoner',
       });
       if (res.data.success || res.data.player) {
-        const serverPlayer = res.data.player;
-        const affinity = serverPlayer.affinity || { primary: 'fire' as Element, learned: [] as Element[] };
-        const startWorld = generateWorld(serverPlayer.currentWorld || 1, affinity);
-        const worlds = new Map<number, WorldData>();
-        worlds.set(serverPlayer.currentWorld || 1, startWorld);
-        const discoveredTilesSet = new Set<string>((serverPlayer.exploredTiles || []).map((tk: string) => tk.split(':')[1]).filter(Boolean));
-
-set({
-           player: {
-             ...(serverPlayer as any),
-             id: serverPlayer._id,
-             affinity,
-             isOnline: true,
-             currentWorldId: serverPlayer.currentWorld || 1,
-             tileX: typeof serverPlayer.posX === 'number' ? serverPlayer.posX : 10,
-             tileY: typeof serverPlayer.posY === 'number' ? serverPlayer.posY : 10,
-             experience: toBigIntXP(serverPlayer.experience),
-             creatures: normalizeCreatures(serverPlayer.creatures),
-             inventory: serverPlayer.inventory || [],
-             activeQuests: serverPlayer.activeQuests || [],
-             completedQuests: serverPlayer.completedQuests || [],
-             discoveredTiles: discoveredTilesSet,
-             skillsUnlocked: serverPlayer.skillsUnlocked || {},
-             unspent_passive_points: serverPlayer.unspent_passive_points ?? 0,
-             unlocked_node_ids: serverPlayer.unlocked_node_ids ?? ['root_hub'],
-             settings: serverPlayer.settings || { musicVolume: 0.5, sfxVolume: 0.5, showLogTimestamps: true },
-           },
-           worlds,
-           currentWorldId: serverPlayer.currentWorld || 1,
-          initialized: true,
-            log: [createLog(`Welcome, ${serverPlayer.name || serverPlayer.username}. Your profile is now persistent.`, 'system', 0)],
-          });
-          get().startHeartbeat();
         appendLog('Registration complete. Your journey is saved to MongoDB.', 'success');
         return true;
       }

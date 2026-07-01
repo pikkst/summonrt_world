@@ -107,14 +107,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onCreateCharacter }) =
             >
               Load Save
             </button>
-            {onCreateCharacter && (
-              <button 
-                onClick={onCreateCharacter}
-                className="w-full bg-indigo-900/50 hover:bg-indigo-800/50 text-indigo-300 py-3 rounded-2xl transition-colors border border-indigo-700 text-xs font-bold uppercase tracking-widest"
-              >
-                Create New Character
-              </button>
-            )}
           </div>
           
           <div className="mt-8 text-center border-t border-gray-800 pt-8">
