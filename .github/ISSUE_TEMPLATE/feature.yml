@@ -31,6 +31,7 @@ body:
         - Economy
         - Save/load
         - UI
+        - Documentation
         - AI Framework
         - Other
     validations:
