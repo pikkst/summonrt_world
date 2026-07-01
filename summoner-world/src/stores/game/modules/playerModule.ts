@@ -20,7 +20,8 @@ import {
   EliteRoomInteraction,
   VendorRoomInteraction,
 } from '../../../core/dungeon/DungeonInteractions';
-import { createCharacter, SUMMONER_CLASSES, CONTRACT_PATHS, type SummonerClassId, type ContractPath } from '../../../core/playerCore/characterCreation.ts';
+import { createCharacter, CONTRACT_PATHS, type ContractPath } from '../../../core/playerCore/characterCreation.ts';
+import type { SummonerClassId } from '../../../data/summonerClasses';
 
 function toBigIntXP(value: unknown): bigint {
   if (typeof value === 'bigint') return value;

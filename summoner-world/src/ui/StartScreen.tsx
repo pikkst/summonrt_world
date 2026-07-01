@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { useGameStore } from '../stores/gameStore.ts';
 import { ELEMENTS } from '../data/constants.ts';
 import type { Element } from '../types/game.ts';
-import { createCharacter, SUMMONER_CLASSES, CONTRACT_PATHS, type SummonerClassId, type ContractPath } from '../core/playerCore/characterCreation.ts';
+import { createCharacter, CONTRACT_PATHS } from '../core/playerCore/characterCreation.ts';
+import { SUMMONER_CLASSES } from '../data/summonerClasses';
+import type { SummonerClassId } from '../data/summonerClasses';
+import type { ContractPath } from '../core/playerCore/characterCreation.ts';
 
 const APPEARANCE_PRESETS = [
   { id: 'default', hair: 'brown', eyes: 'brown', skin: 'light' },

@@ -259,17 +259,17 @@ Sprint goal: align implementation with the new Player Core Bible before expandin
 * Initial attribute bias
 * First creature contract path
 
-- [ ] T6P.3 – Add Summoner Class system
+- [x] T6P.3 – Add Summoner Class system
 
-* Beast Binder
-* Elementalist
-* Warden
-* Ritualist
-* Tactician
-* Alchemist
-* Pathfinder
-* Duelist
-* Add class modifiers as data, not hard-coded branching
+  * Beast Binder
+  * Elementalist
+  * Warden
+  * Ritualist
+  * Tactician
+  * Alchemist
+  * Pathfinder
+  * Duelist
+  * Add class modifiers as data, not hard-coded branching
 
 - [ ] T6P.4 – Refactor element selection to be a player identity decision
 

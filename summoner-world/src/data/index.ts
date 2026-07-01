@@ -5,11 +5,18 @@ export { getAllNodes, getNodeById, getNodesByCategory } from './careerTree';
 export type { CareerNodeType, CareerCategory, CareerNode, CareerTree } from './careerTree/types';
 export { getFusionResult, getAllPairKeys, isLightDarknessFusion, UNSTABLE_VOID_CREATURE, calculateFusionRarity, calculateFusionRarityWithSpecial, CREATURE_CLASS_TIERS } from './fusionMatrix';
 export { inheritSkills } from './fusionUtils';
-export { 
-  TRAIT_SYNERGIES, 
-  getAllSynergies, 
-  getSynergyForTraits, 
+export {
+  TRAIT_SYNERGIES,
+  getAllSynergies,
+  getSynergyForTraits,
   getTraitSynergyCount,
   calculateSynergyEffects,
   getSynergyNames
 } from './traitSynergy';
+export {
+  SUMMONER_CLASSES,
+  getAllClasses,
+  getClassById,
+  getClassModifiers,
+} from './summonerClasses';
+export type { SummonerClassId, ClassDefinition } from './summonerClasses';

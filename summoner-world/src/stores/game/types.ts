@@ -40,7 +40,8 @@ import type {
  import type { HeartbeatInstance } from '../../core/heartbeat.ts';
  import type { FloorActivity } from '../../core/demonlord';
   import type { TrapRoomInteraction, PuzzleRoomInteraction, EliteRoomInteraction, VendorRoomInteraction, TreasureRoomInteraction } from '../../core/dungeon/DungeonInteractions';
-  import type { SummonerClassId, ContractPath } from '../../core/playerCore/characterCreation.ts';
+  import type { SummonerClassId } from '../../data/summonerClasses';
+  import type { ContractPath } from '../../core/playerCore/characterCreation.ts';
 
 export type {
   PlayerState,

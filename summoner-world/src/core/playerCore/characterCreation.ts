@@ -1,8 +1,10 @@
 import type { Element, ElementalAffinity, CreatureInstance, CreatureTemplate, InventoryStack } from '../../types/game.ts';
 import type { PlayerCoreState, SummonerClass } from '../../types/playerCore.ts';
+import type { ClassDefinition, SummonerClassId } from '../../data/summonerClasses';
 import { createDefaultPlayerCoreState } from './factory.ts';
 import { generateCreatureTemplate, registerSpeciesLine } from '../../modules/creatures/creatureFactory.ts';
 import { SeededRandom } from '../../utils/SeededRandom.ts';
+import { SUMMONER_CLASSES } from '../../data/summonerClasses';
 
 export type ContractPath = 'companion' | 'drake' | 'shade' | 'golem' | 'wisp';
 
@@ -55,87 +57,6 @@ export const CONTRACT_PATHS: Record<ContractPath, ContractPathDefinition> = {
     speciesKey: 'spirit_line',
     stage: 0,
     defaultAffinity: { primary: 'light' },
-  },
-};
-
-export type SummonerClassId = 'beast_binder' | 'elementalist' | 'warden' | 'ritualist' | 'tactician' | 'alchemist' | 'pathfinder' | 'duelist';
-
-export interface ClassDefinition {
-  id: SummonerClassId;
-  name: string;
-  description: string;
-  icon: string;
-  statBias: Record<string, number>;
-  startingBonus: {
-    money?: number;
-    items?: InventoryStack[];
-  };
-}
-
-export const SUMMONER_CLASSES: Record<SummonerClassId, ClassDefinition> = {
-  beast_binder: {
-    id: 'beast_binder',
-    name: 'Beast Binder',
-    description: 'Stronger creature bonds and contract stability',
-    icon: '🐾',
-    statBias: { strength: 2, dexterity: 1, luck: 1 },
-    startingBonus: { items: [{ templateKey: 'soul_crystal_common', quantity: 3 }] },
-  },
-  elementalist: {
-    id: 'elementalist',
-    name: 'Elementalist',
-    description: 'Stronger elemental scaling and spell access',
-    icon: '🔥',
-    statBias: { intelligence: 2, wisdom: 1, dexterity: 1 },
-    startingBonus: { items: [{ templateKey: 'mana_crystal', quantity: 5 }] },
-  },
-  warden: {
-    id: 'warden',
-    name: 'Warden',
-    description: 'Defensive play, survival, healing, protection',
-    icon: '🛡️',
-    statBias: { vitality: 2, strength: 1, defense: 1 },
-    startingBonus: { items: [{ templateKey: 'healing_herb', quantity: 5 }] },
-  },
-  ritualist: {
-    id: 'ritualist',
-    name: 'Ritualist',
-    description: 'Advanced summoning, rare contracts, sacrifice mechanics',
-    icon: '🔮',
-    statBias: { intelligence: 2, wisdom: 2 },
-    startingBonus: { money: 500, items: [{ templateKey: 'soul_crystal_common', quantity: 2 }] },
-  },
-  tactician: {
-    id: 'tactician',
-    name: 'Tactician',
-    description: 'Command speed, formation bonuses, combat control',
-    icon: '⚔️',
-    statBias: { dexterity: 2, intelligence: 1, speed: 1 },
-    startingBonus: { items: [{ templateKey: 'basic_food', quantity: 5 }] },
-  },
-  alchemist: {
-    id: 'alchemist',
-    name: 'Alchemist',
-    description: 'Crafting, mutation, consumables, material conversion',
-    icon: '⚗️',
-    statBias: { intelligence: 2, dexterity: 1, wisdom: 1 },
-    startingBonus: { money: 500, items: [{ templateKey: 'essence', quantity: 3 }] },
-  },
-  pathfinder: {
-    id: 'pathfinder',
-    name: 'Pathfinder',
-    description: 'Travel, exploration, scouting, world traversal',
-    icon: '🗺️',
-    statBias: { speed: 2, dexterity: 2 },
-    startingBonus: { items: [{ templateKey: 'healing_herb', quantity: 3 }] },
-  },
-  duelist: {
-    id: 'duelist',
-    name: 'Duelist',
-    description: 'PvP, direct combat, elite single-creature synergy',
-    icon: '🗡️',
-    statBias: { strength: 2, speed: 2 },
-    startingBonus: { items: [{ templateKey: 'healing_herb', quantity: 3 }] },
   },
 };
 

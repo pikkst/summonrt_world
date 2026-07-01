@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { createCharacter, SUMMONER_CLASSES, CONTRACT_PATHS } from '../core/playerCore/characterCreation.ts';
+import { createCharacter, CONTRACT_PATHS } from '../core/playerCore/characterCreation.ts';
 import type { CharacterCreationResult } from '../core/playerCore/characterCreation.ts';
+import { SUMMONER_CLASSES } from '../data/summonerClasses';
 
 describe('characterCreation', () => {
   it('creates a valid character with defaults', () => {
