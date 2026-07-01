@@ -4,6 +4,14 @@ This folder defines how Kilo Code should coordinate task execution for SummonerW
 
 The orchestrator does not replace specialist agents. It decides which agents, documents, patterns, checks, and review steps are needed for a task.
 
+## Framework Position
+
+Read `.kilo/SYSTEM_MAP.md` first.
+
+The Orchestrator owns task lifecycle and execution planning.
+
+Do not create another task-flow layer. Update this folder if task coordination needs to improve.
+
 ## Core Principle
 
 ```text
@@ -12,6 +20,17 @@ Select context second.
 Plan third.
 Implement fourth.
 Review before PR.
+```
+
+## Integration Flow
+
+```text
+Context Engine
+  -> Orchestrator
+    -> Council when needed
+      -> Implementation
+        -> Checklists
+          -> Guardian
 ```
 
 ## File Index
