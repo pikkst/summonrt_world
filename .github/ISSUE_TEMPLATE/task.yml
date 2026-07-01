@@ -1,0 +1,51 @@
+name: Task
+description: Define a focused implementation task
+title: "[Task]: "
+labels: ["task"]
+body:
+  - type: input
+    id: task_id
+    attributes:
+      label: Task ID
+      placeholder: T6.12
+    validations:
+      required: false
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Describe the task clearly.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      placeholder: |
+        In scope:
+        - 
+
+        Out of scope:
+        - 
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: |
+        - [ ] 
+        - [ ] 
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation
+      placeholder: |
+        - [ ] npm run typecheck
+        - [ ] npm run lint
+        - [ ] npm run test
+        - [ ] npm run build
+    validations:
+      required: false
