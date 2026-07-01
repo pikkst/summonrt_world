@@ -7,7 +7,7 @@ These files are guidance examples. They are not mandatory copy-paste code.
 ## Example Index
 
 - `good_react_component.md` - presentation-focused UI component structure.
-- `good_zustand_store.md` - focused store action structure.
+ - `good_store.md` - focused store action structure.
 - `good_domain_event.md` - typed domain event structure.
 - `good_service.md` - testable service/core function structure.
 - `good_test.md` - gameplay invariant test structure.
