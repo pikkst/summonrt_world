@@ -153,7 +153,7 @@ describe('T6.12: World 10 full clear dungeon integration test', () => {
               rngSeed: rng.next() * 10000,
             });
 
-            if (!result.victory) {
+            if (!result.result.victory) {
               floorCleared = false;
               break;
             }
@@ -191,7 +191,7 @@ describe('T6.12: World 10 full clear dungeon integration test', () => {
         rngSeed: rng.next() * 10000,
       });
 
-      expect(bossResult.victory, `Floor ${currentFloorIndex}: failed to defeat boss`).toBe(true);
+      expect(bossResult.result.victory, `Floor ${currentFloorIndex}: failed to defeat boss`).toBe(true);
       floorsCleared++;
       currentFloorIndex++;
 

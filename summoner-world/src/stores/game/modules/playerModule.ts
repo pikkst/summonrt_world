@@ -881,7 +881,7 @@ const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(cu
     if (!player || !combat.roomInteraction?.active) return;
 
     const rng = new SeededRandom(Date.now());
-    const result = resolveRoomTrap(choice, player.speed, player.dexterity, player.defense, rng);
+    const result = resolveRoomTrap(choice, player.dexterity, player.defense, rng);
     
     const updatedLife = result.success 
       ? player.life 

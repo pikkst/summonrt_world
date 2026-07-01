@@ -115,7 +115,7 @@ const finalDamage = Math.max(1, Math.floor(baseDamage * (1 + (demonlordBonuses.d
 
     const careerDamage = finalDamage;
     const withCareerDamage = 1 + ((careerBonuses.damage_dealt_pct || 0) / 100);
-    const withCareerDefense = 1 - ((careerBonuses.damage_taken_pct || 0) / 100);
+    const withCareerDefense = 1 + ((careerBonuses.damage_taken_pct || 0) / 100);
 
     return {
       damage: Math.max(1, Math.floor(finalDamage * withCareerDamage)),
