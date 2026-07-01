@@ -34,6 +34,18 @@ Review-layer checklists:
 - `DocumentationChecklist.md` - documentation accuracy.
 - `SaveSystemChecklist.md` - persistence and migration safety.
 - `PerformanceChecklist.md` - scaling and responsiveness.
+- `APIQualityChecklist.md` - public API type safety, helper signatures, data-module boundaries, and test assertion quality.
+
+## When To Use APIQualityChecklist
+
+Use `APIQualityChecklist.md` when a task adds or changes:
+
+- exported TypeScript types
+- public helper functions
+- shared data modules
+- store action signatures
+- re-exports or module indexes
+- tests for public API behavior
 
 ## Prime Rule
 
