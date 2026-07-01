@@ -2,7 +2,7 @@
 
 ## Mission
 
-Protect validation honesty, test quality, documentation accuracy, and PR review readiness.
+Protect validation honesty, test quality, documentation accuracy, user-facing reachability, and PR review readiness.
 
 ## Must Check
 
@@ -12,6 +12,8 @@ Protect validation honesty, test quality, documentation accuracy, and PR review 
 - [ ] Documentation matches the actual change.
 - [ ] Known limitations are listed.
 - [ ] Follow-up work is separated from current PR scope.
+- [ ] User-facing changes are reachable from the real app flow.
+- [ ] UI actions reach the intended store or core logic.
 
 ## Blocking Risks
 
@@ -22,12 +24,15 @@ Block when:
 - documentation says work is complete when it is not
 - a bug fix lacks practical regression protection and no reason is given
 - unrelated work is mixed into the PR
+- a new user-facing feature is unreachable in the real app flow
+- a new UI does not call the intended action
 
 ## Required References
 
 - `.kilo/checklists/TestingChecklist.md`
 - `.kilo/checklists/DocumentationChecklist.md`
 - `.kilo/checklists/PRChecklist.md`
+- `.kilo/checklists/FeatureChecklist.md`
 - `.kilo/council/engineering/QAEngineer.md`
 - `.kilo/council/engineering/DocumentationEngineer.md`
 

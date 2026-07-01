@@ -9,10 +9,11 @@ Review work before opening or updating a Pull Request.
 ```text
 Scope Review
   -> Architecture Review
-    -> Gameplay Review
+    -> Gameplay or UI Review
       -> Test Review
         -> Documentation Review
-          -> PR Readiness Review
+          -> Guardian Pass
+            -> PR Readiness Review
 ```
 
 ## Scope Review
@@ -36,13 +37,16 @@ Check:
 - save/load impact
 - MMO compatibility when relevant
 
-## Gameplay Review
+## Gameplay or UI Review
 
 Check:
 
 - meaningful decisions over repetitive clicking
 - Action/Event/Report fit
 - world memory impact when important
+- user-facing UI is reachable from the real app flow
+- UI actions call the intended store or core logic
+- input bounds are enforced in code
 
 ## Test Review
 
@@ -52,6 +56,7 @@ Check:
 - regression tests for fixes
 - deterministic tests for generation/simulation
 - save/load tests for persistence changes
+- flow tests for user-facing features when practical
 
 ## Documentation Review
 
@@ -62,6 +67,21 @@ Check:
 - TechnicalSpec if architecture changed
 - `.kilo` docs if AI workflow changed
 
+## Guardian Pass
+
+Before PR readiness, summarize:
+
+```text
+Guardian pass:
+- Architecture:
+- Gameplay or UI reachability:
+- Save/load impact:
+- Quality and validation:
+- Merge readiness:
+```
+
 ## Rule
 
 If a review step fails, update the work or document the limitation honestly before PR.
+
+Do not mark a task PR-ready without a Guardian pass summary.
