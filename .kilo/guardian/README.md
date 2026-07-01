@@ -20,9 +20,9 @@ The Guardian layer checks for blockers that may have been missed by implementati
 ## Use With Existing Layers
 
 ```text
-Orchestrator
-  -> Context Engine
-    -> Council
+Context Engine
+  -> Orchestrator
+    -> Council when needed
       -> Checklists
         -> Guardian
           -> PR Ready
