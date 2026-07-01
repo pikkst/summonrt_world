@@ -6,6 +6,25 @@ This file records important architecture decisions in short form so AI agents ca
 
 For permanent detailed decisions, create or update proper documentation.
 
+## ADR-000 - Design Constitution Is Highest Design Source
+
+Decision:
+
+```text
+DESIGN_CONSTITUTION.md defines the highest-level gameplay identity of SummonerWorld.
+```
+
+Reason:
+
+SummonerWorld needs a stable design philosophy that guides all future features, AI-agent work, UI decisions, and architecture choices.
+
+Impact:
+
+- AI agents must read `DESIGN_CONSTITUTION.md` before implementation.
+- Repetitive clicking should be replaced with meaningful decisions when possible.
+- Actions, Events, Reports, time, and World Memory become recurring design concepts.
+- SummonerWorld should be described as a Strategic Commander Browser RPG.
+
 ## ADR-001 - Player-First Architecture
 
 Decision:

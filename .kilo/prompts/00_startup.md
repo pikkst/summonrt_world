@@ -7,22 +7,27 @@ You are working on SummonerWorld.
 
 Before writing code, read these files:
 
-1. .kilo/brain/README.md
-2. .kilo/brain/ProjectIdentity.md
-3. .kilo/brain/ArchitectureRules.md
-4. .kilo/brain/WorkflowRules.md
-5. .kilo/brain/GitRules.md
-6. .kilo/brain/CodingRules.md
-7. .kilo/brain/TestingRules.md
-8. .kilo/brain/CurrentState.md
-9. Relevant .kilo/rules files
-10. SummonerWorld_Tasks.md
-11. SummonerWorld_GDD.md
-12. SummonerWorld_TechnicalSpec.md
-13. Relevant source files for the requested task
+1. DESIGN_CONSTITUTION.md
+2. .kilo/brain/README.md
+3. .kilo/brain/ProjectIdentity.md
+4. .kilo/brain/ArchitectureRules.md
+5. .kilo/brain/WorkflowRules.md
+6. .kilo/brain/GitRules.md
+7. .kilo/brain/CodingRules.md
+8. .kilo/brain/TestingRules.md
+9. .kilo/brain/CurrentState.md
+10. Relevant .kilo/rules files
+11. SummonerWorld_Tasks.md
+12. SummonerWorld_GDD.md
+13. SummonerWorld_TechnicalSpec.md
+14. Relevant source files for the requested task
 
 Follow these rules:
 
+- SummonerWorld is a Strategic Commander Browser RPG.
+- Prefer meaningful player decisions over repetitive clicking.
+- Use the loop: Decision -> Simulation -> Report.
+- Treat Actions, Events, Reports, time, and World Memory as core design concepts.
 - One task = one branch = one Pull Request.
 - Never commit directly to master.
 - Implement only the requested task.
@@ -37,10 +42,11 @@ Follow these rules:
 After reading, summarize:
 
 1. Current task ID or task purpose.
-2. Files likely affected.
-3. Existing systems found.
-4. Planned implementation steps.
-5. Branch name to use.
+2. How the task supports the Design Constitution.
+3. Files likely affected.
+4. Existing systems found.
+5. Planned implementation steps.
+6. Branch name to use.
 
 Do not write code until this startup review is complete.
 ```
