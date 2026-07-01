@@ -14,7 +14,8 @@ import { FusionPanel } from './FusionPanel';
 import { SkillTreePanel } from './SkillTreePanel';
 import { StatAllocationPanel } from './StatAllocationPanel';
 import { MissionProgressPanel } from './MissionProgressPanel';
-import { SUMMONER_CLASSES, CONTRACT_PATHS } from '../core/playerCore/characterCreation.ts';
+import { SUMMONER_CLASSES } from '../data/summonerClasses';
+import { CONTRACT_PATHS } from '../core/playerCore/characterCreation.ts';
 
 const ELEMENT_COLORS: Record<string, string> = {
   fire: 'text-orange-400',
