@@ -40,6 +40,7 @@ import type {
  import type { HeartbeatInstance } from '../../core/heartbeat.ts';
  import type { FloorActivity } from '../../core/demonlord';
   import type { TrapRoomInteraction, PuzzleRoomInteraction, EliteRoomInteraction, VendorRoomInteraction, TreasureRoomInteraction } from '../../core/dungeon/DungeonInteractions';
+  import type { SummonerClassId, ContractPath } from '../../core/playerCore/characterCreation.ts';
 
 export type {
   PlayerState,
@@ -258,9 +259,17 @@ showLevelUpNotification: (notifications: Array<{ creatureName: string; newLevel:
      isOnDemonlordFloor: () => boolean;
      updateDemonlordInfluence: (playerCountDelta: number) => void;
      getDemonlordInfluenceForCombat: () => number;
-     applyDemonlordCombatBonuses: (baseDamage: number, baseDefense: number) => { damage: number; defense: number };
-     setDemonlordFloorActivity: (activity: FloorActivity) => void;
-     getDemonlordFloorActivity: () => FloorActivity;
-   }
+    applyDemonlordCombatBonuses: (baseDamage: number, baseDefense: number) => { damage: number; defense: number };
+    setDemonlordFloorActivity: (activity: FloorActivity) => void;
+    getDemonlordFloorActivity: () => FloorActivity;
+    createCharacter: (options: {
+      name: string;
+      appearance?: Record<string, any>;
+      className?: SummonerClassId;
+      startingElement?: Element;
+      startingWorldId?: number;
+      contractPathKey?: ContractPath;
+    }) => void;
+  }
 
 export type GameStore = GameStoreState & GameActions;

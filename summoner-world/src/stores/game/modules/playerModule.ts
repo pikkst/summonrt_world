@@ -20,6 +20,7 @@ import {
   EliteRoomInteraction,
   VendorRoomInteraction,
 } from '../../../core/dungeon/DungeonInteractions';
+import { createCharacter, SUMMONER_CLASSES, CONTRACT_PATHS, type SummonerClassId, type ContractPath } from '../../../core/playerCore/characterCreation.ts';
 
 function toBigIntXP(value: unknown): bigint {
   if (typeof value === 'bigint') return value;
@@ -193,6 +194,107 @@ export const playerActions = (set: SetState<GameStore>, get: () => GameStore) =>
     get().startHeartbeat();
   },
 
+  createCharacter: (options: {
+    name: string;
+    appearance?: Record<string, any>;
+    className?: SummonerClassId;
+    startingElement?: Element;
+    startingWorldId?: number;
+    contractPathKey?: ContractPath;
+  }) => {
+    const result = createCharacter({
+      name: options.name,
+      appearance: options.appearance,
+      className: options.className,
+      startingElement: options.startingElement,
+      startingWorldId: options.startingWorldId,
+      contractPathKey: options.contractPathKey,
+    });
+
+    const { playerCore, startingCreature, affinity, classDef, contractPath } = result;
+    const startingWorldId = options.startingWorldId ?? 1;
+
+    const startWorld = generateWorld(startingWorldId, affinity);
+    const worlds = new Map<number, WorldData>();
+    worlds.set(startingWorldId, startWorld);
+
+    const bonusStats = classDef.statBias;
+    const bonusMoney = classDef.startingBonus.money || 0;
+    const bonusResources = classDef.startingBonus.items || [];
+
+    const player: PlayerState = {
+      id: playerCore.identity.id,
+      name: playerCore.identity.name,
+      gender: 'unknown',
+      appearance: playerCore.identity.appearance,
+      affinity,
+      level: 1,
+      experience: 0n,
+      money: 1000 + bonusMoney,
+      skillPoints: 0,
+      skillsUnlocked: {},
+      unspent_passive_points: 0,
+      unlocked_node_ids: ['root_hub'],
+      energy: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
+      nerve: { current: 15, max: 15, lastUpdate: new Date().toISOString() },
+      happy: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
+      life: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
+      strength: 10 + (bonusStats.strength || 0),
+      defense: 10 + (bonusStats.defense || 0),
+      speed: 10 + (bonusStats.speed || 0),
+      dexterity: 10 + (bonusStats.dexterity || 0),
+      currentWorldId: startingWorldId,
+      tileX: 10,
+      tileY: 10,
+      dayCount: 1,
+      gameTimeMinutes: 420,
+      creatures: [startingCreature],
+      inventory: [
+        { templateKey: 'healing_herb', quantity: 5 },
+        { templateKey: 'mana_crystal', quantity: 2 },
+        { templateKey: 'basic_food', quantity: 3 },
+        ...bonusResources,
+      ],
+      activeQuests: [],
+      completedQuests: [],
+      discoveredTiles: new Set<string>(),
+      territorialHostilities: {},
+      settings: {
+        musicVolume: 0.5,
+        sfxVolume: 0.5,
+        showLogTimestamps: true,
+        textSpeed: 30,
+        fontSize: 15,
+        highContrast: false,
+      },
+    };
+
+    const introLogs: LogEntry[] = [
+      createLog(`Welcome, ${player.name}! You begin your journey as a ${classDef.name}.`, 'system', 0),
+      createLog(`Your first companion: ${startingCreature.nickname} the ${contractPath.label}.`, 'info', 0),
+      createLog('You stand at the Edge (10, 10). The Great Spire is at the Center (1000, 1000).', 'info', 0),
+      createLog('Elder Thorne is standing nearby. Talk to him to begin your long journey.', 'success', 0),
+      createLog('Commands: north, south, east, west, talk, explore, save', 'system', 0),
+      createLog(`Goal: Ascend through 100 floors to challenge the Demon Lord.`, 'warning', 0),
+    ];
+
+    set({
+      player,
+      worlds,
+      currentWorldId: startingWorldId,
+      log: introLogs,
+      screen: 'explore',
+      turnCount: 0,
+      initialized: true,
+      combat: { active: false, phase: 'player_turn', log: [], enemyName: '', enemyHp: 0, enemyMaxHp: 0, enemyTemplate: null, playerCreatureId: '', turns: 0 },
+      combatTarget: null,
+      dungeon: { active: false, worldId: startingWorldId, currentFloor: 0, totalFloors: 3, clearedFloors: [], bossDefeated: false, inEncounter: false, encounterType: undefined },
+      exploring: null,
+    });
+
+    get().startHeartbeat();
+  },
+
   register: async (username: string, password: string, options: { name?: string; archetype?: string } = {}): Promise<boolean> => {
     const { appendLog } = get();
     try {
@@ -203,39 +305,6 @@ export const playerActions = (set: SetState<GameStore>, get: () => GameStore) =>
         archetype: options.archetype || 'summoner',
       });
       if (res.data.success || res.data.player) {
-        const serverPlayer = res.data.player;
-        const affinity = serverPlayer.affinity || { primary: 'fire' as Element, learned: [] as Element[] };
-        const startWorld = generateWorld(serverPlayer.currentWorld || 1, affinity);
-        const worlds = new Map<number, WorldData>();
-        worlds.set(serverPlayer.currentWorld || 1, startWorld);
-        const discoveredTilesSet = new Set<string>((serverPlayer.exploredTiles || []).map((tk: string) => tk.split(':')[1]).filter(Boolean));
-
-set({
-           player: {
-             ...(serverPlayer as any),
-             id: serverPlayer._id,
-             affinity,
-             isOnline: true,
-             currentWorldId: serverPlayer.currentWorld || 1,
-             tileX: typeof serverPlayer.posX === 'number' ? serverPlayer.posX : 10,
-             tileY: typeof serverPlayer.posY === 'number' ? serverPlayer.posY : 10,
-             experience: toBigIntXP(serverPlayer.experience),
-             creatures: normalizeCreatures(serverPlayer.creatures),
-             inventory: serverPlayer.inventory || [],
-             activeQuests: serverPlayer.activeQuests || [],
-             completedQuests: serverPlayer.completedQuests || [],
-             discoveredTiles: discoveredTilesSet,
-             skillsUnlocked: serverPlayer.skillsUnlocked || {},
-             unspent_passive_points: serverPlayer.unspent_passive_points ?? 0,
-             unlocked_node_ids: serverPlayer.unlocked_node_ids ?? ['root_hub'],
-             settings: serverPlayer.settings || { musicVolume: 0.5, sfxVolume: 0.5, showLogTimestamps: true },
-           },
-           worlds,
-           currentWorldId: serverPlayer.currentWorld || 1,
-          initialized: true,
-            log: [createLog(`Welcome, ${serverPlayer.name || serverPlayer.username}. Your profile is now persistent.`, 'system', 0)],
-          });
-          get().startHeartbeat();
         appendLog('Registration complete. Your journey is saved to MongoDB.', 'success');
         return true;
       }

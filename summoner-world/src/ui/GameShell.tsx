@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { useGameStore } from '../stores/gameStore.ts';
-import { getTileKey, DIRECTIONS, BIOME_NAMES, RESOURCES } from '../data/constants.ts';
+import { getTileKey, DIRECTIONS, BIOME_NAMES, RESOURCES, ELEMENTS } from '../data/constants.ts';
 import type { Screen, CreatureInstance, CreatureTemplate } from '../types/game.ts';
 import { generateCreatureTemplate } from '../modules/creatures/creatureFactory.ts';
 import { SeededRandom } from '../utils/SeededRandom.ts';
@@ -8,11 +8,13 @@ import { ResourcePanel } from './ResourcePanel';
 import { GymPanel } from './GymPanel';
 import { SummonActsPanel } from './SummonActsPanel';
 import { LoginScreen } from './LoginScreen';
+import { StartScreen } from './StartScreen';
 import { QuestLogPanel } from './QuestLogPanel.tsx';
 import { FusionPanel } from './FusionPanel';
 import { SkillTreePanel } from './SkillTreePanel';
 import { StatAllocationPanel } from './StatAllocationPanel';
 import { MissionProgressPanel } from './MissionProgressPanel';
+import { SUMMONER_CLASSES, CONTRACT_PATHS } from '../core/playerCore/characterCreation.ts';
 
 const ELEMENT_COLORS: Record<string, string> = {
   fire: 'text-orange-400',
@@ -160,11 +162,13 @@ export const GameShell: React.FC = () => {
     return names;
   }, [worlds, currentWorldId, player?.tileX, player?.tileY]);
 
-  if (!initialized) {
-    return <LoginScreen />;
-  }
+  const loadGame = useGameStore((s) => s.loadGame);
+  const [showCharacterCreation, setShowCharacterCreation] = useState(false);
 
-  if (!player) return <LoginScreen />;
+  if (!initialized || !player) {
+    if (showCharacterCreation) return <StartScreen />;
+    return <LoginScreen onCreateCharacter={() => setShowCharacterCreation(true)} />;
+  }
 
   const world = worlds.get(currentWorldId);
   if (!world) return null;
@@ -775,84 +779,6 @@ export const GameShell: React.FC = () => {
 function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
-
-const ARCHETYPES = [
-  { id: 'fighter', name: 'Fighter', icon: '⚔️', desc: 'Close-combat specialist. High strength, tanky.' },
-  { id: 'trader', name: 'Trader', icon: '💰', desc: 'Economic power. Better prices, more money.' },
-  { id: 'explorer', name: 'Explorer', icon: '🗺️', desc: 'Speed & discovery. Fast travel, hidden areas.' },
-  { id: 'spy', name: 'Spy', icon: '🕵️', desc: 'Stealth & info. Dodge, crits, intel.' },
-  { id: 'assassin', name: 'Assassin', icon: '🗡️', desc: 'Burst damage. High crit, first strike.' },
-  { id: 'summoner', name: 'Summoner', icon: '🎴', desc: 'Creature master. Better capture, bonding.' },
-  { id: 'pvp', name: 'PvP Warrior', icon: '🏆', desc: 'Player combat. Arena bonuses, ranking.' },
-  { id: 'pve', name: 'PvE Hunter', icon: '🎯', desc: 'Dungeon specialist. Boss damage, loot.' },
-];
-
-const StartScreen: React.FC = () => {
-  const initGame = useGameStore((s) => s.initGame);
-  const [name, setName] = useState('Seeker');
-  const [archetype, setArchetype] = useState('fighter');
-
-  return (
-    <div className="h-screen w-screen bg-gray-950 text-gray-100 flex items-center justify-center font-mono relative overflow-hidden">
-      <div className="absolute inset-0 opacity-5" style={{ background: 'radial-gradient(circle at 30% 40%, #6366f1 0%, transparent 50%), radial-gradient(circle at 70% 60%, #8b5cf6 0%, transparent 50%)' }} />
-      <div className="border border-gray-700 bg-gray-900/95 p-6 rounded-lg max-w-2xl w-full shadow-2xl relative z-10">
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold mb-1 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">SUMMONERWORLD</h1>
-          <p className="text-xs text-gray-500">Text RPG · Creature Collection · v0.4</p>
-        </div>
-
-        <div className="mb-5">
-          <label className="block text-sm text-gray-300 mb-1.5 font-semibold">Summoner Name</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full bg-gray-950 border border-gray-700 rounded px-3 py-2 text-gray-100 focus:outline-none focus:border-blue-500 placeholder-gray-600"
-            placeholder="Enter your name..."
-            maxLength={24}
-          />
-        </div>
-
-        <div className="mb-6">
-          <label className="block text-sm text-gray-300 mb-3 font-semibold">Choose Archetype</label>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {ARCHETYPES.map((arch) => (
-              <button
-                key={arch.id}
-                onClick={() => setArchetype(arch.id)}
-                className={`p-3 rounded-lg border text-left transition-all ${
-                  archetype === arch.id
-                    ? 'border-indigo-500 bg-indigo-500/10 text-white'
-                    : 'border-gray-700 bg-gray-950 text-gray-400 hover:border-gray-600'
-                }`}
-              >
-                <div className="text-2xl mb-1">{arch.icon}</div>
-                <div className="text-xs font-black uppercase tracking-widest">{arch.name}</div>
-                <div className="text-[10px] text-gray-500 mt-1 leading-tight">{arch.desc}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <button
-          onClick={() => initGame(name || 'Seeker', archetype)}
-          className="w-full bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white py-2.5 rounded font-semibold transition-all mb-2"
-        >
-          Begin Journey
-        </button>
-        <button
-          onClick={() => {
-            const loaded = useGameStore.getState().loadGame();
-            if (!loaded) alert('No save data found.');
-          }}
-          className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 py-2 rounded transition-colors border border-gray-700"
-        >
-          Load Save
-        </button>
-      </div>
-    </div>
-  );
-};
 
 function CreaturesPanel() {
   const player = useGameStore((s) => s.player);
