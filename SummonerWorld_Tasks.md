@@ -244,7 +244,7 @@ Sprint goal: refine combat system, dungeon generation, boss mechanics and automa
 ## Sprint 6.5 – Player Core Architecture Alignment (Pre-World Refactor)
 Sprint goal: align implementation with the new Player Core Bible before expanding world, economy, NPC, and MMO systems. Player must become the root aggregate for progression, inventory, equipment, contracts, statistics, reputation, and save/load.
 
-- [ ] T6P.1 – Create `PlayerCoreState` root aggregate
+- [x] T6P.1 – Create `PlayerCoreState` root aggregate
 
 * Include identity, summoner profile, level, XP, elements, class, inventory, equipment, skills, talents, titles, achievements, statistics, reputation, quest history, creature contracts, housing references, world unlocks, and save metadata
 * Ensure existing player state migrates without losing completed Sprint 0-6 data
