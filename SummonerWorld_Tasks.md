@@ -15,6 +15,7 @@ Current alignment state:
 - The next implementation task is T6.4.8.
 - T6.5, T6.6, and T6.7 overlap earlier completed tasks and should be read as extension tasks, not fresh duplicates.
 - New missing backlog added from `docs/Sumoner_World_dec`: Player Core alignment, event-driven architecture, documentation volume completion, reputation, titles, achievements, statistics, contracts, commands, and end-game structure.
+- T6P.1, T6P.2, T6P.3, and T6P.4 are complete (PlayerCoreState, Character Creation, Summoner Classes, Element Identity).
 
 ## Sprint 0 – Foundation & Tech Debt (Month 0)
 Sprint goal: stabilize prototype, find and fix all technical issues, set up testing and linting foundation.
@@ -271,12 +272,12 @@ Sprint goal: align implementation with the new Player Core Bible before expandin
   * Duelist
   * Add class modifiers as data, not hard-coded branching
 
-- [ ] T6P.4 – Refactor element selection to be a player identity decision
+- [x] T6P.4 – Refactor element selection to be a player identity decision
 
-* Preserve existing 10-element starter pool
-* Keep void/starlight/chaos quest-only
-* Keep Omni quest-chain locked
-* Link element to player skills, creature affinity, contract stability, equipment scaling, crafting recipes, dungeon modifiers, NPC reactions, world travel, and PvP identity
+ * Preserve existing 10-element starter pool
+ * Keep void/starlight/chaos quest-only
+ * Keep Omni quest-chain locked
+ * Link element to player skills, creature affinity, contract stability, equipment scaling, crafting recipes, dungeon modifiers, NPC reactions, world travel, and PvP identity
 
 - [ ] T6P.5 – Implement Player Statistics model
 
