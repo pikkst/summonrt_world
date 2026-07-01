@@ -129,7 +129,7 @@ export const StartScreen: React.FC = () => {
             <div className="flex flex-wrap gap-2 text-[10px] font-bold">
               {Object.entries(selectedClass.statBias).map(([stat, value]) => (
                 <span key={stat} className="px-2 py-1 bg-gray-900 border border-gray-800 rounded text-gray-300">
-                  {stat} +{value as number}
+                  {stat} +{value}
                 </span>
               ))}
             </div>
