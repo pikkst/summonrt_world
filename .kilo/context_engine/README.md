@@ -4,6 +4,14 @@ This folder teaches AI agents how to choose the smallest useful context before w
 
 The goal is to reduce token usage while preserving correctness.
 
+## Framework Position
+
+Read `.kilo/SYSTEM_MAP.md` first.
+
+The Context Engine owns context selection and token usage.
+
+Do not create another router or context-selection layer. Update this folder if context selection needs to improve.
+
 ## Core Rule
 
 ```text
@@ -23,7 +31,7 @@ User Task
         -> Load Minimum Context
           -> Need More Context?
             -> Load Next Layer
-              -> Implementation Plan
+              -> Orchestrator Plan
 ```
 
 ## File Index

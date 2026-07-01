@@ -4,6 +4,14 @@ This folder contains practical quality-control checklists for Kilo Code and othe
 
 Use these checklists before completing work, opening a Pull Request, or reviewing code.
 
+## Framework Position
+
+Read `.kilo/SYSTEM_MAP.md` first.
+
+Checklists own practical review criteria.
+
+Do not create another checklist or review-criteria layer. Update this folder if review checks need to improve.
+
 ## Checklist Index
 
 Existing task checklists:
