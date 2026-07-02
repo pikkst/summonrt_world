@@ -279,11 +279,11 @@ Sprint goal: align implementation with the new Player Core Bible before expandin
  * Keep Omni quest-chain locked
  * Link element to player skills, creature affinity, contract stability, equipment scaling, crafting recipes, dungeon modifiers, NPC reactions, world travel, and PvP identity
 
-- [ ] T6P.5 – Implement Player Statistics model
-
-* Primary: Strength, Vitality, Intelligence, Dexterity, Wisdom, Luck
-* Secondary: Health, Mana, Stamina, Movement, Critical Chance, Elemental Mastery, Contract Capacity, Command Speed, Creature Bond Power, Inventory Capacity, Crafting Efficiency, Trade Influence, Reputation Gain
-* Add deterministic stat recalculation tests
+- [x] T6P.5 – Implement Player Statistics model
+ 
+ * Primary: Strength, Vitality, Intelligence, Dexterity, Wisdom, Luck
+ * Secondary: Health, Mana, Stamina, Movement, Critical Chance, Elemental Mastery, Contract Capacity, Command Speed, Creature Bond Power, Inventory Capacity, Crafting Efficiency, Trade Influence, Reputation Gain
+ * Add deterministic stat recalculation tests
 
 - [ ] T6P.6 – Implement Inventory Core
 

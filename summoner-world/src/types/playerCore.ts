@@ -60,6 +60,31 @@ export interface AchievementEntry {
   target?: number;
 }
 
+export interface PlayerPrimaryStats {
+  strength: number;
+  vitality: number;
+  intelligence: number;
+  dexterity: number;
+  wisdom: number;
+  luck: number;
+}
+
+export interface PlayerSecondaryStats {
+  maxHealth: number;
+  maxMana: number;
+  maxStamina: number;
+  movement: number;
+  criticalChance: number;
+  elementalMastery: number;
+  contractCapacity: number;
+  commandSpeed: number;
+  creatureBondPower: number;
+  inventoryCapacity: number;
+  craftingEfficiency: number;
+  tradeInfluence: number;
+  reputationGain: number;
+}
+
 export interface PlayerStatistics {
   worldsUnlocked: number;
   creaturesContracted: number;
@@ -147,6 +172,8 @@ export interface PlayerCoreState {
   experience: bigint;
   elements: ElementalAffinity;
   class: SummonerClass;
+  primaryStats: PlayerPrimaryStats;
+  secondaryStats: PlayerSecondaryStats;
   inventory: InventoryStack[];
   equipment: EquipmentSlot[];
   skills: SkillEntry[];
