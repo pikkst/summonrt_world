@@ -20,3 +20,28 @@ export {
   getClassModifiers,
 } from './summonerClasses';
 export type { SummonerClassId, ClassDefinition } from './summonerClasses';
+
+export {
+  getElementIdentity,
+  getStarterElements,
+  getQuestOnlyElements,
+  getWorld100Element,
+  isStarterElement,
+  isQuestOnlyElement,
+  getElementModifiers,
+  getElementSkillDamagePct,
+  getElementCreatureAffinityPct,
+  getElementContractStabilityPct,
+  getElementEquipmentScalingPct,
+  getElementCraftingSuccessPct,
+  getElementDungeonRewardPct,
+  getElementNPCReactionPct,
+  getElementWorldTravelSpeedPct,
+  getElementPVPIdentityModifier,
+} from './playerElements';
+export type {
+  ElementIdentity,
+  ElementIdentityModifiers,
+  StarterElement,
+  QuestOnlyElement,
+} from './playerElements';
