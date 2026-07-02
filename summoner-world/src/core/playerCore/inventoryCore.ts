@@ -69,6 +69,15 @@ export function canStackItems(a: InventoryStack, b: InventoryStack): boolean {
   return aKeys.every((key) => aMods[key as keyof typeof aMods] === bMods[key as keyof typeof bMods]);
 }
 
+function matchesFilter(item: InventoryItem, templateKey: string, filter?: Partial<InventoryFilter>): boolean {
+  if (item.templateKey !== templateKey) return false;
+  if (filter?.categories && !filter.categories.includes(item.category)) return false;
+  if (filter?.rarities && !filter.rarities.includes(item.rarity)) return false;
+  if (filter?.binding && !filter.binding.includes(item.binding)) return false;
+  if (filter?.nameContains && !item.templateKey.toLowerCase().includes(filter.nameContains.toLowerCase())) return false;
+  return true;
+}
+
 export function stackItem(inventory: InventoryItem[], newItem: InventoryStack, category: ItemCategory, rarity: ItemRarity, binding: ItemBinding): InventoryItem[] {
   const existing = inventory.find(
     (item) => item.templateKey === newItem.templateKey && item.binding === binding && item.category === category
@@ -85,6 +94,7 @@ export function stackItem(inventory: InventoryItem[], newItem: InventoryStack, c
     if (toAdd < remaining) {
       const leftover: InventoryItem = {
         ...newItem,
+        quantity: remaining - toAdd,
         category,
         rarity,
         binding,
@@ -134,14 +144,9 @@ export function addItemToInventory(
     (i) => i.templateKey === item.templateKey && i.binding === binding && i.category === category
   );
 
-  if (existing) {
-    const maxStack = template.maxStack || 99;
-    if (existing.quantity >= maxStack) {
-      return { inventory, added: false, reason: 'inventory_full' };
-    }
-
+  if (existing && existing.quantity < (template.maxStack || 99)) {
     const remaining = item.quantity;
-    const space = maxStack - existing.quantity;
+    const space = (template.maxStack || 99) - existing.quantity;
     const toAdd = Math.min(remaining, space);
 
     existing.quantity += toAdd;
@@ -187,13 +192,7 @@ export function removeItemFromInventory(
   const result = [...inventory];
 
   const candidates = filter
-    ? result.filter((item) => {
-        if (item.templateKey !== templateKey) return false;
-        if (filter.categories && !filter.categories.includes(item.category)) return false;
-        if (filter.rarities && !filter.rarities.includes(item.rarity)) return false;
-        if (filter.binding && !filter.binding.includes(item.binding)) return false;
-        return true;
-      })
+    ? result.filter((item) => matchesFilter(item, templateKey, filter))
     : result.filter((item) => item.templateKey === templateKey);
 
   for (let i = 0; i < candidates.length && remainingToRemove > 0; i++) {
@@ -220,14 +219,7 @@ export function hasItem(inventory: InventoryItem[], templateKey: string, quantit
 
 export function getItemCount(inventory: InventoryItem[], templateKey: string, filter?: Partial<InventoryFilter>): number {
   return inventory
-    .filter((item) => {
-      if (item.templateKey !== templateKey) return false;
-      if (filter?.categories && !filter.categories.includes(item.category)) return false;
-      if (filter?.rarities && !filter.rarities.includes(item.rarity)) return false;
-      if (filter?.binding && !filter.binding.includes(item.binding)) return false;
-      if (filter?.nameContains && !item.templateKey.toLowerCase().includes(filter.nameContains.toLowerCase())) return false;
-      return true;
-    })
+    .filter((item) => matchesFilter(item, templateKey, filter))
     .reduce((sum, item) => sum + item.quantity, 0);
 }
 
@@ -409,9 +401,7 @@ export function splitStack(
   const candidates = inventory.filter((item) => {
     if (item.templateKey !== templateKey) return false;
     if (item.quantity < quantity) return false;
-    if (filter?.categories && !filter.categories.includes(item.category)) return false;
-    if (filter?.rarities && !filter.rarities.includes(item.rarity)) return false;
-    if (filter?.binding && !filter.binding.includes(item.binding)) return false;
+    if (filter) return matchesFilter(item, templateKey, filter);
     return true;
   });
 
