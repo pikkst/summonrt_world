@@ -200,13 +200,26 @@ it('returns zero for undefined element', () => {
     });
   });
 
-  describe('canObtainElement', () => {
-    it('allows starter elements for any player', () => {
-      const result = canObtainElement('fire', null as any);
-      expect(result.allowed).toBe(false);
-      expect(result.reason).toBe('No player data');
-    });
-  });
+describe('canObtainElement', () => {
+     it('rejects elements when no player data', () => {
+       const result = canObtainElement('fire', null as any);
+       expect(result.allowed).toBe(false);
+       expect(result.reason).toBe('No player data');
+     });
+
+     it('allows starter elements when player has the element', () => {
+       const player = { affinity: { primary: 'fire' } } as any;
+       const result = canObtainElement('fire', player);
+       expect(result.allowed).toBe(true);
+     });
+
+     it('handles endgame elements via getElementCategory', () => {
+       const player = { affinity: { primary: 'omni' } } as any;
+       const result = canObtainElement('omni', player);
+       expect(result.allowed).toBe(true);
+       expect(result.reason).toBe('Endgame elements must be unlocked through endgame content');
+     });
+   });
 
   describe('getElementCategory', () => {
     it('returns correct category for each element type', () => {

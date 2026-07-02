@@ -103,20 +103,24 @@ export function getElementPVPIdentityModifier(element: Element | undefined): num
 
 export function canObtainElement(element: Element, player: PlayerState | null): { allowed: boolean; reason?: string } {
   if (!player) return { allowed: false, reason: 'No player data' };
-  
+
   const isStarter = isStarterElement(element);
   const isQuest = isQuestOnlyElement(element);
   const hasPlayerElement = player.affinity.learned?.includes(element) || player.affinity.primary === element;
-  const hasElementalistClass = player.archetype === 'elementalist';
-  
+
   if (isStarter) {
-    return { allowed: hasElementalistClass || hasPlayerElement };
+    return { allowed: hasPlayerElement };
   }
-  
+
   if (isQuest) {
     return { allowed: hasPlayerElement, reason: 'Quest-only elements must be unlocked through quest progression' };
   }
-  
+
+  const category = getElementCategory(element);
+  if (category === 'endgame') {
+    return { allowed: hasPlayerElement, reason: 'Endgame elements must be unlocked through endgame content' };
+  }
+
   return { allowed: false, reason: 'Unknown element type' };
 }
 
