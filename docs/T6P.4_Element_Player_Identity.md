@@ -38,7 +38,7 @@ Created a new `src/data/playerElements/` data module following the existing proj
 - Created `ElementCombatBonuses`, `ElementAffinityBonuses`, `ElementCraftingBonuses` interfaces
 - Created `getElementCombatBonuses`, `getElementAffinityBonuses`, `getElementCraftingBonuses` functions
 - Created `applyElementSkillDamageBoost`, `applyElementAffinityBoost`, `applyElementContractStabilityBoost`, `applyElementCraftingBoost` functions
-- Created `canObtainElement` function for element access control
+- Created `canObtainElement` function for element access control using identity.category
 - Created `getElementCategory` function for categorization
 
 ### 4. `src/core/playerCore/index.ts`
