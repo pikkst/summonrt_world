@@ -21,7 +21,10 @@ import {
   VendorRoomInteraction,
 } from '../../../core/dungeon/DungeonInteractions';
 import { createCharacter, CONTRACT_PATHS, type ContractPath } from '../../../core/playerCore/characterCreation.ts';
-import type { SummonerClassId } from '../../../data/summonerClasses';
+import { getPrimaryStatsOrDefault } from '../../../core/playerCore/playerStatistics';
+import { ARCHETYPE_TO_CLASS } from '../../../core/playerCore/factory';
+import type { SummonerClass } from '../../../types/playerCore';
+import { SUMMONER_CLASSES } from '../../../data/summonerClasses';
 
 function toBigIntXP(value: unknown): bigint {
   if (typeof value === 'bigint') return value;
@@ -48,6 +51,21 @@ function normalizeCreatures(creatures: unknown): CreatureInstance[] {
   }));
 }
 
+function buildDefaultResources(archetype: string): InventoryStack[] {
+  switch (archetype) {
+    case 'trader':
+      return [{ templateKey: 'essence', quantity: 3 }];
+    case 'summoner':
+      return [{ templateKey: 'soul_crystal_common', quantity: 3 }];
+    case 'pvp':
+      return [{ templateKey: 'healing_herb', quantity: 5 }];
+    case 'pve':
+      return [{ templateKey: 'mana_crystal', quantity: 3 }];
+    default:
+      return [];
+  }
+}
+
 export const playerActions = (set: SetState<GameStore>, get: () => GameStore) => ({
   initGame: (playerName: string, archetype: string = 'fighter') => {
     const affinity = rollAffinity();
@@ -55,41 +73,8 @@ export const playerActions = (set: SetState<GameStore>, get: () => GameStore) =>
     const worlds = new Map<number, WorldData>();
     worlds.set(1, startWorld);
 
-    const baseHealth = 100;
-    const baseMana = 50;
-
-    let bonusStats: Record<string, number> = {};
-    let bonusResources: InventoryStack[] = [];
-    switch (archetype) {
-      case 'fighter':
-        bonusStats = { strength: 5, defense: 5 };
-        break;
-      case 'trader':
-        bonusStats = { money: 500 };
-        bonusResources = [{ templateKey: 'essence', quantity: 3 }];
-        break;
-      case 'explorer':
-        bonusStats = { speed: 5, dexterity: 5 };
-        break;
-      case 'spy':
-        bonusStats = { dexterity: 8, speed: 3 };
-        break;
-      case 'assassin':
-        bonusStats = { dexterity: 10, speed: 5 };
-        break;
-      case 'summoner':
-        bonusStats = { strength: 2, defense: 2, speed: 2, dexterity: 2 };
-        bonusResources = [{ templateKey: 'soul_crystal_common', quantity: 3 }];
-        break;
-      case 'pvp':
-        bonusStats = { strength: 5, speed: 5 };
-        bonusResources = [{ templateKey: 'healing_herb', quantity: 5 }];
-        break;
-      case 'pve':
-        bonusStats = { strength: 3, defense: 3, speed: 3 };
-        bonusResources = [{ templateKey: 'mana_crystal', quantity: 3 }];
-        break;
-    }
+const className = ARCHETYPE_TO_CLASS[archetype] ?? 'elementalist';
+    const classDef = SUMMONER_CLASSES[className];
 
     const rng = new SeededRandom(Date.now());
     const startingSpeciesKey = pickRandomSpeciesKey(rng);
@@ -122,53 +107,63 @@ export const playerActions = (set: SetState<GameStore>, get: () => GameStore) =>
       evolvedFromKey: undefined,
     };
 
+    const bonusResources = buildDefaultResources(archetype);
+    const bonusMoney = archetype === 'trader' ? 500 : 0;
+    const bonusStats = classDef.statBias;
+
+    const basePrimaryStats = getPrimaryStatsOrDefault(bonusStats);
+
     const player: PlayerState = {
-      id: uuidv4(),
-      name: playerName,
-      gender: 'unknown',
-      appearance: {},
-      affinity,
-      archetype,
-      level: 1,
-      experience: 0n,
-      money: 1000 + (bonusStats.money || 0),
-      skillPoints: 0,
-      skillsUnlocked: {},
-      unspent_passive_points: 0,
-      unlocked_node_ids: ['root_hub'],
-      energy: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
-      nerve: { current: 15, max: 15, lastUpdate: new Date().toISOString() },
-      happy: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
-      life: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
-      strength: 10 + (bonusStats.strength || 0),
-      defense: 10 + (bonusStats.defense || 0),
-      speed: 10 + (bonusStats.speed || 0),
-      dexterity: 10 + (bonusStats.dexterity || 0),
-      currentWorldId: 1,
-      tileX: 10,
-      tileY: 10,
-      dayCount: 1,
-      gameTimeMinutes: 420,
-      creatures: [startingCreature],
-      inventory: [
-        { templateKey: 'healing_herb', quantity: 5 },
-        { templateKey: 'mana_crystal', quantity: 2 },
-        { templateKey: 'basic_food', quantity: 3 },
-        ...bonusResources,
-      ],
-      activeQuests: [],
-      completedQuests: [],
-      discoveredTiles: new Set<string>(),
-      territorialHostilities: {},
-      settings: {
-        musicVolume: 0.5,
-        sfxVolume: 0.5,
-        showLogTimestamps: true,
-        textSpeed: 30,
-        fontSize: 15,
-        highContrast: false,
-      },
-    };
+       id: uuidv4(),
+       name: playerName,
+       gender: 'unknown',
+       appearance: {},
+       affinity,
+       archetype,
+       level: 1,
+       experience: 0n,
+       money: 1000 + bonusMoney,
+       skillPoints: 0,
+       skillsUnlocked: {},
+       unspent_passive_points: 0,
+       unlocked_node_ids: ['root_hub'],
+       energy: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
+       nerve: { current: 15, max: 15, lastUpdate: new Date().toISOString() },
+       happy: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
+       life: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
+       strength: basePrimaryStats.strength,
+       vitality: basePrimaryStats.vitality,
+       intelligence: basePrimaryStats.intelligence,
+       dexterity: basePrimaryStats.dexterity,
+       wisdom: basePrimaryStats.wisdom,
+       luck: basePrimaryStats.luck,
+       speed: bonusStats.speed ?? 10,
+       defense: bonusStats.defense ?? 10,
+       currentWorldId: 1,
+       tileX: 10,
+       tileY: 10,
+       dayCount: 1,
+       gameTimeMinutes: 420,
+       creatures: [startingCreature],
+       inventory: [
+         { templateKey: 'healing_herb', quantity: 5 },
+         { templateKey: 'mana_crystal', quantity: 2 },
+         { templateKey: 'basic_food', quantity: 3 },
+         ...bonusResources,
+       ],
+       activeQuests: [],
+       completedQuests: [],
+       discoveredTiles: new Set<string>(),
+       territorialHostilities: {},
+       settings: {
+         musicVolume: 0.5,
+         sfxVolume: 0.5,
+         showLogTimestamps: true,
+         textSpeed: 30,
+         fontSize: 15,
+         highContrast: false,
+       },
+     };
 
     const introLogs: LogEntry[] = [
       createLog('Welcome to SummonerWorld!', 'system', 0),
@@ -198,7 +193,7 @@ export const playerActions = (set: SetState<GameStore>, get: () => GameStore) =>
   createCharacter: (options: {
     name: string;
     appearance?: Record<string, any>;
-    className?: SummonerClassId;
+    className?: SummonerClass;
     startingElement?: Element;
     startingWorldId?: number;
     contractPathKey?: ContractPath;
@@ -219,56 +214,62 @@ export const playerActions = (set: SetState<GameStore>, get: () => GameStore) =>
     const worlds = new Map<number, WorldData>();
     worlds.set(startingWorldId, startWorld);
 
-    const bonusStats = classDef.statBias;
+const bonusStats = classDef.statBias;
     const bonusMoney = classDef.startingBonus.money || 0;
     const bonusResources = classDef.startingBonus.items || [];
 
+    const basePrimaryStats = getPrimaryStatsOrDefault(bonusStats);
+
     const player: PlayerState = {
-      id: playerCore.identity.id,
-      name: playerCore.identity.name,
-      gender: 'unknown',
-      appearance: playerCore.identity.appearance,
-      affinity,
-      level: 1,
-      experience: 0n,
-      money: 1000 + bonusMoney,
-      skillPoints: 0,
-      skillsUnlocked: {},
-      unspent_passive_points: 0,
-      unlocked_node_ids: ['root_hub'],
-      energy: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
-      nerve: { current: 15, max: 15, lastUpdate: new Date().toISOString() },
-      happy: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
-      life: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
-      strength: 10 + (bonusStats.strength || 0),
-      defense: 10 + (bonusStats.defense || 0),
-      speed: 10 + (bonusStats.speed || 0),
-      dexterity: 10 + (bonusStats.dexterity || 0),
-      currentWorldId: startingWorldId,
-      tileX: 10,
-      tileY: 10,
-      dayCount: 1,
-      gameTimeMinutes: 420,
-      creatures: [startingCreature],
-      inventory: [
-        { templateKey: 'healing_herb', quantity: 5 },
-        { templateKey: 'mana_crystal', quantity: 2 },
-        { templateKey: 'basic_food', quantity: 3 },
-        ...bonusResources,
-      ],
-      activeQuests: [],
-      completedQuests: [],
-      discoveredTiles: new Set<string>(),
-      territorialHostilities: {},
-      settings: {
-        musicVolume: 0.5,
-        sfxVolume: 0.5,
-        showLogTimestamps: true,
-        textSpeed: 30,
-        fontSize: 15,
-        highContrast: false,
-      },
-    };
+       id: playerCore.identity.id,
+       name: playerCore.identity.name,
+       gender: 'unknown',
+       appearance: playerCore.identity.appearance,
+       affinity,
+       level: 1,
+       experience: 0n,
+       money: 1000 + bonusMoney,
+       skillPoints: 0,
+       skillsUnlocked: {},
+       unspent_passive_points: 0,
+       unlocked_node_ids: ['root_hub'],
+       energy: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
+       nerve: { current: 15, max: 15, lastUpdate: new Date().toISOString() },
+       happy: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
+       life: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
+       strength: basePrimaryStats.strength,
+       vitality: basePrimaryStats.vitality,
+       intelligence: basePrimaryStats.intelligence,
+       dexterity: basePrimaryStats.dexterity,
+       wisdom: basePrimaryStats.wisdom,
+       luck: basePrimaryStats.luck,
+       speed: bonusStats.speed ?? 10,
+       defense: bonusStats.defense ?? 10,
+       currentWorldId: startingWorldId,
+       tileX: 10,
+       tileY: 10,
+       dayCount: 1,
+       gameTimeMinutes: 420,
+       creatures: [startingCreature],
+       inventory: [
+         { templateKey: 'healing_herb', quantity: 5 },
+         { templateKey: 'mana_crystal', quantity: 2 },
+         { templateKey: 'basic_food', quantity: 3 },
+         ...bonusResources,
+       ],
+       activeQuests: [],
+       completedQuests: [],
+       discoveredTiles: new Set<string>(),
+       territorialHostilities: {},
+       settings: {
+         musicVolume: 0.5,
+         sfxVolume: 0.5,
+         showLogTimestamps: true,
+         textSpeed: 30,
+         fontSize: 15,
+         highContrast: false,
+       },
+     };
 
     const introLogs: LogEntry[] = [
       createLog(`Welcome, ${player.name}! You begin your journey as a ${classDef.name}.`, 'system', 0),
@@ -910,15 +911,15 @@ const newCreature: any = {
          }
          break;
        }
-      case 'physical_training': {
-        xpGain = Math.floor(activity.duration / 1000) * 0.2;
-        const statGain = Math.floor(xpGain / 10);
-        player.strength += statGain;
-        player.defense += statGain;
-        player.speed += statGain;
-        player.dexterity += statGain;
-        message += ` You feel stronger! (+${statGain} all physical stats)`;
-        break;
+case 'physical_training': {
+         xpGain = Math.floor(activity.duration / 1000) * 0.2;
+         const statGain = Math.floor(xpGain / 10);
+         player.strength += statGain;
+         player.vitality += statGain;
+         player.speed += statGain;
+         player.dexterity += statGain;
+         message += ` You feel stronger! (+${statGain} all physical stats)`;
+         break;
       }
       case 'rest':
         player.energy.current = player.energy.max;
