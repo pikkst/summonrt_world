@@ -12,10 +12,11 @@ Receive Task
     -> Select Agents
       -> Select Context
         -> Create Plan
-          -> Implement
-            -> Validate
-              -> Review
-                -> Open or Update PR
+          -> Create Todo List
+            -> Implement
+              -> Validate
+                -> Final Review
+                  -> Open or Update PR
 ```
 
 ## Step 1 - Receive Task
@@ -62,11 +63,23 @@ Plan must include:
 - documentation updates
 - PR branch name
 
-## Step 6 - Implement
+## Step 6 - Create Todo List
+
+Every task todo list must include a final review item before PR creation.
+
+Required todo item text:
+
+```text
+Run Final Review before PR creation
+```
+
+This item must be completed after validation and before opening or updating a Pull Request.
+
+## Step 7 - Implement
 
 Stay inside task scope.
 
-## Step 7 - Validate
+## Step 8 - Validate
 
 Run or honestly report:
 
@@ -75,10 +88,22 @@ Run or honestly report:
 - test
 - build
 
-## Step 8 - Review
+## Step 9 - Final Review
 
 Use the relevant checklist and review pipeline.
 
-## Step 9 - PR
+The final review must cover:
+
+- architecture
+- user flow when relevant
+- API quality when relevant
+- save/load impact when relevant
+- validation
+- documentation
+- merge readiness
+
+## Step 10 - PR
 
 Every task must use its own branch and Pull Request.
+
+Do not open or update a PR until the final review todo item is complete.

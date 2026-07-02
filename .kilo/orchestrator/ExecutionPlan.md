@@ -18,6 +18,7 @@ Tests required:
 Docs required:
 Branch name:
 Risk level:
+Required todo item: Run Final Review before PR creation
 ```
 
 ## Planning Rules
@@ -37,8 +38,19 @@ Inspect existing code
     -> Add or update tests
       -> Update docs if needed
         -> Run validation
-          -> Prepare PR notes
+          -> Run Final Review
+            -> Prepare PR notes
 ```
+
+## Todo Rule
+
+When creating the task todo list, include this item:
+
+```text
+Run Final Review before PR creation
+```
+
+Complete it after validation and before opening or updating a Pull Request.
 
 ## Stop Conditions
 
@@ -49,3 +61,4 @@ Stop and re-plan when:
 - scope expands
 - validation fails unexpectedly
 - task touches more systems than expected
+- final review finds an unresolved issue
