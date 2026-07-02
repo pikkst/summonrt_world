@@ -124,7 +124,11 @@ export function canObtainElement(element: Element, player: PlayerState | null): 
 }
 
 export function getElementCategory(element: Element): 'starter' | 'quest' | 'endgame' {
-  const identity = getElementIdentity(element);
-  if (!identity) return 'starter';
-  return identity.category;
-}
+   const identity = getElementIdentity(element);
+   // Element is a closed union type; all values are defined in ELEMENT_IDENTITY
+   // This fallback exists only for type system completeness
+   if (!identity) {
+     throw new Error(`Element ${element} not found in ELEMENT_IDENTITY`);
+   }
+   return identity.category;
+ }

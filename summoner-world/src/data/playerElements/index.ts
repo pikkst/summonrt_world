@@ -70,8 +70,8 @@ export function getElementWorldTravelSpeedPct(element: Element | undefined): num
   return getElementModifier(element, 'worldTravelSpeedPct');
 }
 
-export function getElementPVPIdentityModifier(element: Element): number {
-  return getElementModifier(element, 'pvpIdentityModifier');
-}
+export function getElementPVPIdentityModifier(element: Element | undefined): number {
+   return getElementModifier(element, 'pvpIdentityModifier');
+ }
 
 export * from './types';
