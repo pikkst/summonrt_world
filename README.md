@@ -36,8 +36,8 @@ The playable app lives in the `summoner-world/` folder.
 ├── README.md
 ├── SummonerWorld_Tasks.md
 ├── docs/
-│   ├── Sumoner_World_dec/
-│   └── T6P.* implementation reports
+│   ├── T*.md task and implementation reports
+│   └── T6P.* Player Core alignment reports
 ├── .kilo/
 │   ├── README.md
 │   ├── SYSTEM_MAP.md
@@ -236,16 +236,10 @@ SummonerWorld_Tasks.md
 Sprint and task breakdown.
 
 ```text
-docs/Sumoner_World_dec/
+docs/
 ```
 
-Design and system documentation.
-
-```text
-docs/T6P.*.md
-```
-
-Implementation reports for Player Core alignment tasks.
+Flat task reports, sprint reports, and implementation notes. Current examples include `T4.1.md`, `T6.9.md`, `T6P.1_PlayerCoreState_Implementation_Report.md`, `T6P.2.md`, and other task-specific documents.
 
 ```text
 .kilo/
