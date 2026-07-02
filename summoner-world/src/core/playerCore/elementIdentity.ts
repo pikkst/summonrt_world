@@ -1,8 +1,7 @@
 import type { Element, PlayerState } from '../../types/game';
 import {
   getElementModifiers,
-  isStarterElement,
-  isQuestOnlyElement,
+  getElementIdentity,
   getElementSkillDamagePct as getElementSkillDamagePctCore,
 } from '../../data/playerElements';
 
@@ -104,20 +103,20 @@ export function getElementPVPIdentityModifier(element: Element | undefined): num
 export function canObtainElement(element: Element, player: PlayerState | null): { allowed: boolean; reason?: string } {
   if (!player) return { allowed: false, reason: 'No player data' };
 
-  const isStarter = isStarterElement(element);
-  const isQuest = isQuestOnlyElement(element);
+  const identity = getElementIdentity(element);
+  if (!identity) return { allowed: false, reason: 'Unknown element type' };
+
   const hasPlayerElement = player.affinity.learned?.includes(element) || player.affinity.primary === element;
 
-  if (isStarter) {
+  if (identity.category === 'starter') {
     return { allowed: hasPlayerElement };
   }
 
-  if (isQuest) {
+  if (identity.category === 'quest') {
     return { allowed: hasPlayerElement, reason: 'Quest-only elements must be unlocked through quest progression' };
   }
 
-  const category = getElementCategory(element);
-  if (category === 'endgame') {
+  if (identity.category === 'endgame') {
     return { allowed: hasPlayerElement, reason: 'Endgame elements must be unlocked through endgame content' };
   }
 
@@ -125,7 +124,7 @@ export function canObtainElement(element: Element, player: PlayerState | null): 
 }
 
 export function getElementCategory(element: Element): 'starter' | 'quest' | 'endgame' {
-  const modifiers = getElementModifiers(element);
-  if (!modifiers) return 'starter';
-  return modifiers.contractStabilityPct >= 30 ? 'endgame' : (isQuestOnlyElement(element) ? 'quest' : 'starter');
+  const identity = getElementIdentity(element);
+  if (!identity) return 'starter';
+  return identity.category;
 }
