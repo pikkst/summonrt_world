@@ -1,7 +1,8 @@
-import type { PlayerCoreState, SummonerClass } from '../../types/playerCore.ts';
+import type { PlayerCoreState, SummonerClass, PlayerPrimaryStats, PlayerSecondaryStats } from '../../types/playerCore.ts';
 import type { PlayerState } from '../../types/game.ts';
+import { calculatePrimaryStats, calculateSecondaryStats, useFinalStats } from './playerStatistics';
 
-const ARCHETYPE_TO_CLASS: Record<string, SummonerClass> = {
+export const ARCHETYPE_TO_CLASS: Record<string, SummonerClass> = {
   fighter: 'tactician',
   trader: 'alchemist',
   explorer: 'pathfinder',
@@ -26,6 +27,9 @@ export function createDefaultPlayerCoreState(
   const startingWorldId = options.startingWorldId ?? 1;
   const sClass = ARCHETYPE_TO_CLASS[archetype] ?? DEFAULT_CLASS;
 
+  const primaryStats = calculatePrimaryStats(sClass, 1);
+  const secondaryStats = calculateSecondaryStats(primaryStats, []);
+
   return {
     identity: {
       id: generateId(),
@@ -42,6 +46,8 @@ export function createDefaultPlayerCoreState(
     experience: 0n,
     elements: options.affinity ?? { primary: 'fire' as any },
     class: sClass,
+    primaryStats,
+    secondaryStats,
     inventory: [],
     equipment: [],
     skills: [],
@@ -138,6 +144,17 @@ export function migratePlayerStateToCore(player: PlayerState): PlayerCoreState {
     instance: creature,
   });
 
+  const primaryStats = useFinalStats({
+    strength: player.strength,
+    vitality: player.vitality,
+    intelligence: player.intelligence,
+    dexterity: player.dexterity,
+    wisdom: player.wisdom,
+    luck: player.luck,
+  });
+
+  const secondaryStats = calculateSecondaryStats(primaryStats, []);
+
   return {
     identity: {
       id: player.id,
@@ -154,6 +171,8 @@ export function migratePlayerStateToCore(player: PlayerState): PlayerCoreState {
     experience: player.experience,
     elements: player.affinity,
     class: sClass,
+    primaryStats,
+    secondaryStats,
     inventory: player.inventory,
     equipment: [],
     skills: Object.entries(player.skillsUnlocked).map(([key, unlocked]) => ({

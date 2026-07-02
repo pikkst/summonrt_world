@@ -222,11 +222,15 @@ isOnline?: boolean;
   happy: Resource;
   life: Resource;
 
-  // Battle Stats
-  strength: number;
-  defense: number;
-  speed: number;
-  dexterity: number;
+// Battle Stats
+   strength: number;
+   vitality: number;
+   intelligence: number;
+   dexterity: number;
+   wisdom: number;
+   luck: number;
+   defense: number;
+   speed: number;
 
   currentWorldId: number;
   tileX: number;

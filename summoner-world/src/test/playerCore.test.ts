@@ -23,9 +23,13 @@ function makeLegacyPlayer(): PlayerState {
     happy: { current: 90, max: 100, lastUpdate: new Date().toISOString() },
     life: { current: 120, max: 150, lastUpdate: new Date().toISOString() },
     strength: 15,
+    vitality: 10,
+    intelligence: 12,
+    dexterity: 14,
+    wisdom: 10,
+    luck: 10,
     defense: 12,
     speed: 18,
-    dexterity: 14,
     currentWorldId: 3,
     tileX: 50,
     tileY: 60,
@@ -103,29 +107,33 @@ function makeLegacyPlayer(): PlayerState {
 }
 
 describe('PlayerCoreState factory', () => {
-  it('creates a valid default core state', () => {
-    const core = createDefaultPlayerCoreState('Test Summoner', { archetype: 'summoner' });
+it('creates a valid default core state', () => {
+     const core = createDefaultPlayerCoreState('Test Summoner', { archetype: 'summoner' });
 
-    expect(core.identity.name).toBe('Test Summoner');
-    expect(core.identity.id).toBeDefined();
-    expect(core.level).toBe(1);
-    expect(core.experience).toBe(0n);
-    expect(core.class).toBe('elementalist');
-    expect(core.inventory).toEqual([]);
-    expect(core.equipment).toEqual([]);
-    expect(core.creatureContracts).toEqual([]);
-    expect(core.titles).toEqual([]);
-    expect(core.achievements).toEqual([]);
-    expect(core.statistics.worldsUnlocked).toBe(1);
-    expect(core.statistics.questsCompleted).toBe(0);
-    expect(core.worldUnlocks.unlockedWorlds).toEqual([1]);
-    expect(core.worldUnlocks.activeWorldId).toBe(1);
-    expect(core.saveMetadata.saveVersion).toBe('1.0.0');
-    expect(core.resources.life.current).toBe(100);
-    expect(core.position.x).toBe(10);
-    expect(core.money).toBe(1000);
-    expect(core.skillPoints).toBe(0);
-  });
+     expect(core.identity.name).toBe('Test Summoner');
+     expect(core.identity.id).toBeDefined();
+     expect(core.level).toBe(1);
+     expect(core.experience).toBe(0n);
+     expect(core.class).toBe('elementalist');
+     expect(core.inventory).toEqual([]);
+     expect(core.equipment).toEqual([]);
+     expect(core.creatureContracts).toEqual([]);
+     expect(core.titles).toEqual([]);
+     expect(core.achievements).toEqual([]);
+     expect(core.statistics.worldsUnlocked).toBe(1);
+     expect(core.statistics.questsCompleted).toBe(0);
+     expect(core.worldUnlocks.unlockedWorlds).toEqual([1]);
+     expect(core.worldUnlocks.activeWorldId).toBe(1);
+     expect(core.saveMetadata.saveVersion).toBe('1.0.0');
+     expect(core.resources.life.current).toBe(100);
+     expect(core.position.x).toBe(10);
+     expect(core.money).toBe(1000);
+     expect(core.skillPoints).toBe(0);
+     expect(core.primaryStats).toBeDefined();
+     expect(core.primaryStats.strength).toBe(10);
+     expect(core.secondaryStats).toBeDefined();
+     expect(core.secondaryStats.maxHealth).toBeGreaterThan(100);
+   });
 
   it('maps archetypes to summoner classes', () => {
     expect(createDefaultPlayerCoreState('A', { archetype: 'fighter' }).class).toBe('tactician');

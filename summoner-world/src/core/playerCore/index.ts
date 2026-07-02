@@ -8,6 +8,8 @@ export type {
   TitleEntry,
   AchievementEntry,
   PlayerStatistics,
+  PlayerPrimaryStats,
+  PlayerSecondaryStats,
   ReputationState,
   EquipmentSlot,
   EquipmentSlotId,
@@ -16,7 +18,7 @@ export type {
   WorldUnlocks,
   SaveMetadata,
 } from '../../types/playerCore.ts';
-export { createDefaultPlayerCoreState, migratePlayerStateToCore } from './factory.ts';
+export { createDefaultPlayerCoreState, migratePlayerStateToCore, ARCHETYPE_TO_CLASS } from './factory.ts';
 export { createCharacter, CONTRACT_PATHS } from './characterCreation.ts';
 export type {
   ContractPath,
@@ -31,6 +33,7 @@ export {
   getClassModifiers,
 } from '../../data/summonerClasses';
 export type { SummonerClassId, ClassDefinition } from '../../data/summonerClasses';
+export { calculatePrimaryStats, calculateSecondaryStats, recalculateAllStats, getPrimaryStatsOrDefault, useFinalStats } from './playerStatistics';
 export {
   getElementIdentity,
   getStarterElements,
