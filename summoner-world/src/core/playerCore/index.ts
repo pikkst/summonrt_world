@@ -183,6 +183,21 @@ export {
   getEmptySlotCount,
 } from './equipmentCore';
 export {
+  hasCommandPermission,
+  validateCommand,
+  checkCommandEligibility,
+  resolveCommandWithAI,
+  getAvailableCommands,
+  createDefaultCommandPermissions,
+} from './commandCore';
+export type {
+  CreatureCommand,
+  CommandContext,
+  CommandValidationResult,
+  CommandResolutionResult,
+  CommandEffects,
+} from './commandCore';
+export {
   calculateSummonManaCost,
   getSummonCooldown,
   canSummonAtLocation,
