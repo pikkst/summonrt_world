@@ -190,6 +190,24 @@ export interface CreatureContract {
   instance: CreatureInstance;
 }
 
+export type CreatureSlotType =
+  | 'active_combat'
+  | 'reserve'
+  | 'utility'
+  | 'housing'
+  | 'marketplace'
+  | 'breeding';
+
+export interface CreatureSlotGroup {
+  type: CreatureSlotType;
+  max: number;
+  assigned: string[];
+}
+
+export interface CreatureSlots {
+  groups: CreatureSlotGroup[];
+}
+
 export interface HousingReference {
   housingId?: string;
   worldId?: number;
@@ -232,6 +250,7 @@ export interface PlayerCoreState {
     completed: string[];
   };
   creatureContracts: CreatureContract[];
+  creatureSlots: CreatureSlots;
   housing: HousingReference;
   worldUnlocks: WorldUnlocks;
   saveMetadata: SaveMetadata;
