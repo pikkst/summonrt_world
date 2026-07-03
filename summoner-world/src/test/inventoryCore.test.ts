@@ -367,7 +367,7 @@ describe('Inventory Core', () => {
         maxHealth: 100, maxMana: 50, maxStamina: 100, movement: 5,
         criticalChance: 5, elementalMastery: 10, contractCapacity: 5,
         commandSpeed: 100, creatureBondPower: 100, inventoryCapacity: 20.7,
-        craftingEfficiency: 100, tradeInfluence: 100, reputationGain: 100,
+        craftingEfficiency: 100, tradeInfluence: 100, reputationGain: 100, summoningCost: 100, travelUtility: 0,
       };
       expect(getInventoryCapacity(stats)).toBe(20);
     });
@@ -377,7 +377,7 @@ describe('Inventory Core', () => {
         maxHealth: 100, maxMana: 50, maxStamina: 100, movement: 5,
         criticalChance: 5, elementalMastery: 10, contractCapacity: 5,
         commandSpeed: 100, creatureBondPower: 100, inventoryCapacity: 2,
-        craftingEfficiency: 100, tradeInfluence: 100, reputationGain: 100,
+        craftingEfficiency: 100, tradeInfluence: 100, reputationGain: 100, summoningCost: 100, travelUtility: 0,
       };
       const inventory = [makeItem({}), makeItem({ templateKey: 'other' })];
       expect(isInventoryFull(inventory, stats)).toBe(true);
@@ -388,7 +388,7 @@ describe('Inventory Core', () => {
         maxHealth: 100, maxMana: 50, maxStamina: 100, movement: 5,
         criticalChance: 5, elementalMastery: 10, contractCapacity: 5,
         commandSpeed: 100, creatureBondPower: 100, inventoryCapacity: 2,
-        craftingEfficiency: 100, tradeInfluence: 100, reputationGain: 100,
+        craftingEfficiency: 100, tradeInfluence: 100, reputationGain: 100, summoningCost: 100, travelUtility: 0,
       };
       const inventory = [makeItem({ templateKey: 'herb', quantity: 50 })];
       const template = makeTemplate({ key: 'herb', maxStack: 99 });

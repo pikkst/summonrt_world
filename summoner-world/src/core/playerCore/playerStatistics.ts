@@ -65,6 +65,8 @@ export function calculateSecondaryStats(
         acc.craftingBonus += slot.modifiers.craftingEfficiency || 0;
         acc.tradeBonus += slot.modifiers.tradeInfluence || 0;
         acc.reputationBonus += slot.modifiers.reputationGain || 0;
+        acc.summoningCostBonus += slot.modifiers.summoningCost || 0;
+        acc.travelUtilityBonus += slot.modifiers.travelUtility || 0;
       }
       return acc;
     },
@@ -81,6 +83,8 @@ export function calculateSecondaryStats(
       craftingBonus: 0,
       tradeBonus: 0,
       reputationBonus: 0,
+      summoningCostBonus: 0,
+      travelUtilityBonus: 0,
     }
   );
 
@@ -98,6 +102,8 @@ export function calculateSecondaryStats(
     craftingEfficiency: 100 + (primaryStats.intelligence * 1) + equipmentMods.craftingBonus,
     tradeInfluence: 100 + (primaryStats.luck * 1.5) + equipmentMods.tradeBonus,
     reputationGain: 100 + (primaryStats.wisdom * 1) + equipmentMods.reputationBonus,
+    summoningCost: 100 + equipmentMods.summoningCostBonus,
+    travelUtility: 0 + equipmentMods.travelUtilityBonus,
   };
 }
 
