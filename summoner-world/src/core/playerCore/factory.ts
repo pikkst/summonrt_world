@@ -1,7 +1,8 @@
-import type { PlayerCoreState, SummonerClass, PlayerPrimaryStats, PlayerSecondaryStats } from '../../types/playerCore.ts';
+import type { PlayerCoreState, SummonerClass, PlayerPrimaryStats, PlayerSecondaryStats, CreatureSlots } from '../../types/playerCore.ts';
 import type { PlayerState } from '../../types/game.ts';
 import { calculatePrimaryStats, calculateSecondaryStats, useFinalStats } from './playerStatistics';
 import { createEmptyEquipmentSlots } from './equipmentCore';
+import { createDefaultCreatureSlots } from './creatureSlotCore';
 
 export const ARCHETYPE_TO_CLASS: Record<string, SummonerClass> = {
   fighter: 'tactician',
@@ -51,6 +52,7 @@ export function createDefaultPlayerCoreState(
     secondaryStats,
     inventory: [],
     equipment: createEmptyEquipmentSlots(),
+    creatureSlots: createDefaultCreatureSlots(),
     skills: [],
     talents: [],
     titles: [],
@@ -176,6 +178,7 @@ export function migratePlayerStateToCore(player: PlayerState): PlayerCoreState {
     secondaryStats,
     inventory: player.inventory,
     equipment: createEmptyEquipmentSlots(),
+    creatureSlots: createDefaultCreatureSlots(),
     skills: Object.entries(player.skillsUnlocked).map(([key, unlocked]) => ({
       key,
       name: key.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
