@@ -5,6 +5,7 @@ import { createDefaultPlayerCoreState } from './factory.ts';
 import { generateCreatureTemplate, registerSpeciesLine } from '../../modules/creatures/creatureFactory.ts';
 import { SeededRandom } from '../../utils/SeededRandom.ts';
 import { SUMMONER_CLASSES } from '../../data/summonerClasses';
+import { createContract } from './contractCore';
 
 export type ContractPath = 'companion' | 'drake' | 'shade' | 'golem' | 'wisp';
 
@@ -132,22 +133,17 @@ export function createCharacter(options: CharacterCreationOptions): CharacterCre
     evolvedFromKey: undefined,
   };
 
-  playerCore.creatureContracts = [{
-    id: startingCreature.id,
-    templateKey: startingTemplate.key,
-    nickname: startingTemplate.name,
-    bondLevel: 1,
-    trust: 50,
-    loyalty: 50,
-    contractStability: 100,
-    elementCompatibility: 100,
-    commandPermissions: ['follow', 'attack', 'defend', 'retreat'],
-    tradeStatus: 'bound',
-    breedingRights: false,
-    pvpEligibility: false,
-    contractedAt: Date.now(),
-    instance: startingCreature,
-  }];
+  playerCore.creatureContracts = [
+    createContract({
+      id: startingCreature.id,
+      templateKey: startingTemplate.key,
+      instance: startingCreature,
+      nickname: startingTemplate.name,
+      playerElement: affinity.primary,
+      creatureElements: startingTemplate.elements,
+      contractedAt: Date.now(),
+    }),
+  ];
 
   playerCore.statistics.creaturesContracted = 1;
 
