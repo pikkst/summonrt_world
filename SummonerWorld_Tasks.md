@@ -15,7 +15,7 @@ Current alignment state:
 - The next implementation task is T6.4.8.
 - T6.5, T6.6, and T6.7 overlap earlier completed tasks and should be read as extension tasks, not fresh duplicates.
 - New missing backlog added from `docs/Sumoner_World_dec`: Player Core alignment, event-driven architecture, documentation volume completion, reputation, titles, achievements, statistics, contracts, commands, and end-game structure.
-- T6P.1, T6P.2, T6P.3, and T6P.4 are complete (PlayerCoreState, Character Creation, Summoner Classes, Element Identity).
+- T6P.1, T6P.2, T6P.3, T6P.4, T6P.5, T6P.6, and T6P.7 are complete (PlayerCoreState, Character Creation, Summoner Classes, Element Identity, Player Statistics, Inventory Core, Equipment Core).
 
 ## Sprint 0 – Foundation & Tech Debt (Month 0)
 Sprint goal: stabilize prototype, find and fix all technical issues, set up testing and linting foundation.
@@ -299,7 +299,7 @@ Sprint goal: align implementation with the new Player Core Bible before expandin
 * Dungeon keys
 * Sorting, filtering, stacking, rarity, ownership, binding, trading rules, and save/load stability
 
-- [ ] T6P.7 – Implement Equipment Core
+- [x] T6P.7 – Implement Equipment Core
 
 * Slots: weapon, offhand, head, chest, hands, legs, feet, amulet, ring 1, ring 2, summoner focus, creature command artifact
 * Equipment modifies player stats, elemental mastery, creature bond power, contract capacity, command speed, summoning cost, crafting efficiency, and travel utility

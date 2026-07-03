@@ -115,9 +115,9 @@ it('creates a valid default core state', () => {
      expect(core.level).toBe(1);
      expect(core.experience).toBe(0n);
      expect(core.class).toBe('elementalist');
-     expect(core.inventory).toEqual([]);
-     expect(core.equipment).toEqual([]);
-     expect(core.creatureContracts).toEqual([]);
+expect(core.inventory).toEqual([]);
+      expect(core.equipment).toHaveLength(12);
+      expect(core.creatureContracts).toEqual([]);
      expect(core.titles).toEqual([]);
      expect(core.achievements).toEqual([]);
      expect(core.statistics.worldsUnlocked).toBe(1);
@@ -169,7 +169,7 @@ describe('migratePlayerStateToCore', () => {
     expect(core.elements.learned).toEqual(['water']);
 
     expect(core.inventory).toEqual(legacy.inventory);
-    expect(core.equipment).toEqual([]);
+    expect(core.equipment).toHaveLength(12);
 
     expect(core.skills).toHaveLength(3);
     expect(core.skills.find(s => s.key === 'fire_mastery')?.unlocked).toBe(true);

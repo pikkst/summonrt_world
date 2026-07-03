@@ -50,6 +50,7 @@ Implementation notes already exist in root `docs/` for:
 - T6.4.7
 - T6.4.8
 - T6.4.9
+- T6P.1-T6P.7 - Player Core Architecture Alignment (equipmentCore.ts with full slot system and stat modifiers)
 
 ## Documentation Volume Mapping
 

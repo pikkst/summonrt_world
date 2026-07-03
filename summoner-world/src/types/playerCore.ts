@@ -83,6 +83,8 @@ export interface PlayerSecondaryStats {
   craftingEfficiency: number;
   tradeInfluence: number;
   reputationGain: number;
+  summoningCost: number;
+  travelUtility: number;
 }
 
 export interface PlayerStatistics {

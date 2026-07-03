@@ -108,4 +108,17 @@ export type {
   InventoryFilter,
   InventoryItem,
 } from '../../types/playerCore.ts';
+export {
+  EQUIPMENT_SLOT_IDS,
+  createEmptyEquipmentSlots,
+  equipItem,
+  unequipItem,
+  getEquippedItem,
+  getEquipmentBonuses,
+  getSummoningCostModifier,
+  getTravelUtilityModifier,
+  isSlotOccupied,
+  getFilledSlotCount,
+  getEmptySlotCount,
+} from './equipmentCore';
 

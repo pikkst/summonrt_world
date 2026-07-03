@@ -115,6 +115,54 @@ describe('Player Statistics - Secondary Stats', () => {
     expect(secondary.movement).toBe(9);
   });
 
+  it('includes summoning cost modifier in secondary stats', () => {
+    const primaryStats: PlayerPrimaryStats = {
+      strength: 10,
+      vitality: 10,
+      intelligence: 10,
+      dexterity: 10,
+      wisdom: 10,
+      luck: 10,
+    };
+    
+    const equipment: EquipmentSlot[] = [
+      {
+        slot: 'summoner_focus',
+        quantity: 0,
+        modifiers: {
+          summoningCost: -20,
+        },
+      },
+    ];
+    
+    const secondary = calculateSecondaryStats(primaryStats, equipment);
+    expect(secondary.summoningCost).toBe(80);
+  });
+
+  it('includes travel utility modifier in secondary stats', () => {
+    const primaryStats: PlayerPrimaryStats = {
+      strength: 10,
+      vitality: 10,
+      intelligence: 10,
+      dexterity: 10,
+      wisdom: 10,
+      luck: 10,
+    };
+    
+    const equipment: EquipmentSlot[] = [
+      {
+        slot: 'amulet',
+        quantity: 0,
+        modifiers: {
+          travelUtility: 15,
+        },
+      },
+    ];
+    
+    const secondary = calculateSecondaryStats(primaryStats, equipment);
+    expect(secondary.travelUtility).toBe(15);
+  });
+
   it('calculates secondary stats deterministically for same primary stats', () => {
     const primaryStats: PlayerPrimaryStats = {
       strength: 15,
