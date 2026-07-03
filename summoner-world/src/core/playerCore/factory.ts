@@ -3,6 +3,7 @@ import type { PlayerState } from '../../types/game.ts';
 import { calculatePrimaryStats, calculateSecondaryStats, useFinalStats } from './playerStatistics';
 import { createEmptyEquipmentSlots } from './equipmentCore';
 import { createDefaultCreatureSlots } from './creatureSlotCore';
+import { createContract } from './contractCore';
 
 export const ARCHETYPE_TO_CLASS: Record<string, SummonerClass> = {
   fighter: 'tactician',
@@ -130,23 +131,6 @@ export function migratePlayerStateToCore(player: PlayerState): PlayerCoreState {
     if (!unlockedWorlds.includes(w)) unlockedWorlds.push(w);
   }
 
-  const toContract = (creature: any) => ({
-    id: creature.id,
-    templateKey: creature.templateKey,
-    nickname: creature.nickname,
-    bondLevel: 1,
-    trust: 50,
-    loyalty: 50,
-    contractStability: 100,
-    elementCompatibility: 100,
-    commandPermissions: ['follow', 'attack', 'defend', 'retreat'],
-    tradeStatus: 'bound' as const,
-    breedingRights: false,
-    pvpEligibility: false,
-    contractedAt: Date.now(),
-    instance: creature,
-  });
-
   const primaryStats = useFinalStats({
     strength: player.strength,
     vitality: player.vitality,
@@ -213,7 +197,15 @@ export function migratePlayerStateToCore(player: PlayerState): PlayerCoreState {
       active: player.activeQuests,
       completed: player.completedQuests,
     },
-    creatureContracts: player.creatures.map(toContract),
+    creatureContracts: player.creatures.map((creature) =>
+      createContract({
+        id: creature.id,
+        templateKey: creature.templateKey,
+        instance: creature,
+        nickname: creature.nickname,
+        contractedAt: Date.now(),
+      })
+    ),
     housing: {},
     worldUnlocks: {
       unlockedWorlds,

@@ -314,7 +314,7 @@ Sprint goal: align implementation with the new Player Core Bible before expandin
 * Breeding slots
 * Slot expansion through level, equipment, housing, guild bonuses, and end-game unlocks
 
-- [ ] T6P.9 – Implement Creature Contract system
+- [x] T6P.9 – Implement Creature Contract system
 
 * Creature ID
 * Player ID
