@@ -69,8 +69,8 @@ export function canStackItems(a: InventoryStack, b: InventoryStack): boolean {
   return aKeys.every((key) => aMods[key as keyof typeof aMods] === bMods[key as keyof typeof bMods]);
 }
 
-function matchesFilter(item: InventoryItem, templateKey: string, filter?: Partial<InventoryFilter>): boolean {
-  if (item.templateKey !== templateKey) return false;
+function matchesFilter(item: InventoryItem, templateKey?: string, filter?: Partial<InventoryFilter>): boolean {
+  if (templateKey && item.templateKey !== templateKey) return false;
   if (filter?.categories && !filter.categories.includes(item.category)) return false;
   if (filter?.rarities && !filter.rarities.includes(item.rarity)) return false;
   if (filter?.binding && !filter.binding.includes(item.binding)) return false;
@@ -252,21 +252,7 @@ export function sortInventory(inventory: InventoryItem[], sortBy: InventorySortK
 }
 
 export function filterInventory(inventory: InventoryItem[], filter: InventoryFilter): InventoryItem[] {
-  return inventory.filter((item) => {
-    if (filter.categories && filter.categories.length > 0 && !filter.categories.includes(item.category)) {
-      return false;
-    }
-    if (filter.rarities && filter.rarities.length > 0 && !filter.rarities.includes(item.rarity)) {
-      return false;
-    }
-    if (filter.binding && filter.binding.length > 0 && !filter.binding.includes(item.binding)) {
-      return false;
-    }
-    if (filter.nameContains && !item.templateKey.toLowerCase().includes(filter.nameContains.toLowerCase())) {
-      return false;
-    }
-    return true;
-  });
+  return inventory.filter((item) => matchesFilter(item, undefined, filter));
 }
 
 export function getInventoryByCategory(inventory: InventoryItem[]): Record<ItemCategory, InventoryItem[]> {
