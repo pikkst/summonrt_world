@@ -155,26 +155,28 @@ export function getEquipmentBonuses(
   );
 }
 
-export function getSummoningCostModifier(
-  equipment: EquipmentSlot[]
+function getEquipmentModifierSum(
+  equipment: EquipmentSlot[],
+  modifierKey: keyof PlayerSecondaryStats
 ): number {
   return equipment.reduce((acc, slot) => {
-    if (slot.modifiers?.summoningCost) {
-      return acc + slot.modifiers.summoningCost;
+    if (slot.modifiers?.[modifierKey]) {
+      return acc + slot.modifiers[modifierKey]!;
     }
     return acc;
   }, 0);
 }
 
+export function getSummoningCostModifier(
+  equipment: EquipmentSlot[]
+): number {
+  return getEquipmentModifierSum(equipment, 'summoningCost');
+}
+
 export function getTravelUtilityModifier(
   equipment: EquipmentSlot[]
 ): number {
-  return equipment.reduce((acc, slot) => {
-    if (slot.modifiers?.travelUtility) {
-      return acc + slot.modifiers.travelUtility;
-    }
-    return acc;
-  }, 0);
+  return getEquipmentModifierSum(equipment, 'travelUtility');
 }
 
 export function isSlotOccupied(
