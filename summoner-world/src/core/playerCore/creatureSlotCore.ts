@@ -112,6 +112,10 @@ export function moveCreatureBetweenSlots(
   toType: CreatureSlotType,
   creatureContractId: string
 ): { slots: CreatureSlots; moved: boolean } {
+  if (fromType === toType) {
+    return { slots, moved: false };
+  }
+
   const fromGroup = getSlotGroup(slots, fromType);
   const toGroup = getSlotGroup(slots, toType);
 

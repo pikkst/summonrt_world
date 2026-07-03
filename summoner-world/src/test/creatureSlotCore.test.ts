@@ -234,6 +234,19 @@ describe('creatureSlotCore', () => {
       );
       expect(finalResult.moved).toBe(false);
     });
+
+    it('does not mutate slots when fromType equals toType', () => {
+      let slots = createDefaultCreatureSlots();
+      slots = assignCreatureToSlot(slots, 'active_combat', 'creature-1').slots;
+      const { slots: updated, moved } = moveCreatureBetweenSlots(
+        slots,
+        'active_combat',
+        'active_combat',
+        'creature-1'
+      );
+      expect(moved).toBe(false);
+      expect(getSlotGroup(updated, 'active_combat')!.assigned).toContain('creature-1');
+    });
   });
 
   describe('getAssignedCreatures', () => {
