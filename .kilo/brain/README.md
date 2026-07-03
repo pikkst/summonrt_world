@@ -19,17 +19,18 @@ This document defines the highest-level gameplay identity of SummonerWorld.
 Before writing or modifying code, the agent must read these files in order:
 
 1. `DESIGN_CONSTITUTION.md`
-2. `.kilo/brain/ProjectIdentity.md`
-3. `.kilo/brain/ArchitectureRules.md`
-4. `.kilo/brain/WorkflowRules.md`
-5. `.kilo/brain/GitRules.md`
-6. `.kilo/brain/CodingRules.md`
-7. `.kilo/brain/TestingRules.md`
-8. `.kilo/brain/CurrentState.md`
-9. `SummonerWorld_Tasks.md`
-10. `SummonerWorld_GDD.md`
-11. `SummonerWorld_TechnicalSpec.md`
-12. Relevant source files for the current task
+2. `.kilo/SYSTEM_MAP.md`
+3. `.kilo/brain/ProjectIdentity.md`
+4. `.kilo/rules/05_ARCHITECTURE_RULES.md`
+5. `.kilo/brain/WorkflowRules.md`
+6. `.kilo/rules/01_GIT_RULES.md`
+7. `.kilo/rules/02_CODE_RULES.md`
+8. `.kilo/rules/04_TESTING_RULES.md`
+9. `.kilo/brain/CurrentState.md`
+10. `SummonerWorld_Tasks.md`
+11. `SummonerWorld_GDD.md`
+12. `SummonerWorld_TechnicalSpec.md`
+13. Relevant source files for the current task
 
 ## Prime Directive
 

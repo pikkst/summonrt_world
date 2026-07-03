@@ -9,9 +9,10 @@ It is designed for Kilo Code and other AI coding agents that work on the project
 Read these first:
 
 1. `DESIGN_CONSTITUTION.md`
-2. `.kilo/SYSTEM_MAP.md`
-3. `.kilo/context_engine/TaskAnalyzer.md`
-4. `.kilo/orchestrator/TaskLifecycle.md`
+2. `AGENTS.md` (auto-loaded at session start)
+3. `.kilo/SYSTEM_MAP.md`
+4. `.kilo/context_engine/TaskAnalyzer.md`
+5. `.kilo/orchestrator/TaskLifecycle.md`
 
 Do not load the full `.kilo` folder by default.
 
@@ -31,6 +32,7 @@ guardian/         final quality gate
 memory/           architecture and project memory
 prompts/          reusable AI prompts
 context/          system maps and flow documents
+command/          slash commands for /implement_task, /create_pr, /startup, /validate, /self_review
 ```
 
 ## Standard Flow

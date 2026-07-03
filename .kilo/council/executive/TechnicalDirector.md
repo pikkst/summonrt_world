@@ -29,7 +29,7 @@ Use for:
 
 ## Required Documents
 
-- `.kilo/brain/CodingRules.md`
+- `.kilo/rules/02_CODE_RULES.md`
 - `.kilo/context/ProjectStructure.md`
 - `.kilo/patterns/RepositoryPattern.md`
 - `.kilo/patterns/ValidationPattern.md`

@@ -10,11 +10,15 @@ Before writing code, read these files:
 1. DESIGN_CONSTITUTION.md
 2. .kilo/brain/README.md
 3. .kilo/brain/ProjectIdentity.md
-4. .kilo/brain/ArchitectureRules.md
-5. .kilo/brain/WorkflowRules.md
-6. .kilo/brain/GitRules.md
-7. .kilo/brain/CodingRules.md
-8. .kilo/brain/TestingRules.md
+4. `.kilo/rules/05_ARCHITECTURE_RULES.md`
+
+5. `.kilo/brain/WorkflowRules.md`
+
+6. `.kilo/rules/01_GIT_RULES.md`
+
+7. `.kilo/rules/02_CODE_RULES.md`
+
+8. `.kilo/rules/04_TESTING_RULES.md`
 9. .kilo/brain/CurrentState.md
 10. Relevant .kilo/rules files
 11. SummonerWorld_Tasks.md
