@@ -239,11 +239,7 @@ export function calculateElementCompatibility(
     (e) => e.toLowerCase() === playerElement.toLowerCase()
   );
 
-  if (hasPrimary) {
-    return 100;
-  }
-
-  return 80;
+  return hasPrimary ? 100 : 80;
 }
 
 export function canTradeContract(contract: CreatureContract): boolean {
