@@ -182,4 +182,32 @@ export {
   getFilledSlotCount,
   getEmptySlotCount,
 } from './equipmentCore';
+export {
+  calculateSummonManaCost,
+  getSummonCooldown,
+  canSummonAtLocation,
+  getSummonRestrictions,
+  checkSummonEligibility,
+  performSummon,
+  isOnCooldown,
+  getRemainingCooldown,
+  getAffectionSummonBoost,
+  calculateElementCompatibilityBoost,
+  getSummonSuccessModifiers,
+  getSummonSuccessChance,
+  updateContractSummonedTime,
+  clearContractSummonedTime,
+  serializeSummonHistory,
+  deserializeSummonHistory,
+  BASE_SUMMON_MANA_COST,
+  BASE_SUMMON_COOLDOWN_MS,
+} from './summoningCore';
+export type {
+  SummonLocationType,
+  SummonCheckResult,
+  SummonResult,
+  SummonState,
+  SummonSuccessModifiers,
+  SummonHistoryEntry,
+} from './summoningCore';
 
