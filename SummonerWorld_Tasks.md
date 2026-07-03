@@ -340,7 +340,7 @@ Sprint goal: align implementation with the new Player Core Bible before expandin
 * Contract stability - `CONTRACT_STABILITY_MIN_FOR_SUMMON` (20) required for summoning
 * Element compatibility - Affects mana cost modifier and success chance via `getSummonSuccessModifiers()`
 
-- [ ] T6P.11 – Implement Creature Command interface
+- [x] T6P.11 – Implement Creature Command interface
 
 * Follow, Stay, Guard, Attack, Defend, Retreat, Scout, Gather, Track, Interact, Use Ability, Protect Ally, Avoid Combat
 * Commands express player intent; Creature AI resolves execution using state, personality, training, loyalty, and world conditions
