@@ -329,16 +329,16 @@ Sprint goal: align implementation with the new Player Core Bible before expandin
 * PvP eligibility
 * Attach player-owned contract state to PlayerCoreState
 
-- [ ] T6P.10 – Implement Summoning rules
+- [x] T6P.10 – Implement Summoning rules
 
-* Mana/resource cost
-* Cooldown
-* Location restrictions
-* Dungeon restrictions
-* PvP restrictions
-* Creature mood
-* Contract stability
-* Element compatibility
+* Mana/resource cost - `calculateSummonManaCost()` uses summoningCost stat and element compatibility
+* Cooldown - `getSummonCooldown()` based on contract stability (30s base, increases for unstable contracts)
+* Location restrictions - `canSummonAtLocation()` allows world/safe_zone, restricts active dungeons/non-PvP arenas
+* Dungeon restrictions - Safe floors allowed via `safeFloor` property on DungeonState
+* PvP restrictions - Only allowed in active PvP arenas
+* Creature mood - `getAffectionSummonBoost()` provides 20% boost for affection >= 50
+* Contract stability - `CONTRACT_STABILITY_MIN_FOR_SUMMON` (20) required for summoning
+* Element compatibility - Affects mana cost modifier and success chance via `getSummonSuccessModifiers()`
 
 - [ ] T6P.11 – Implement Creature Command interface
 

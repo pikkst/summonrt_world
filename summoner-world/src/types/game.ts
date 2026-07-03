@@ -412,6 +412,7 @@ export interface DungeonState {
   encounterType?: 'guardian' | 'trap' | 'treasure' | 'boss' | 'puzzle' | 'elite' | 'vendor' | 'rest';
   encounterName?: string;
   tower?: DungeonTower;
+  safeFloor?: boolean;
 }
 
 export interface DemonlordSkill {
