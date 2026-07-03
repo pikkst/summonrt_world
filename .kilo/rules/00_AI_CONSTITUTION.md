@@ -39,13 +39,13 @@ Player decision -> Simulation -> Report
 Before implementation, read:
 
 1. `DESIGN_CONSTITUTION.md`
-2. `.kilo/brain/README.md`
+2. `.kilo/SYSTEM_MAP.md`
 3. `.kilo/brain/ProjectIdentity.md`
-4. `.kilo/brain/ArchitectureRules.md`
+4. `.kilo/rules/05_ARCHITECTURE_RULES.md`
 5. `.kilo/brain/WorkflowRules.md`
-6. `.kilo/brain/GitRules.md`
-7. `.kilo/brain/CodingRules.md`
-8. `.kilo/brain/TestingRules.md`
+6. `.kilo/rules/01_GIT_RULES.md`
+7. `.kilo/rules/02_CODE_RULES.md`
+8. `.kilo/rules/04_TESTING_RULES.md`
 9. `.kilo/brain/CurrentState.md`
 10. Relevant `.kilo/rules` files
 11. `SummonerWorld_Tasks.md`
@@ -63,9 +63,8 @@ When instructions conflict, follow this priority:
 4. Current task file
 5. Technical specification
 6. Game design document
-7. `.kilo/brain` files
-8. `.kilo/rules` files
-9. Existing source code conventions
+7. `.kilo/rules` files
+8. Existing source code conventions
 
 ## Forbidden Agent Behavior
 
