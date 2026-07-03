@@ -285,7 +285,7 @@ Sprint goal: align implementation with the new Player Core Bible before expandin
  * Secondary: Health, Mana, Stamina, Movement, Critical Chance, Elemental Mastery, Contract Capacity, Command Speed, Creature Bond Power, Inventory Capacity, Crafting Efficiency, Trade Influence, Reputation Gain
  * Add deterministic stat recalculation tests
 
-- [ ] T6P.6 – Implement Inventory Core
+- [x] T6P.6 – Implement Inventory Core
 
 * Equipment
 * Consumables

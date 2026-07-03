@@ -106,6 +106,49 @@ export interface ReputationState {
   creature_rep: Record<string, number>;
 }
 
+export type ItemCategory =
+  | 'equipment'
+  | 'consumable'
+  | 'material'
+  | 'quest'
+  | 'creature'
+  | 'contract'
+  | 'crafting_tool'
+  | 'housing'
+  | 'marketplace'
+  | 'dungeon_key';
+
+export type ItemBinding = 'bound' | 'tradeable' | 'marketable';
+
+export type ItemRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythical';
+
+export type InventorySortKey = 'category' | 'rarity' | 'name' | 'quantity' | 'addedAt';
+export type InventorySortOrder = 'asc' | 'desc';
+
+export interface InventoryFilter {
+  categories?: ItemCategory[];
+  rarities?: ItemRarity[];
+  binding?: ItemBinding[];
+  nameContains?: string;
+}
+
+export interface InventoryItem extends InventoryStack {
+  category: ItemCategory;
+  rarity: ItemRarity;
+  binding: ItemBinding;
+  ownerId?: string;
+  addedAt: number;
+  dungeonKeyData?: {
+    worldId: number;
+    floorStart: number;
+    floorEnd: number;
+  };
+  contractItemData?: {
+    creatureTemplateKey: string;
+    contractType: string;
+  };
+}
+
 export type EquipmentSlotId =
   | 'weapon'
   | 'offhand'
