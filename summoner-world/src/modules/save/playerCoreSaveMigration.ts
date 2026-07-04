@@ -3,6 +3,7 @@ import type { PlayerCoreState } from '../../types/playerCore.ts';
 import type { ActiveMission } from '../../core/missionQueue.ts';
 import { createDefaultPlayerCoreState, migratePlayerStateToCore } from '../../core/playerCore/index.ts';
 import { normalizeSkillEntry, normalizeTalentNode } from '../../core/playerCore/skillTalentCore.ts';
+import { mergePlayerStatistics, normalizePlayerStatistics } from '../../core/playerCore/playerStatisticsTracking.ts';
 
 export const ACTIVE_SAVE_KEY = 'summonerworld-save';
 export const LEGACY_HELPER_SAVE_KEY = 'summonerworld-save-v1';
@@ -87,10 +88,10 @@ export function deserializePlayerCore(data: unknown): PlayerCoreState {
       ...defaults.secondaryStats,
       ...raw.secondaryStats,
     },
-    statistics: {
+    statistics: normalizePlayerStatistics({
       ...defaults.statistics,
       ...raw.statistics,
-    },
+    }),
     reputation: {
       ...defaults.reputation,
       ...raw.reputation,
@@ -222,6 +223,7 @@ export function migrateLegacyPlayerToCore(player: PlayerState, previous?: Player
     equipment: previous?.equipment ?? migrated.equipment,
     titles: previous?.titles ?? migrated.titles,
     achievements: previous?.achievements ?? migrated.achievements,
+    statistics: mergePlayerStatistics(previous?.statistics, migrated.statistics),
     reputation: previous?.reputation ?? migrated.reputation,
     housing: previous?.housing ?? migrated.housing,
     saveMetadata: {

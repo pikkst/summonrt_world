@@ -6,6 +6,7 @@ import { createDefaultCreatureSlots } from './creatureSlotCore';
 import { createContract } from './contractCore';
 import { getNodeById } from '../../data/careerTree';
 import { createSkillEntry, createTalentNode, inferTalentCategory } from './skillTalentCore';
+import { createDefaultPlayerStatistics } from './playerStatisticsTracking';
 
 export const ARCHETYPE_TO_CLASS: Record<string, SummonerClass> = {
   fighter: 'tactician',
@@ -60,19 +61,7 @@ export function createDefaultPlayerCoreState(
     talents: [],
     titles: [],
     achievements: [],
-    statistics: {
-      worldsUnlocked: 1,
-      creaturesContracted: 0,
-      dungeonsCleared: 0,
-      itemsCrafted: 0,
-      tradesCompleted: 0,
-      goldEarned: 0,
-      bossesDefeated: 0,
-      pvpWins: 0,
-      housingValue: 0,
-      guildContributions: 0,
-      questsCompleted: 0,
-    },
+    statistics: createDefaultPlayerStatistics(1),
     reputation: {
       world_rep: {},
       faction_rep: {},
@@ -182,16 +171,9 @@ export function migratePlayerStateToCore(player: PlayerState): PlayerCoreState {
     titles: [],
     achievements: [],
     statistics: {
-      worldsUnlocked: unlockedWorlds.length,
+      ...createDefaultPlayerStatistics(unlockedWorlds.length),
       creaturesContracted: player.creatures.length,
-      dungeonsCleared: 0,
-      itemsCrafted: 0,
-      tradesCompleted: 0,
       goldEarned: player.money,
-      bossesDefeated: 0,
-      pvpWins: 0,
-      housingValue: 0,
-      guildContributions: 0,
       questsCompleted: player.completedQuests.length,
     },
     reputation: {
