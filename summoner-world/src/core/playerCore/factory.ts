@@ -4,6 +4,8 @@ import { calculatePrimaryStats, calculateSecondaryStats, useFinalStats } from '.
 import { createEmptyEquipmentSlots } from './equipmentCore';
 import { createDefaultCreatureSlots } from './creatureSlotCore';
 import { createContract } from './contractCore';
+import { getNodeById } from '../../data/careerTree';
+import { createSkillEntry, createTalentNode, inferTalentCategory } from './skillTalentCore';
 
 export const ARCHETYPE_TO_CLASS: Record<string, SummonerClass> = {
   fighter: 'tactician',
@@ -163,15 +165,20 @@ export function migratePlayerStateToCore(player: PlayerState): PlayerCoreState {
     inventory: player.inventory,
     equipment: createEmptyEquipmentSlots(),
     creatureSlots: createDefaultCreatureSlots(),
-    skills: Object.entries(player.skillsUnlocked).map(([key, unlocked]) => ({
-      key,
-      name: key.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-      unlocked,
-    })),
-      talents: player.unlocked_node_ids.map((nodeId: string) => ({
+    skills: Object.entries(player.skillsUnlocked).map(([key, unlocked]) =>
+      createSkillEntry({
+        key,
+        unlocked,
+      })
+    ),
+    talents: player.unlocked_node_ids.map((nodeId: string) => {
+      const careerNode = getNodeById(nodeId);
+      return createTalentNode({
         nodeId,
+        category: inferTalentCategory(nodeId, careerNode?.career_category),
         unlocked: true,
-      })),
+      });
+    }),
     titles: [],
     achievements: [],
     statistics: {

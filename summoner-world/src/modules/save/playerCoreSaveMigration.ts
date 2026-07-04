@@ -2,6 +2,7 @@ import type { CombatState, DungeonState, InventoryStack, LogEntry, PlayerState, 
 import type { PlayerCoreState } from '../../types/playerCore.ts';
 import type { ActiveMission } from '../../core/missionQueue.ts';
 import { createDefaultPlayerCoreState, migratePlayerStateToCore } from '../../core/playerCore/index.ts';
+import { normalizeSkillEntry, normalizeTalentNode } from '../../core/playerCore/skillTalentCore.ts';
 
 export const ACTIVE_SAVE_KEY = 'summonerworld-save';
 export const LEGACY_HELPER_SAVE_KEY = 'summonerworld-save-v1';
@@ -133,8 +134,8 @@ export function deserializePlayerCore(data: unknown): PlayerCoreState {
     },
     inventory: raw.inventory ?? defaults.inventory,
     equipment: raw.equipment ?? defaults.equipment,
-    skills: raw.skills ?? defaults.skills,
-    talents: raw.talents ?? defaults.talents,
+    skills: normalizeSkillEntries(raw.skills, defaults.skills),
+    talents: normalizeTalentNodes(raw.talents, defaults.talents),
     titles: raw.titles ?? defaults.titles,
     achievements: raw.achievements ?? defaults.achievements,
     creatureContracts: raw.creatureContracts ?? defaults.creatureContracts,
@@ -412,6 +413,28 @@ function normalizeSerializedWorlds(data: unknown): SerializedWorldData[] {
     ...world,
     tiles: Array.from(world.tiles.entries()),
   }));
+}
+
+function normalizeSkillEntries(
+  skills: unknown,
+  defaults: PlayerCoreState['skills']
+): PlayerCoreState['skills'] {
+  if (!Array.isArray(skills)) return defaults;
+
+  return skills
+    .filter((entry): entry is { key: string } => isRecord(entry) && typeof entry.key === 'string')
+    .map((entry) => normalizeSkillEntry(entry));
+}
+
+function normalizeTalentNodes(
+  talents: unknown,
+  defaults: PlayerCoreState['talents']
+): PlayerCoreState['talents'] {
+  if (!Array.isArray(talents)) return defaults;
+
+  return talents
+    .filter((entry): entry is { nodeId: string } => isRecord(entry) && typeof entry.nodeId === 'string')
+    .map((entry) => normalizeTalentNode(entry));
 }
 
 function serializeValue(value: unknown): JsonValue {

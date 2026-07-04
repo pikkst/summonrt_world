@@ -345,7 +345,7 @@ Sprint goal: align implementation with the new Player Core Bible before expandin
 * Follow, Stay, Guard, Attack, Defend, Retreat, Scout, Gather, Track, Interact, Use Ability, Protect Ally, Avoid Combat
 * Commands express player intent; Creature AI resolves execution using state, personality, training, loyalty, and world conditions
 
-- [ ] T6P.12 – Add Player Skills and Talent Tree categories
+- [x] T6P.12 – Add Player Skills and Talent Tree categories
 
 * Direct combat
 * Summoner commands

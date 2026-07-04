@@ -31,9 +31,49 @@ export interface SummonerProfile {
   firstContractPath?: string;
 }
 
+export type PlayerSkillCategoryId =
+  | 'direct_combat'
+  | 'summoner_commands'
+  | 'elemental'
+  | 'crafting'
+  | 'travel'
+  | 'social'
+  | 'economy'
+  | 'housing'
+  | 'pvp';
+
+export interface PlayerSkillCategory {
+  id: PlayerSkillCategoryId;
+  name: string;
+  description: string;
+  supportsDirectUse: boolean;
+  supportsCreatureSynergy: boolean;
+}
+
+export type TalentTreeCategoryId =
+  | 'summoning'
+  | 'elemental_mastery'
+  | 'creature_bonding'
+  | 'combat'
+  | 'survival'
+  | 'crafting'
+  | 'trading'
+  | 'housing'
+  | 'exploration'
+  | 'pvp'
+  | 'guild_leadership';
+
+export interface TalentTreeCategory {
+  id: TalentTreeCategoryId;
+  name: string;
+  description: string;
+  unlockFocus: string;
+}
+
 export interface SkillEntry {
   key: string;
   name: string;
+  category: PlayerSkillCategoryId;
   description?: string;
   element?: Element;
   unlocked: boolean;
@@ -41,6 +81,7 @@ export interface SkillEntry {
 
 export interface TalentNode {
   nodeId: string;
+  category: TalentTreeCategoryId;
   unlocked: boolean;
 }
 
