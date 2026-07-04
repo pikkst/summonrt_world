@@ -393,7 +393,7 @@ Sprint goal: align implementation with the new Player Core Bible before expandin
 * creature_rep
 * Reputation affects merchant prices, creature capture chance, settlement growth, dungeon difficulty, and NPC reactions
 
-- [ ] T6P.16 – Refactor save/load so PlayerCoreState is the root save aggregate
+- [x] T6P.16 – Refactor save/load so PlayerCoreState is the root save aggregate
 
 * Player-owned contracts remain attached to player save data
 * Creature AI state remains creature/world state

@@ -42,6 +42,7 @@ import type {
   import type { TrapRoomInteraction, PuzzleRoomInteraction, EliteRoomInteraction, VendorRoomInteraction, TreasureRoomInteraction } from '../../core/dungeon/DungeonInteractions';
   import type { SummonerClassId } from '../../data/summonerClasses';
   import type { ContractPath } from '../../core/playerCore/characterCreation.ts';
+  import type { PlayerCoreState } from '../../types/playerCore.ts';
 
 export type {
   PlayerState,
@@ -89,6 +90,7 @@ ActiveMission,
 
 export interface GameStoreState {
    player: PlayerState | null;
+   playerCore: PlayerCoreState | null;
    worlds: Map<number, WorldData>;
    currentWorldId: number;
    log: LogEntry[];

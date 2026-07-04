@@ -23,8 +23,19 @@ import {
 import { createCharacter, CONTRACT_PATHS, type ContractPath } from '../../../core/playerCore/characterCreation.ts';
 import { getPrimaryStatsOrDefault } from '../../../core/playerCore/playerStatistics';
 import { ARCHETYPE_TO_CLASS } from '../../../core/playerCore/factory';
-import type { SummonerClass } from '../../../types/playerCore';
+import type { PlayerCoreState, SummonerClass } from '../../../types/playerCore';
 import { SUMMONER_CLASSES } from '../../../data/summonerClasses';
+import {
+  ACTIVE_SAVE_KEY,
+  LEGACY_HELPER_SAVE_KEY,
+  createSaveEnvelopeV2,
+  deserializeLegacyPlayer,
+  deserializePlayerCore,
+  deserializeWorlds,
+  migrateLegacyPlayerToCore,
+  migrateSaveToV2,
+  projectCoreToLegacyPlayer,
+} from '../../../modules/save/playerCoreSaveMigration.ts';
 
 function toBigIntXP(value: unknown): bigint {
   if (typeof value === 'bigint') return value;
@@ -37,10 +48,6 @@ function toBigIntXP(value: unknown): bigint {
     }
   }
   return 0n;
-}
-
-function serializeXP(value: unknown): number {
-  return Number(toBigIntXP(value));
 }
 
 function normalizeCreatures(creatures: unknown): CreatureInstance[] {
@@ -64,6 +71,19 @@ function buildDefaultResources(archetype: string): InventoryStack[] {
     default:
       return [];
   }
+}
+
+function syncCharacterCoreWithLegacy(core: PlayerCoreState, player: PlayerState): PlayerCoreState {
+  const migrated = migrateLegacyPlayerToCore(player, core);
+  return {
+    ...migrated,
+    summonerProfile: {
+      ...migrated.summonerProfile,
+      firstContractPath: core.summonerProfile.firstContractPath,
+    },
+    creatureContracts: core.creatureContracts,
+    creatureSlots: core.creatureSlots,
+  };
 }
 
 export const playerActions = (set: SetState<GameStore>, get: () => GameStore) => ({
@@ -175,6 +195,7 @@ const className = ARCHETYPE_TO_CLASS[archetype] ?? 'elementalist';
 
     set({
       player,
+      playerCore: migrateLegacyPlayerToCore(player),
       worlds,
       currentWorldId: 1,
       log: introLogs,
@@ -282,6 +303,7 @@ const bonusStats = classDef.statBias;
 
     set({
       player,
+      playerCore: syncCharacterCoreWithLegacy(playerCore, player),
       worlds,
       currentWorldId: startingWorldId,
       log: introLogs,
@@ -386,6 +408,7 @@ const bonusStats = classDef.statBias;
 
         set({
           player: regeneratedPlayer,
+          playerCore: migrateLegacyPlayerToCore(regeneratedPlayer, get().playerCore ?? undefined),
           worlds,
           currentWorldId: serverPlayer.currentWorld || 1,
           initialized: true,
@@ -510,8 +533,7 @@ const bonusStats = classDef.statBias;
         };
       }
 
-set({
-         player: {
+      const syncedPlayer: PlayerState = {
            ...serverPlayer,
            id: serverPlayer._id,
            affinity: serverPlayer.affinity || { primary: 'fire' as Element, learned: [] as Element[] },
@@ -528,8 +550,12 @@ set({
            completedQuests: serverPlayer.completedQuests || [],
            activity: activityState,
            settings: serverPlayer.settings || { musicVolume: 0.5, sfxVolume: 0.5, showLogTimestamps: true }
-         }
-       });
+         };
+
+      set({
+        player: syncedPlayer,
+        playerCore: migrateLegacyPlayerToCore(syncedPlayer, get().playerCore ?? undefined),
+      });
     } catch (err) {
       console.error('Sync failed', err);
     }
@@ -541,7 +567,7 @@ set({
 
   logout: () => {
     get().saveGame();
-    set({ player: null, initialized: false, screen: 'login', lastLogoutTimestamp: Date.now() });
+    set({ player: null, playerCore: null, initialized: false, screen: 'login', lastLogoutTimestamp: Date.now() });
     localStorage.setItem('summonerworld-last-logout', Date.now().toString());
   },
 
@@ -549,28 +575,11 @@ set({
     const state = get();
     if (!state.player) return;
 
-    const serializedPlayer = {
-      ...state.player,
-      experience: serializeXP(state.player.experience),
-      creatures: state.player.creatures.map((creature) => ({
-        ...creature,
-        experience: serializeXP(creature.experience),
-      })),
-      discoveredTiles: Array.from(state.player.discoveredTiles || []),
-    };
-
-    const serializedWorlds = Array.from(state.worlds.entries()).map(([worldId, worldData]) => [
-      worldId,
-      {
-        ...worldData,
-        tiles: Array.from(worldData.tiles.entries()),
-      }
-    ]);
-
-    const data = {
-      version: '1.1.0',
-      player: serializedPlayer,
-      worlds: serializedWorlds,
+    const playerCore = migrateLegacyPlayerToCore(state.player, state.playerCore ?? undefined);
+    const data = createSaveEnvelopeV2({
+      playerCore,
+      legacyPlayer: state.player,
+      worlds: state.worlds,
       currentWorldId: state.currentWorldId,
       turnCount: state.turnCount,
       screen: state.screen,
@@ -582,11 +591,11 @@ set({
       searching: state.searching,
       capturing: state.capturing,
       lastLogoutTimestamp: state.lastLogoutTimestamp,
-      log: state.log.slice(-500),
-      savedAt: Date.now(),
-    };
+      log: state.log,
+    });
 
-    localStorage.setItem('summonerworld-save', JSON.stringify(data));
+    localStorage.setItem(ACTIVE_SAVE_KEY, JSON.stringify(data));
+    set({ playerCore: deserializePlayerCore(data.playerCore) });
     set((state) => ({
       log: [...state.log.slice(-499), createLog('Local save successful.', 'success', state.turnCount)]
     }));
@@ -603,7 +612,8 @@ set({
         });
 
         const syncPayload = {
-          ...serializedPlayer,
+          ...data.legacyPlayer,
+          playerCore: data.playerCore,
           exploredTiles,
           combat: state.combat,
           dungeon: state.dungeon,
@@ -631,68 +641,45 @@ set({
   },
 
   loadGame: (): boolean => {
-    const raw = localStorage.getItem('summonerworld-save');
+    const raw = localStorage.getItem(ACTIVE_SAVE_KEY) ?? localStorage.getItem(LEGACY_HELPER_SAVE_KEY);
     if (!raw) return false;
     try {
-      const data = JSON.parse(raw);
-      const rawPlayer = data.player;
-      if (!rawPlayer) return false;
-
-      const player: PlayerState = {
-        ...rawPlayer,
-        tileX: typeof rawPlayer.tileX === 'number' && !isNaN(rawPlayer.tileX) ? rawPlayer.tileX : 10,
-        tileY: typeof rawPlayer.tileY === 'number' && !isNaN(rawPlayer.tileY) ? rawPlayer.tileY : 10,
-        discoveredTiles: new Set(rawPlayer.discoveredTiles || []),
-        affinity: rawPlayer.affinity || { primary: 'fire' as Element, learned: [] as Element[] },
-        experience: toBigIntXP(rawPlayer.experience),
-        creatures: normalizeCreatures(rawPlayer.creatures),
-        inventory: rawPlayer.inventory || [],
-        activeQuests: rawPlayer.activeQuests || [],
-        completedQuests: rawPlayer.completedQuests || [],
-        territorialHostilities: rawPlayer.territorialHostilities || {},
-        unspent_passive_points: rawPlayer.unspent_passive_points ?? 0,
-        unlocked_node_ids: rawPlayer.unlocked_node_ids ?? ['root_hub'],
-        settings: rawPlayer.settings || { musicVolume: 0.5, sfxVolume: 0.5, showLogTimestamps: true },
-      };
-
-      const worlds = new Map<number, WorldData>();
-      if (data.worlds) {
-        data.worlds.forEach(([worldId, worldData]: [number, any]) => {
-          worlds.set(worldId, {
-            ...worldData,
-            tiles: new Map(worldData.tiles || []),
-          });
-        });
-      }
+      const data = migrateSaveToV2(JSON.parse(raw));
+      const playerCore = deserializePlayerCore(data.playerCore);
+      const previousLegacy = data.legacyPlayer ? deserializeLegacyPlayer(data.legacyPlayer) : undefined;
+      const player = projectCoreToLegacyPlayer(playerCore, previousLegacy);
+      const worlds = deserializeWorlds(data.runtime.worlds);
 
       const storedLogout = localStorage.getItem('summonerworld-last-logout');
       const parsedLogout = storedLogout ? parseInt(storedLogout, 10) : 0;
-      const logoutTimestamp = data.lastLogoutTimestamp ?? (parsedLogout > 0 ? parsedLogout : undefined);
+      const logoutTimestamp = data.runtime.lastLogoutTimestamp ?? (parsedLogout > 0 ? parsedLogout : undefined);
       if (parsedLogout > 0) localStorage.removeItem('summonerworld-last-logout');
 
       const regeneratedPlayer = applyResourceRegeneration(player, Date.now());
+      const regeneratedCore = migrateLegacyPlayerToCore(regeneratedPlayer, playerCore);
 
       set({
         player: regeneratedPlayer,
+        playerCore: regeneratedCore,
         worlds,
-        currentWorldId: data.currentWorldId || 1,
-        turnCount: data.turnCount || 0,
-        screen: data.screen || 'explore',
-        log: data.log && data.log.length > 0 ? data.log : [createLog('Loaded from previous save.', 'system', 0)],
-        combat: data.combat || { active: false, phase: 'player_turn' as const, log: [], enemyName: '', enemyHp: 0, enemyMaxHp: 0, enemyTemplate: null, playerCreatureId: '', turns: 0 },
-        dungeon: data.dungeon || { active: false, worldId: 1, currentFloor: 0, totalFloors: 3, clearedFloors: [], bossDefeated: false, inEncounter: false, encounterType: undefined },
-        activity: data.activity || null,
-        missions: data.missions || [],
-        exploring: data.exploring || null,
-        searching: data.searching || null,
-        capturing: data.capturing || null,
+        currentWorldId: data.runtime.currentWorldId || 1,
+        turnCount: data.runtime.turnCount || 0,
+        screen: data.runtime.screen || 'explore',
+        log: data.runtime.log.length > 0 ? data.runtime.log : [createLog('Loaded from previous save.', 'system', 0)],
+        combat: data.runtime.combat || { active: false, phase: 'player_turn' as const, log: [], enemyName: '', enemyHp: 0, enemyMaxHp: 0, enemyTemplate: null, playerCreatureId: '', turns: 0 },
+        dungeon: data.runtime.dungeon || { active: false, worldId: 1, currentFloor: 0, totalFloors: 3, clearedFloors: [], bossDefeated: false, inEncounter: false, encounterType: undefined },
+        activity: data.runtime.activity || null,
+        missions: data.runtime.missions || [],
+        exploring: (data.runtime.exploring || null) as GameStoreState['exploring'],
+        searching: (data.runtime.searching || null) as GameStoreState['searching'],
+        capturing: (data.runtime.capturing || null) as GameStoreState['capturing'],
         lastLogoutTimestamp: logoutTimestamp,
           initialized: true,
         });
 
         get().startHeartbeat();
         
-        if (logoutTimestamp && (data.missions || []).length > 0) {
+      if (logoutTimestamp && data.runtime.missions.length > 0) {
         const resolved = get().processOfflineCatchUp(logoutTimestamp);
         if (resolved > 0) {
           set({ lastLogoutTimestamp: undefined });
