@@ -358,7 +358,7 @@ Sprint goal: align implementation with the new Player Core Bible before expandin
 * PvP
 * Guild leadership
 
-- [ ] T6P.13 – Add Titles and Achievements systems
+- [x] T6P.13 – Add Titles and Achievements systems
 
 * Exploration
 * Creature collection
