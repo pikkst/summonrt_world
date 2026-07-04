@@ -37,6 +37,24 @@ import {
   projectCoreToLegacyPlayer,
 } from '../../../modules/save/playerCoreSaveMigration.ts';
 
+function buildValidatedUrl(baseUrl: string, playerId: string): string {
+  try {
+    const url = new URL(baseUrl);
+    
+    // Validate path parameter
+    if (!/^[A-Za-z0-9_-]+$/.test(playerId)) {
+      throw new Error('Invalid parameter');
+    }
+    
+    // Rebuild pathname from fixed literals + validated segments
+    url.pathname = `/player/${playerId}`;
+    
+    return url.href;
+  } catch {
+    throw new Error('Invalid URL');
+  }
+}
+
 function toBigIntXP(value: unknown): bigint {
   if (typeof value === 'bigint') return value;
   if (typeof value === 'number' && Number.isFinite(value)) return BigInt(Math.trunc(value));
@@ -514,7 +532,7 @@ const bonusStats = classDef.statBias;
     const { player } = get();
     if (!player) return;
     try {
-      const res = await axios.get(`${'http://localhost:5000/api'}/player/${player.id}`);
+      const res = await axios.get(buildValidatedUrl('http://localhost:5000/api', player.id));
       const serverPlayer = res.data;
 
       const discoveredTilesSet = new Set<string>();
