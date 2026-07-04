@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed.
+Accepted for incremental implementation.
 
 ## Context
 
@@ -11,16 +11,16 @@ SummonerWorld currently has two player state shapes:
 - `PlayerState` in `src/types/game.ts` is the active runtime shape used by Zustand store, UI panels, local save/load, server sync, combat, missions, inventory, creatures, resources, and world position.
 - `PlayerCoreState` in `src/types/playerCore.ts` is the intended Player Core root aggregate. It groups identity, summoner profile, stats, inventory, equipment, skills, talents, titles, achievements, statistics, reputation, quest history, creature contracts, creature slots, world unlocks, save metadata, resources, position, settings, money, skill points, and time.
 
-Player Core modules are already implemented and tested, but most runtime flows still mutate legacy `PlayerState` directly. The current `playerModule.createCharacter()` calls `createCharacter()` from Player Core, then copies only selected fields into legacy `PlayerState`. The resulting `PlayerCoreState` is not stored in the game store.
+Player Core modules are already implemented and tested, but most runtime flows still mutate legacy `PlayerState` directly. The current transition keeps that runtime compatibility while making Player Core the authoritative player-owned save aggregate.
 
-Save/load also remains legacy-first:
+Save/load was legacy-first:
 
 - Active Zustand save key: `summonerworld-save`
-- Active save version: `1.1.0`
-- Active payload field: `player`
+- Active legacy save version: `1.1.0`
+- Active legacy payload field: `player`
 - Older helper key: `summonerworld-save-v1`
-- BigInt XP is serialized into numbers in active save flow
-- `discoveredTiles` and world tile maps are manually serialized/deserialized
+- Legacy XP serialization could lose BigInt precision
+- `discoveredTiles` and world tile maps needed explicit round-trip handling
 
 The migration must not break existing local saves, online sync payloads, or current UI panels.
 
@@ -55,7 +55,18 @@ interface SaveEnvelopeV2 {
 }
 ```
 
-`playerCore` becomes authoritative for player-owned domain data. `legacyPlayer` remains optional compatibility data until all runtime modules read from Player Core or adapters.
+`playerCore` is the authoritative player-owned save aggregate. `legacyPlayer` remains optional compatibility data until all runtime modules read from Player Core or adapters.
+
+## Implemented In T6P.16
+
+- Added `src/modules/save/playerCoreSaveMigration.ts`.
+- Added `playerCore: PlayerCoreState | null` to `GameStoreState`.
+- Updated character creation and legacy init flows to retain `playerCore`.
+- Updated `saveGame()` to write `version: '2.0.0'`, `playerCore`, `legacyPlayer`, and runtime state.
+- Updated `loadGame()` to read `2.0.0`, migrate active `1.1.0` saves, and migrate `summonerworld-save-v1` helper saves.
+- Preserved BigInt XP as strings in serialized Player Core and legacy player payloads.
+- Preserved `Set` and `Map` data through explicit serialization for discovered tiles and worlds.
+- Added focused migration tests for BigInt round-trip, active legacy save migration, helper payload migration, and v2 idempotency.
 
 ## Migration Phases
 
@@ -73,7 +84,7 @@ Goal: stop accidental growth of legacy `PlayerState`.
 
 Goal: make Player Core safely saveable without changing runtime behavior.
 
-Create a dedicated save migration module, for example:
+Create a dedicated save migration module:
 
 ```text
 src/modules/save/playerCoreSaveMigration.ts
@@ -190,14 +201,14 @@ Keep read-only import support for exported old saves if needed.
 | Legacy `PlayerState` | Player Core destination | Notes |
 |---|---|---|
 | `id`, `name`, `gender`, `appearance` | `identity` | Direct mapping. |
-| `archetype` | `summonerProfile.archetype`, derived `class` | Use `ARCHETYPE_TO_CLASS` fallback. |
+| `archetype` | `summonerProfile.archetype`, derived `class` | Use existing class fallback. |
 | `level`, `experience` | `level`, `experience` | Serialize BigInt as string. |
 | `affinity` | `elements` | Preserve learned/secondary/tertiary traits if present. |
 | `strength`, `vitality`, `intelligence`, `dexterity`, `wisdom`, `luck` | `primaryStats` | Recalculate secondary stats after equipment migration. |
 | `defense`, `speed` | compatibility/projection | These are not direct Player Core primary stats; derive or preserve during projection. |
 | `energy`, `nerve`, `happy`, `life` | `resources` | Direct mapping. |
 | `currentWorldId`, `tileX`, `tileY` | `position`, `worldUnlocks.activeWorldId` | `worldUnlocks.unlockedWorlds` can be derived conservatively from progress. |
-| `creatures` | `creatureContracts`, `creatureSlots` | Wrap creatures with `createContract()`, then assign active/reserve slots. |
+| `creatures` | `creatureContracts`, `creatureSlots` | Wrap creatures with contracts while preserving creature instances. |
 | `inventory` | `inventory` | Initially preserve `InventoryStack[]`; later migrate to categorized `InventoryItem[]` if the type is widened. |
 | `activeQuests`, `completedQuests` | `questHistory` | Direct mapping. |
 | `skillsUnlocked` | `skills` | Convert record into `SkillEntry[]`. |
@@ -234,7 +245,7 @@ Migration must not:
 
 ## Testing Plan
 
-Add focused tests before runtime migration:
+Focused tests cover:
 
 - Load `1.1.0` save payload and migrate to `2.0.0`.
 - Load `summonerworld-save-v1` style payload and migrate to `2.0.0`.
@@ -243,22 +254,29 @@ Add focused tests before runtime migration:
 - Migrate inventory stacks without dropping modifiers.
 - Project `PlayerCoreState` back to legacy `PlayerState` for existing UI.
 - Verify save/load idempotency: migrating an already migrated save produces the same result.
-- Verify corrupted/missing optional fields use defaults without crashing.
+- Verify missing optional fields use defaults without crashing.
 
 ## Rollout Checklist
 
-- [ ] Add `playerCoreSaveMigration.ts`.
-- [ ] Add migration tests with fixture payloads.
-- [ ] Add `playerCore: PlayerCoreState | null` to store state.
-- [ ] Update `createCharacter()` store action to retain `playerCore`.
-- [ ] Update `loadGame()` to dual-read legacy and core saves.
-- [ ] Update `saveGame()` to dual-write `playerCore` and `legacyPlayer`.
+- [x] Add `playerCoreSaveMigration.ts`.
+- [x] Add migration tests with fixture payloads.
+- [x] Add `playerCore: PlayerCoreState | null` to store state.
+- [x] Update `createCharacter()` store action to retain `playerCore`.
+- [x] Update `loadGame()` to dual-read legacy and core saves.
+- [x] Update `saveGame()` to dual-write `playerCore` and `legacyPlayer`.
 - [ ] Add runtime invariant checks in development builds.
 - [ ] Move inventory actions through Inventory Core.
 - [ ] Move equipment UI/actions through Equipment Core.
 - [ ] Move creature list/capacity through contracts and creature slots.
 - [ ] Move summon/command flows through Player Core modules.
 - [ ] Remove `legacyPlayer` from default saves after UI/store migration is complete.
+
+## Validation
+
+- `npm run typecheck`
+- `npm run lint`
+- `npm run test`
+- `npm run build`
 
 ## Consequences
 
@@ -274,7 +292,7 @@ Tradeoffs:
 
 - For several tasks, both `player` and `playerCore` will exist in store state.
 - Adapters must maintain temporary consistency between the two shapes.
-- Tests need fixture coverage for multiple save versions.
+- Runtime actions still mostly mutate `PlayerState`; `saveGame()` refreshes `playerCore` from legacy state during the transition.
 - Some code will look redundant until legacy fields are removed.
 
 ## Open Questions
