@@ -125,7 +125,11 @@ export const economyActions = (set: SetState<GameStore>, get: () => GameStore) =
   acceptTrade: async (tradeId: string) => {
     const { appendLog } = get();
     try {
-      await axios.post(`http://localhost:5000/api/community/trade/${tradeId}/accept`);
+      const res = await axios.post(`http://localhost:5000/api/community/trade/${tradeId}/accept`);
+      if (res.data?.success === false) {
+        appendLog('Trade could not be accepted.', 'warning');
+        return;
+      }
       set((state) => state.playerCore ? ({
         playerCore: {
           ...state.playerCore,

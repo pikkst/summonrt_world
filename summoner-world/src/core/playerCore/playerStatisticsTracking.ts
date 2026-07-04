@@ -194,10 +194,16 @@ export function applyPlayerStatisticEvent(
       return updatePlayerStatistic(statistics, 'guildContributions', event.amount);
     case 'QuestCompleted':
       return updatePlayerStatistic(statistics, 'questsCompleted');
+    default:
+      return assertNever(event);
   }
 }
 
 function normalizeStatisticValue(value: unknown, fallback: number): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) return fallback;
   return Math.max(0, Math.floor(value));
+}
+
+function assertNever(value: never): never {
+  throw new Error(`Unhandled player statistic event: ${JSON.stringify(value)}`);
 }
