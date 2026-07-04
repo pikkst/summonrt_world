@@ -4,6 +4,10 @@ export type {
   PlayerIdentity,
   SummonerProfile,
   SkillEntry,
+  PlayerSkillCategory,
+  PlayerSkillCategoryId,
+  TalentTreeCategory,
+  TalentTreeCategoryId,
   TalentNode,
   TitleEntry,
   AchievementEntry,
@@ -21,6 +25,20 @@ export type {
   WorldUnlocks,
   SaveMetadata,
 } from '../../types/playerCore.ts';
+export {
+  PLAYER_SKILL_CATEGORIES,
+  TALENT_TREE_CATEGORIES,
+  getAllPlayerSkillCategories,
+  getAllTalentTreeCategories,
+  isPlayerSkillCategory,
+  isTalentTreeCategory,
+  inferSkillCategory,
+  inferTalentCategory,
+  normalizeSkillEntry,
+  normalizeTalentNode,
+  createSkillEntry,
+  createTalentNode,
+} from './skillTalentCore.ts';
 export { createDefaultPlayerCoreState, migratePlayerStateToCore, ARCHETYPE_TO_CLASS } from './factory.ts';
 export { createCharacter, CONTRACT_PATHS } from './characterCreation.ts';
 export type {
