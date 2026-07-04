@@ -22,7 +22,20 @@ import { generateProceduralIdentity } from '../../../data/proceduralIdentity';
 import { generateDungeonTower, exportDungeonRun } from '../../../core/dungeon/DungeonTowerGenerator';
 import { generateTrapInteraction, generatePuzzleInteraction, generateEliteInteraction, generateVendorInteraction, generateTreasureInteraction, TrapRoomInteraction, PuzzleRoomInteraction, EliteRoomInteraction, VendorRoomInteraction, TreasureRoomInteraction } from '../../../core/dungeon/DungeonInteractions';
 import type { RoomInteractionState } from '../../../types/game.ts';
+import { applyPlayerStatisticEvent, type PlayerStatisticEvent } from '../../../core/playerCore/playerStatisticsTracking';
 import axios from 'axios';
+
+function recordPlayerCoreStatistic(set: SetState<GameStore>, event: PlayerStatisticEvent): void {
+  set((state) => {
+    if (!state.playerCore) return {};
+    return {
+      playerCore: {
+        ...state.playerCore,
+        statistics: applyPlayerStatisticEvent(state.playerCore.statistics, event),
+      },
+    };
+  });
+}
 
 export const missionActions = (set: SetState<GameStore>, get: () => GameStore) => ({
   movePlayer: (dx: number, dy: number) => {
@@ -501,6 +514,7 @@ finishCapture: () => {
           }
         };
       });
+      recordPlayerCoreStatistic(set, { type: 'CreatureContracted' });
       appendLog(`✨ Success! You captured a new creature: ${creature.name} (${creature.class.toUpperCase()})!`, 'success');
     } else {
       if (player.creatures.length > 0) {
@@ -647,6 +661,10 @@ finishCapture: () => {
     const updatedPlayer = addPlayerXP(basePlayer, template.rewards?.exp || 0, appendLog, getWorldModifier(currentWorldId));
 
     set({ player: updatedPlayer });
+    recordPlayerCoreStatistic(set, { type: 'QuestCompleted', questKey: quest.templateKey });
+    if ((template.rewards?.money || 0) > 0) {
+      recordPlayerCoreStatistic(set, { type: 'GoldEarned', amount: template.rewards!.money! });
+    }
     appendLog(`Quest Completed: ${template.title}!`, 'success');
   },
 
@@ -1163,6 +1181,16 @@ resolveDungeonEncounter: (victory: boolean) => {
              creatures: scaledCreatures,
              activeQuests: updatedQuests,
            },
+           playerCore: state.playerCore && isBoss ? {
+             ...state.playerCore,
+             statistics: [
+               { type: 'BossDefeated', worldId: currentWorldId } as const,
+               { type: 'DungeonCleared', worldId: currentWorldId, floorCount: dungeon.totalFloors } as const,
+             ].reduce(
+               (statistics, event) => applyPlayerStatisticEvent(statistics, event),
+               state.playerCore.statistics
+             ),
+           } : state.playerCore,
            dungeon: {
              ...state.dungeon,
              clearedFloors: newCleared,
@@ -1185,7 +1213,11 @@ resolveDungeonEncounter: (victory: boolean) => {
              player: {
                ...state.player!,
                money: state.player!.money + goldFound,
-             }
+             },
+             playerCore: state.playerCore ? {
+               ...state.playerCore,
+               statistics: applyPlayerStatisticEvent(state.playerCore.statistics, { type: 'GoldEarned', amount: goldFound }),
+             } : state.playerCore,
            }));
            appendLog(`Found ${goldFound} gold!`, 'success');
          }
@@ -1555,6 +1587,7 @@ const modifiers: MissionModifiers = {
            get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
          },
          CRAFT_ITEM: (mission) => {
+           recordPlayerCoreStatistic(set, { type: 'ItemCrafted' });
            get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
          },
          STORE_VISIT: (mission) => {
@@ -1739,6 +1772,7 @@ const modifiers: MissionModifiers = {
             get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
           },
           CRAFT_ITEM: (mission) => {
+            recordPlayerCoreStatistic(set, { type: 'ItemCrafted' });
             get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
           },
           STORE_VISIT: (mission) => {
