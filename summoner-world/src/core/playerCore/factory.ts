@@ -7,6 +7,7 @@ import { createContract } from './contractCore';
 import { getNodeById } from '../../data/careerTree';
 import { createSkillEntry, createTalentNode, inferTalentCategory } from './skillTalentCore';
 import { refreshTitleAchievementState } from './titleAchievementCore';
+import { createDefaultPlayerStatistics } from './playerStatisticsTracking';
 
 export const ARCHETYPE_TO_CLASS: Record<string, SummonerClass> = {
   fighter: 'tactician',

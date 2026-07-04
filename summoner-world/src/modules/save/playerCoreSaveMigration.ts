@@ -3,6 +3,7 @@ import type { PlayerCoreState } from '../../types/playerCore.ts';
 import type { ActiveMission } from '../../core/missionQueue.ts';
 import { createDefaultPlayerCoreState, migratePlayerStateToCore } from '../../core/playerCore/index.ts';
 import { normalizeSkillEntry, normalizeTalentNode } from '../../core/playerCore/skillTalentCore.ts';
+import { mergePlayerStatistics } from '../../core/playerCore/playerStatisticsTracking.ts';
 import {
   getUnlockedTitlesForAchievements,
   normalizeAchievementEntry,
