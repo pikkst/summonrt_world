@@ -2,7 +2,7 @@
 
 ## Documentation Alignment Notes
 
-Current design documentation lives in `docs/Sumoner_World_dec`.
+Current documentation lives under `docs/`: task reports are in `docs/`, and design-source volumes are in `docs/Sumoner_World_dec/`.
 
 Current alignment state:
 - The project is now documented as a player-first Summoner RPG.
@@ -14,7 +14,7 @@ Current alignment state:
 - T6.4.10 is partially complete: current unit tests cover connectivity, multi-paths, treasure rooms, deterministic seeds, and room types; 100-floor simulation and boss-floor reachability remain.
 - The next implementation task is T6.4.8.
 - T6.5, T6.6, and T6.7 overlap earlier completed tasks and should be read as extension tasks, not fresh duplicates.
-- New missing backlog added from `docs/Sumoner_World_dec`: Player Core alignment, event-driven architecture, documentation volume completion, reputation, titles, achievements, statistics, contracts, commands, and end-game structure.
+- New missing backlog added from the design-source volumes in `docs/Sumoner_World_dec/`: Player Core alignment, event-driven architecture, documentation volume completion, reputation, titles, achievements, statistics, contracts, commands, and end-game structure.
 - T6P.1, T6P.2, T6P.3, T6P.4, T6P.5, T6P.6, T6P.7, and T6P.8 are complete (PlayerCoreState, Character Creation, Summoner Classes, Element Identity, Player Statistics, Inventory Core, Equipment Core, Creature Slot System).
 
 ## Sprint 0 – Foundation & Tech Debt (Month 0)
@@ -885,7 +885,7 @@ T15.12 – Creature Bible Integration
 
 ## Sprint 16 – Documentation Volume Completion
 
-Sprint goal: complete the documentation structure defined in `docs/Sumoner_World_dec` so future implementation work has one coherent player-first design source.
+Sprint goal: complete the documentation structure defined under `docs/`, with design-source volumes in `docs/Sumoner_World_dec/`, so future implementation work has one coherent player-first design source.
 
 - [ ] T16.1 – Create `30_Creature_Bible.md`
   - [ ] T16.1.1 – Define creature role as player tool and companion
