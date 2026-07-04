@@ -307,6 +307,61 @@ describe('commandCore', () => {
       expect(result.success).toBe(true);
     });
 
+    it('increases obedience for brave trait on protect_ally', () => {
+      const contract = createMockContract({
+        commandPermissions: ['follow', 'protect_ally'],
+        bondLevel: 1,
+        loyalty: 50,
+        trust: 50,
+        contractStability: 100,
+        instance: createMockCreatureInstance({ affection: 50, traits: ['brave'] }),
+      });
+      const context = { worldId: 1, locationType: 'world' as const, inCombat: true };
+      const result = resolveCommandWithAI(contract, 'protect_ally', context);
+      expect(result.success).toBe(true);
+    });
+
+    it('applies cowardly bonus for avoid_combat', () => {
+      const contract = createMockContract({
+        commandPermissions: ['follow', 'avoid_combat'],
+        bondLevel: 1,
+        loyalty: 50,
+        trust: 50,
+        contractStability: 100,
+        instance: createMockCreatureInstance({ affection: 0, traits: ['cowardly'] }),
+      });
+      const context = { worldId: 1, locationType: 'world' as const, inCombat: false };
+      const result = resolveCommandWithAI(contract, 'avoid_combat', context);
+      expect(result.success).toBe(true);
+    });
+
+    it('reduces obedience for brave trait on avoid_combat', () => {
+      const contract = createMockContract({
+        commandPermissions: ['follow', 'avoid_combat'],
+        bondLevel: 1,
+        loyalty: 50,
+        trust: 50,
+        contractStability: 100,
+        instance: createMockCreatureInstance({ affection: 0, traits: ['brave'] }),
+      });
+      const context = { worldId: 1, locationType: 'world' as const, inCombat: false, dangerLevel: 0 };
+      const result = resolveCommandWithAI(contract, 'avoid_combat', context);
+      expect(result.success).toBe(false);
+    });
+
+    it('treats use_ability as a dangerous command', () => {
+      const contract = createMockContract({
+        bondLevel: 1,
+        loyalty: 50,
+        trust: 50,
+        contractStability: 100,
+        instance: createMockCreatureInstance({ affection: 0, traits: [] }),
+      });
+      const context = { worldId: 1, locationType: 'world' as const, inCombat: false, dangerLevel: 5 };
+      const result = resolveCommandWithAI(contract, 'use_ability', context);
+      expect(result.success).toBe(false);
+    });
+
     it('calculates consistent deterministic results for same inputs', () => {
       const contract = createMockContract({
         bondLevel: 5,
@@ -321,6 +376,9 @@ describe('commandCore', () => {
       expect(result1.success).toBe(result2.success);
       expect(result1.loyaltyDelta).toBe(result2.loyaltyDelta);
       expect(result1.trustDelta).toBe(result2.trustDelta);
+      expect(result1.affectionDelta).toBe(result2.affectionDelta);
+      expect(result1.contractStabilityDelta).toBe(result2.contractStabilityDelta);
+      expect(result1.message).toBe(result2.message);
     });
   });
 

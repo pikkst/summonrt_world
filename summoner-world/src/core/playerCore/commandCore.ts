@@ -1,5 +1,5 @@
-import { COMMAND_PERMISSIONS as CONTRACT_COMMAND_PERMISSIONS } from './contractCore';
-import type { CreatureContract, PlayerCoreState } from '../../types/playerCore.ts';
+import { CONTRACT_STABILITY_MIN_FOR_SUMMON } from './summoningCore';
+import type { CreatureContract } from '../../types/playerCore.ts';
 import type { CreatureInstance } from '../../types/game.ts';
 
 export type CreatureCommand =
@@ -17,7 +17,21 @@ export type CreatureCommand =
   | 'protect_ally'
   | 'avoid_combat';
 
-export const COMMAND_PERMISSIONS = CONTRACT_COMMAND_PERMISSIONS as readonly CreatureCommand[];
+export const COMMAND_PERMISSIONS = [
+  'follow',
+  'stay',
+  'guard',
+  'attack',
+  'defend',
+  'retreat',
+  'scout',
+  'gather',
+  'track',
+  'interact',
+  'use_ability',
+  'protect_ally',
+  'avoid_combat',
+] as const;
 
 export interface CommandContext {
   worldId: number;
@@ -77,7 +91,24 @@ const DANGEROUS_COMMANDS: readonly CreatureCommand[] = [
   'attack',
   'defend',
   'protect_ally',
+  'use_ability',
 ];
+
+const BASE_OBEDIENCE = 0.75;
+const LOYALTY_OBEDIENCE_FACTOR = 0.003;
+const TRUST_OBEDIENCE_FACTOR = 0.002;
+const BOND_OBEDIENCE_FACTOR = 0.005;
+const AFFECTION_OBEDIENCE_FACTOR = 0.0005;
+const DANGER_OBEDIENCE_FACTOR = 0.02;
+const COWARDLY_DANGER_PENALTY = 0.15;
+const BRAVE_DANGER_BONUS = 0.1;
+const BRAVE_AVOID_COMBAT_PENALTY = 0.3;
+const COWARDLY_RETREAT_BONUS = 0.1;
+const BRAVE_RETREAT_PENALTY = 0.2;
+const LOYAL_PROTECT_BONUS = 0.15;
+const STABILITY_PENALTY_FACTOR = 0.002;
+const MIN_SUCCESS_CHANCE = 0.35;
+const MAX_SUCCESS_CHANCE = 0.98;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -121,7 +152,7 @@ export function checkCommandEligibility(
     return permissionResult;
   }
 
-  if (contract.contractStability < 20) {
+  if (contract.contractStability < CONTRACT_STABILITY_MIN_FOR_SUMMON) {
     return {
       valid: false,
       hasPermission: true,
@@ -175,48 +206,58 @@ export function resolveCommandWithAI(
   }
 
   const traits = contract.instance.traits ?? [];
-  const hasBraveTrait = traits.some((t) => t.toLowerCase().includes('brave'));
-  const hasCowardlyTrait = traits.some((t) => t.toLowerCase().includes('cowardly'));
-  const hasLoyalTrait = traits.some((t) => t.toLowerCase().includes('loyal'));
+  const hasBraveTrait = traits.some((t) => t.toLowerCase() === 'brave');
+  const hasCowardlyTrait = traits.some((t) => t.toLowerCase() === 'cowardly');
+  const hasLoyalTrait = traits.some((t) => t.toLowerCase() === 'loyal');
 
-  let obedience = 0.75;
-  obedience += (contract.loyalty - 50) * 0.003;
-  obedience += (contract.trust - 50) * 0.002;
-  obedience += (contract.bondLevel - 1) * 0.005;
-  obedience += (contract.instance.affection ?? 0) * 0.0005;
+  let obedience = BASE_OBEDIENCE;
+  obedience += (contract.loyalty - 50) * LOYALTY_OBEDIENCE_FACTOR;
+  obedience += (contract.trust - 50) * TRUST_OBEDIENCE_FACTOR;
+  obedience += (contract.bondLevel - 1) * BOND_OBEDIENCE_FACTOR;
+  obedience += (contract.instance.affection ?? 0) * AFFECTION_OBEDIENCE_FACTOR;
 
   const dangerLevel = context.dangerLevel ?? 0;
   if (DANGEROUS_COMMANDS.includes(command)) {
-    obedience -= dangerLevel * 0.02;
+    obedience -= dangerLevel * DANGER_OBEDIENCE_FACTOR;
     if (hasCowardlyTrait) {
-      obedience -= 0.15;
+      obedience -= COWARDLY_DANGER_PENALTY;
     }
     if (hasBraveTrait) {
-      obedience += 0.1;
+      obedience += BRAVE_DANGER_BONUS;
     }
   }
 
-  if (command === 'avoid_combat' && hasBraveTrait) {
-    obedience -= 0.1;
+  if (command === 'avoid_combat') {
+    if (hasBraveTrait) {
+      obedience -= BRAVE_AVOID_COMBAT_PENALTY;
+    }
+    if (hasCowardlyTrait) {
+      obedience += COWARDLY_DANGER_PENALTY;
+    }
   }
 
-  if (command === 'protect_ally' && hasLoyalTrait) {
-    obedience += 0.15;
+  if (command === 'protect_ally') {
+    if (hasLoyalTrait) {
+      obedience += LOYAL_PROTECT_BONUS;
+    }
+    if (hasBraveTrait) {
+      obedience += BRAVE_DANGER_BONUS;
+    }
   }
 
   if (command === 'retreat') {
     if (hasBraveTrait) {
-      obedience -= 0.2;
+      obedience -= BRAVE_RETREAT_PENALTY;
     }
     if (hasCowardlyTrait) {
-      obedience += 0.1;
+      obedience += COWARDLY_RETREAT_BONUS;
     }
   }
 
-  const stabilityPenalty = (100 - contract.contractStability) * 0.002;
+  const stabilityPenalty = (100 - contract.contractStability) * STABILITY_PENALTY_FACTOR;
   obedience -= stabilityPenalty;
 
-  const successChance = clamp(obedience, 0.35, 0.98);
+  const successChance = clamp(obedience, MIN_SUCCESS_CHANCE, MAX_SUCCESS_CHANCE);
   const success = successChance >= 0.5;
 
   let message = '';
