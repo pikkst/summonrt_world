@@ -7,6 +7,8 @@ import { createContract } from './contractCore';
 import { getNodeById } from '../../data/careerTree';
 import { createSkillEntry, createTalentNode, inferTalentCategory } from './skillTalentCore';
 import { createDefaultReputationState } from './reputationCore';
+import { refreshTitleAchievementState } from './titleAchievementCore';
+import { createDefaultPlayerStatistics } from './playerStatisticsTracking';
 
 export const ARCHETYPE_TO_CLASS: Record<string, SummonerClass> = {
   fighter: 'tactician',
@@ -35,8 +37,10 @@ export function createDefaultPlayerCoreState(
 
   const primaryStats = calculatePrimaryStats(sClass, 1);
   const secondaryStats = calculateSecondaryStats(primaryStats, []);
+  const createdAt = Date.now();
+  const createdAtIso = new Date(createdAt).toISOString();
 
-  return {
+  const core: PlayerCoreState = {
     identity: {
       id: generateId(),
       name,
@@ -61,19 +65,7 @@ export function createDefaultPlayerCoreState(
     talents: [],
     titles: [],
     achievements: [],
-    statistics: {
-      worldsUnlocked: 1,
-      creaturesContracted: 0,
-      dungeonsCleared: 0,
-      itemsCrafted: 0,
-      tradesCompleted: 0,
-      goldEarned: 0,
-      bossesDefeated: 0,
-      pvpWins: 0,
-      housingValue: 0,
-      guildContributions: 0,
-      questsCompleted: 0,
-    },
+    statistics: createDefaultPlayerStatistics(1),
     reputation: createDefaultReputationState(startingWorldId),
     questHistory: {
       active: [],
@@ -86,15 +78,15 @@ export function createDefaultPlayerCoreState(
       activeWorldId: startingWorldId,
     },
     saveMetadata: {
-      lastSavedAt: new Date().toISOString(),
+      lastSavedAt: createdAtIso,
       playtimeSeconds: 0,
       saveVersion: '1.0.0',
     },
     resources: {
-      energy: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
-      nerve: { current: 15, max: 15, lastUpdate: new Date().toISOString() },
-      happy: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
-      life: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
+      energy: { current: 100, max: 100, lastUpdate: createdAtIso },
+      nerve: { current: 15, max: 15, lastUpdate: createdAtIso },
+      happy: { current: 100, max: 100, lastUpdate: createdAtIso },
+      life: { current: 100, max: 100, lastUpdate: createdAtIso },
     },
     position: {
       worldId: startingWorldId,
@@ -111,6 +103,8 @@ export function createDefaultPlayerCoreState(
     dayCount: 1,
     gameTimeMinutes: 420,
   };
+
+  return refreshTitleAchievementState(core, createdAt);
 }
 
 function generateId(): string {
@@ -140,7 +134,7 @@ export function migratePlayerStateToCore(player: PlayerState): PlayerCoreState {
 
   const secondaryStats = calculateSecondaryStats(primaryStats, []);
 
-  return {
+  const migrated: PlayerCoreState = {
     identity: {
       id: player.id,
       name: player.name,
@@ -178,16 +172,9 @@ export function migratePlayerStateToCore(player: PlayerState): PlayerCoreState {
     titles: [],
     achievements: [],
     statistics: {
-      worldsUnlocked: unlockedWorlds.length,
+      ...createDefaultPlayerStatistics(unlockedWorlds.length),
       creaturesContracted: player.creatures.length,
-      dungeonsCleared: 0,
-      itemsCrafted: 0,
-      tradesCompleted: 0,
       goldEarned: player.money,
-      bossesDefeated: 0,
-      pvpWins: 0,
-      housingValue: 0,
-      guildContributions: 0,
       questsCompleted: player.completedQuests.length,
     },
     reputation: createDefaultReputationState(currentWorldId),
@@ -232,4 +219,6 @@ export function migratePlayerStateToCore(player: PlayerState): PlayerCoreState {
     gameTimeMinutes: player.gameTimeMinutes,
     isOnline: player.isOnline,
   };
+
+  return refreshTitleAchievementState(migrated);
 }

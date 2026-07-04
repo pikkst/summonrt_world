@@ -1,5 +1,6 @@
 import type { GameStore, CommunityState, SetState } from '../types.ts';
 import { createLog } from '../helpers.ts';
+import { applyPlayerStatisticEvent } from '../../../core/playerCore/playerStatisticsTracking';
 import axios from 'axios';
 
 export const economyActions = (set: SetState<GameStore>, get: () => GameStore) => ({
@@ -124,7 +125,17 @@ export const economyActions = (set: SetState<GameStore>, get: () => GameStore) =
   acceptTrade: async (tradeId: string) => {
     const { appendLog } = get();
     try {
-      await axios.post(`http://localhost:5000/api/community/trade/${tradeId}/accept`);
+      const res = await axios.post(`http://localhost:5000/api/community/trade/${tradeId}/accept`);
+      if (res.data?.success === false) {
+        appendLog('Trade could not be accepted.', 'warning');
+        return;
+      }
+      set((state) => state.playerCore ? ({
+        playerCore: {
+          ...state.playerCore,
+          statistics: applyPlayerStatisticEvent(state.playerCore.statistics, { type: 'TradeCompleted' }),
+        },
+      }) : {});
       appendLog('Trade accepted.', 'success');
     } catch (err) {
       console.error('Failed to accept trade', err);

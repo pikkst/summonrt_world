@@ -118,8 +118,8 @@ it('creates a valid default core state', () => {
 expect(core.inventory).toEqual([]);
       expect(core.equipment).toHaveLength(12);
       expect(core.creatureContracts).toEqual([]);
-     expect(core.titles).toEqual([]);
-     expect(core.achievements).toEqual([]);
+     expect(core.titles.map((title) => title.key)).toContain('trailfinder');
+     expect(core.achievements.find((achievement) => achievement.key === 'first_steps')?.unlocked).toBe(true);
      expect(core.statistics.worldsUnlocked).toBe(1);
      expect(core.statistics.questsCompleted).toBe(0);
      expect(core.worldUnlocks.unlockedWorlds).toEqual([1]);

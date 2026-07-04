@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { createDefaultPlayerCoreState } from '../core/playerCore/index';
 import { calculatePrimaryStats, calculateSecondaryStats, recalculateAllStats } from '../core/playerCore/playerStatistics';
+import {
+  applyPlayerStatisticEvent,
+  createDefaultPlayerStatistics,
+  mergePlayerStatistics,
+  normalizePlayerStatistics,
+  updatePlayerStatistic,
+} from '../core/playerCore/playerStatisticsTracking';
 import type { PlayerPrimaryStats, EquipmentSlot, SummonerClass } from '../types/playerCore';
 
 describe('Player Statistics - Primary Stats', () => {
@@ -243,4 +250,121 @@ describe('Player Statistics - Stat Recalculation', () => {
      
      expect(result1).toEqual(result2);
    });
+});
+
+describe('Player Statistics - Progress Tracking', () => {
+  it('creates the full progress tracking model with default values', () => {
+    const statistics = createDefaultPlayerStatistics();
+
+    expect(statistics).toEqual({
+      worldsUnlocked: 1,
+      creaturesContracted: 0,
+      dungeonsCleared: 0,
+      itemsCrafted: 0,
+      tradesCompleted: 0,
+      goldEarned: 0,
+      bossesDefeated: 0,
+      pvpWins: 0,
+      housingValue: 0,
+      guildContributions: 0,
+      questsCompleted: 0,
+    });
+  });
+
+  it('applies gameplay statistic events deterministically', () => {
+    const initial = createDefaultPlayerStatistics();
+    const updated = [
+      { type: 'WorldUnlocked', worldId: 3 },
+      { type: 'CreatureContracted' },
+      { type: 'DungeonCleared', worldId: 1 },
+      { type: 'BossDefeated', worldId: 1 },
+      { type: 'ItemCrafted', count: 2 },
+      { type: 'TradeCompleted' },
+      { type: 'GoldEarned', amount: 250 },
+      { type: 'PvpWon' },
+      { type: 'HousingValueChanged', value: 1200 },
+      { type: 'GuildContributionAdded', amount: 75 },
+      { type: 'QuestCompleted', questKey: 'quest-1' },
+    ] as const;
+
+    const result = updated.reduce(
+      (statistics, event) => applyPlayerStatisticEvent(statistics, event),
+      initial
+    );
+    const resultAgain = updated.reduce(
+      (statistics, event) => applyPlayerStatisticEvent(statistics, event),
+      initial
+    );
+
+    expect(result).toEqual(resultAgain);
+    expect(result.worldsUnlocked).toBe(3);
+    expect(result.creaturesContracted).toBe(1);
+    expect(result.dungeonsCleared).toBe(1);
+    expect(result.bossesDefeated).toBe(1);
+    expect(result.itemsCrafted).toBe(2);
+    expect(result.tradesCompleted).toBe(1);
+    expect(result.goldEarned).toBe(250);
+    expect(result.pvpWins).toBe(1);
+    expect(result.housingValue).toBe(1200);
+    expect(result.guildContributions).toBe(75);
+    expect(result.questsCompleted).toBe(1);
+  });
+
+  it('keeps max-tracked statistics from decreasing', () => {
+    const statistics = createDefaultPlayerStatistics(5);
+    const withLowerWorld = applyPlayerStatisticEvent(statistics, { type: 'WorldUnlocked', worldId: 3 });
+    const withLowerHousing = applyPlayerStatisticEvent(
+      { ...withLowerWorld, housingValue: 900 },
+      { type: 'HousingValueChanged', value: 500 }
+    );
+
+    expect(withLowerWorld.worldsUnlocked).toBe(5);
+    expect(withLowerHousing.housingValue).toBe(900);
+  });
+
+  it('normalizes invalid statistic payloads for save compatibility', () => {
+    const statistics = normalizePlayerStatistics({
+      worldsUnlocked: Number.NaN,
+      goldEarned: -20,
+      questsCompleted: 4.8,
+    });
+
+    expect(statistics.worldsUnlocked).toBe(1);
+    expect(statistics.goldEarned).toBe(0);
+    expect(statistics.questsCompleted).toBe(4);
+  });
+
+  it('merges legacy-derived statistics without losing player-core counters', () => {
+    const previous = {
+      ...createDefaultPlayerStatistics(2),
+      dungeonsCleared: 4,
+      goldEarned: 5000,
+      questsCompleted: 8,
+    };
+    const derived = {
+      ...createDefaultPlayerStatistics(5),
+      goldEarned: 1000,
+      creaturesContracted: 3,
+      questsCompleted: 2,
+    };
+
+    const merged = mergePlayerStatistics(previous, derived);
+
+    expect(merged.worldsUnlocked).toBe(5);
+    expect(merged.creaturesContracted).toBe(3);
+    expect(merged.dungeonsCleared).toBe(4);
+    expect(merged.goldEarned).toBe(5000);
+    expect(merged.questsCompleted).toBe(8);
+  });
+
+  it('supports explicit statistic update modes', () => {
+    const statistics = createDefaultPlayerStatistics();
+    const incremented = updatePlayerStatistic(statistics, 'itemsCrafted', 3, 'increment');
+    const setValue = updatePlayerStatistic(incremented, 'itemsCrafted', 1, 'set');
+    const maxValue = updatePlayerStatistic(setValue, 'itemsCrafted', 5, 'max');
+
+    expect(incremented.itemsCrafted).toBe(3);
+    expect(setValue.itemsCrafted).toBe(1);
+    expect(maxValue.itemsCrafted).toBe(5);
+  });
 });

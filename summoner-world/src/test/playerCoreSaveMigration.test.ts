@@ -227,4 +227,25 @@ describe('player core save migration', () => {
 
     expect(migratedAgain).toEqual(envelope);
   });
+
+  it('preserves tracked Player Core statistics when regenerating from legacy state', () => {
+    const legacy = makeLegacyPlayer();
+    const previousCore = migrateLegacyPlayerToCore(legacy);
+    previousCore.statistics.dungeonsCleared = 3;
+    previousCore.statistics.bossesDefeated = 4;
+    previousCore.statistics.itemsCrafted = 9;
+    previousCore.statistics.tradesCompleted = 2;
+    previousCore.statistics.goldEarned = 10000;
+
+    const regenerated = migrateLegacyPlayerToCore(legacy, previousCore);
+
+    expect(regenerated.statistics.worldsUnlocked).toBe(4);
+    expect(regenerated.statistics.creaturesContracted).toBe(1);
+    expect(regenerated.statistics.questsCompleted).toBe(1);
+    expect(regenerated.statistics.dungeonsCleared).toBe(3);
+    expect(regenerated.statistics.bossesDefeated).toBe(4);
+    expect(regenerated.statistics.itemsCrafted).toBe(9);
+    expect(regenerated.statistics.tradesCompleted).toBe(2);
+    expect(regenerated.statistics.goldEarned).toBe(10000);
+  });
 });

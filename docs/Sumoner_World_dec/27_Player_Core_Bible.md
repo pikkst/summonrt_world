@@ -469,6 +469,14 @@ Categories:
 
 Titles can provide cosmetic identity, reputation hooks, or small progression bonuses.
 
+Implementation note:
+
+- Player Core owns the title and achievement catalogs.
+- Achievement entries carry category, progress, target, and unlock timestamp.
+- Title entries carry category and unlock timestamp.
+- Statistic-backed achievements are recalculated from PlayerStatistics during creation, migration, and save deserialization.
+- Older saves without category fields should be normalized instead of rejected.
+
 ## 25. Statistics
 
 Player statistics should support UI, achievements, balance, debugging, and live operations.
