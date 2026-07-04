@@ -6,6 +6,7 @@ import { createDefaultCreatureSlots } from './creatureSlotCore';
 import { createContract } from './contractCore';
 import { getNodeById } from '../../data/careerTree';
 import { createSkillEntry, createTalentNode, inferTalentCategory } from './skillTalentCore';
+import { createDefaultReputationState } from './reputationCore';
 
 export const ARCHETYPE_TO_CLASS: Record<string, SummonerClass> = {
   fighter: 'tactician',
@@ -73,12 +74,7 @@ export function createDefaultPlayerCoreState(
       guildContributions: 0,
       questsCompleted: 0,
     },
-    reputation: {
-      world_rep: {},
-      faction_rep: {},
-      settlement_rep: {},
-      creature_rep: {},
-    },
+    reputation: createDefaultReputationState(startingWorldId),
     questHistory: {
       active: [],
       completed: [],
@@ -194,12 +190,7 @@ export function migratePlayerStateToCore(player: PlayerState): PlayerCoreState {
       guildContributions: 0,
       questsCompleted: player.completedQuests.length,
     },
-    reputation: {
-      world_rep: {},
-      faction_rep: {},
-      settlement_rep: {},
-      creature_rep: {},
-    },
+    reputation: createDefaultReputationState(currentWorldId),
     questHistory: {
       active: player.activeQuests,
       completed: player.completedQuests,

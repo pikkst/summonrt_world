@@ -172,7 +172,22 @@ Progression should come from many activities:
 
 Player progression should not require only combat. A summoner can be a fighter, trader, crafter, explorer, breeder, guild leader, collector, or PvP specialist.
 
-## 9. Inventory
+## 9. Reputation
+
+Reputation is a Player Core bridge into NPC, faction, settlement, creature, world, and dungeon systems.
+
+Core reputation buckets:
+
+- World reputation
+- Faction reputation
+- Settlement reputation
+- Creature reputation
+
+Reputation changes should come from player-visible activity such as quests, trading, ecosystem impact, and dungeon clearing. Positive and negative reputation should produce deterministic effect modifiers for merchant prices, creature capture chance, settlement growth, dungeon difficulty, and NPC reactions.
+
+Reputation belongs to the player save aggregate. Downstream systems may consume reputation effects, but they should not become the source of truth for player reputation.
+
+## 10. Inventory
 
 Inventory is a player-owned system.
 
@@ -191,7 +206,7 @@ Item categories:
 
 Inventory must support sorting, filtering, stacking, rarity, ownership, binding, trading rules, and save/load stability.
 
-## 10. Equipment
+## 11. Equipment
 
 Equipment should support both direct player power and summoner power.
 
@@ -221,7 +236,7 @@ Equipment can modify:
 - Crafting efficiency
 - Travel utility
 
-## 11. Creature Slots
+## 12. Creature Slots
 
 Creature slots define how many creatures the player can actively use.
 
@@ -236,7 +251,7 @@ Slot types:
 
 Slot expansion should be tied to player progression, equipment, housing, guild bonuses, and end-game unlocks.
 
-## 12. Creature Contracts
+## 13. Creature Contracts
 
 Creatures should not simply be owned as inventory items.
 
@@ -258,7 +273,7 @@ Contract properties:
 
 Contracts make creatures feel like part of the player journey while still allowing economy and marketplace systems.
 
-## 13. Summoning
+## 14. Summoning
 
 Summoning is the act of bringing contracted creatures into active play.
 
@@ -273,7 +288,7 @@ Summoning should consider:
 - Contract stability
 - Element compatibility
 
-## 14. Creature Commands
+## 15. Creature Commands
 
 Creature commands are the player's interface into Creature AI.
 
@@ -295,7 +310,7 @@ Command examples:
 
 Creature AI should interpret commands through its own state, personality, training, loyalty, and current world conditions. The player gives intent; the creature executes through simulation.
 
-## 15. Player Skills
+## 16. Player Skills
 
 Player skills should include:
 
@@ -311,7 +326,7 @@ Player skills should include:
 
 Skills should be usable both directly and through creature synergy.
 
-## 16. Talent Trees
+## 17. Talent Trees
 
 Talent trees define long-term build identity.
 
@@ -331,7 +346,7 @@ Possible trees:
 
 Talent choices should unlock new options, not only add small stat bonuses.
 
-## 17. Crafting
+## 18. Crafting
 
 Crafting should be player-centered and connected to world resources.
 
@@ -346,7 +361,7 @@ Crafting outputs:
 - Dungeon keys
 - Marketplace goods
 
-## 18. Housing and Building
+## 19. Housing and Building
 
 Housing gives the player a persistent place in the world.
 
@@ -364,7 +379,7 @@ Housing supports:
 
 Building expands the player's influence beyond character stats.
 
-## 19. Transportation and World Travel
+## 20. Transportation and World Travel
 
 World travel is part of player progression.
 
@@ -381,7 +396,7 @@ Travel systems:
 
 Travel should connect to exploration, danger, economy, quests, and creature utility.
 
-## 20. Trading and Marketplace
+## 21. Trading and Marketplace
 
 Trading must support player agency without breaking progression.
 
@@ -397,7 +412,7 @@ Tradeable categories:
 
 Marketplace systems need restrictions for binding, rarity, fraud prevention, listing fees, taxes, and server-side validation in MMO mode.
 
-## 21. Guilds and Friends
+## 22. Guilds and Friends
 
 Social systems should be part of the long-term RPG loop.
 
@@ -420,7 +435,7 @@ Friends features:
 - Party invites
 - Co-op travel
 
-## 22. PvP
+## 23. PvP
 
 PvP should be optional, structured, and build-aware.
 
@@ -435,7 +450,7 @@ Modes:
 
 PvP must validate player stats, equipment, contracts, creature states, cooldowns, and command rules.
 
-## 23. Achievements and Titles
+## 24. Achievements and Titles
 
 Achievements should recognize the full game, not only combat.
 
@@ -454,7 +469,7 @@ Categories:
 
 Titles can provide cosmetic identity, reputation hooks, or small progression bonuses.
 
-## 24. Statistics
+## 25. Statistics
 
 Player statistics should support UI, achievements, balance, debugging, and live operations.
 
@@ -472,7 +487,7 @@ Examples:
 - Guild contributions
 - Quests completed
 
-## 25. Save System
+## 26. Save System
 
 The save system must treat the player as the root aggregate.
 
@@ -495,7 +510,7 @@ Player save data should include:
 
 Creature AI state should be saved as part of creature/world state, but player-owned contract state must remain attached to the player.
 
-## 26. End Game
+## 27. End Game
 
 End game begins when the player reaches Floor 100 of the dungeon and challenges the active Demonlord.
 
@@ -534,7 +549,7 @@ End-game systems:
 - High-tier crafting for challenge preparation
 - Marketplace demand around challenge cycles
 
-## 27. Relationship to Creature AI
+## 28. Relationship to Creature AI
 
 Creature AI supports the Player Core through commands, contracts, loyalty, combat, exploration, gathering, world behavior, and simulation.
 
@@ -550,7 +565,7 @@ Player intent
 
 This keeps Creature AI powerful without allowing it to become the entire game.
 
-## 28. Acceptance Criteria
+## 29. Acceptance Criteria
 
 Player Core is complete when:
 

@@ -385,7 +385,7 @@ Sprint goal: align implementation with the new Player Core Bible before expandin
 * Guild contributions
 * Quests completed
 
-- [ ] T6P.15 – Add Player Reputation foundation
+- [x] T6P.15 – Add Player Reputation foundation
 
 * world_rep
 * faction_rep

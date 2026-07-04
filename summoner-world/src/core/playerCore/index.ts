@@ -12,6 +12,10 @@ export type {
   TitleEntry,
   AchievementEntry,
   PlayerStatistics,
+  ReputationChange,
+  ReputationChangeSource,
+  ReputationDomain,
+  ReputationEffects,
   PlayerPrimaryStats,
   PlayerSecondaryStats,
   ReputationState,
@@ -55,6 +59,17 @@ export {
 } from '../../data/summonerClasses';
 export type { SummonerClassId, ClassDefinition } from '../../data/summonerClasses';
 export { calculatePrimaryStats, calculateSecondaryStats, recalculateAllStats, getPrimaryStatsOrDefault, useFinalStats } from './playerStatistics';
+export {
+  REPUTATION_MAX,
+  REPUTATION_MIN,
+  REPUTATION_NEUTRAL,
+  REPUTATION_SOURCE_MULTIPLIERS,
+  applyPlayerReputationChange,
+  applyReputationChange,
+  calculateReputationEffects,
+  createDefaultReputationState,
+  getReputationScore,
+} from './reputationCore';
 export {
   getElementIdentity,
   getStarterElements,
