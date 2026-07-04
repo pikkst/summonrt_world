@@ -227,4 +227,36 @@ describe('player core save migration', () => {
 
     expect(migratedAgain).toEqual(envelope);
   });
+
+  it('rejects malformed optional values while preserving explicit creature experience BigInts', () => {
+    const legacy = makeLegacyPlayer();
+    const serializedLegacy = serializeLegacyPlayer(legacy);
+    serializedLegacy.isOnline = 'yes' as unknown as boolean;
+    serializedLegacy.creatures[0]!.experience = '98765432109876543210';
+
+    const payload = {
+      version: '1.1.0',
+      player: serializedLegacy,
+      worlds: [],
+      currentWorldId: 4,
+      turnCount: 12,
+      screen: 'not-a-real-screen',
+      combat: { active: 'true', phase: 'player_turn', log: [], turns: 0 },
+      dungeon: { active: true, worldId: 4 },
+      log: [{ id: 'ok', turn: 1, text: 'kept', type: 'system', timestamp: 1 }, { bad: true }],
+    };
+
+    const envelope = migrateSaveToV2(payload);
+    const core = deserializePlayerCore(envelope.playerCore);
+    const legacyPlayer = deserializeLegacyPlayer(envelope.legacyPlayer);
+
+    expect(envelope.runtime.screen).toBe('explore');
+    expect(envelope.runtime.combat).toBeNull();
+    expect(envelope.runtime.dungeon).toBeNull();
+    expect(envelope.runtime.log).toEqual([{ id: 'ok', turn: 1, text: 'kept', type: 'system', timestamp: 1 }]);
+    expect(core.isOnline).toBeUndefined();
+    expect(legacyPlayer.isOnline).toBeUndefined();
+    expect(core.creatureContracts[0]!.instance.experience).toBe(98765432109876543210n);
+    expect(legacyPlayer.creatures[0]!.experience).toBe(98765432109876543210n);
+  });
 });

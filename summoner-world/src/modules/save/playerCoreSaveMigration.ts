@@ -53,6 +53,27 @@ export type SerializedWorldData = Omit<WorldData, 'tiles'> & {
   tiles: Array<[string, WorldData['tiles'] extends Map<string, infer V> ? V : never]>;
 };
 
+const VALID_SCREENS = [
+  'explore',
+  'inventory',
+  'creatures',
+  'map',
+  'dungeon',
+  'settings',
+  'combat',
+  'quests',
+  'gym',
+  'acts',
+  'login',
+  'fusion',
+  'skills',
+  'creature_activity',
+  'stats',
+  'profile',
+  'community',
+  'missions',
+] as const satisfies readonly Screen[];
+
 export function serializePlayerCore(core: PlayerCoreState): SerializedPlayerCoreState {
   return serializeValue(core) as SerializedPlayerCoreState;
 }
@@ -137,7 +158,7 @@ export function deserializePlayerCore(data: unknown): PlayerCoreState {
     talents: raw.talents ?? defaults.talents,
     titles: raw.titles ?? defaults.titles,
     achievements: raw.achievements ?? defaults.achievements,
-    creatureContracts: raw.creatureContracts ?? defaults.creatureContracts,
+    creatureContracts: normalizeCreatureContracts(raw.creatureContracts, defaults.creatureContracts),
     level: raw.level ?? defaults.level,
     experience: toBigInt(raw.experience),
     elements: raw.elements ?? defaults.elements,
@@ -146,7 +167,7 @@ export function deserializePlayerCore(data: unknown): PlayerCoreState {
     skillPoints: raw.skillPoints ?? defaults.skillPoints,
     dayCount: raw.dayCount ?? defaults.dayCount,
     gameTimeMinutes: raw.gameTimeMinutes ?? defaults.gameTimeMinutes,
-    isOnline: raw.isOnline,
+    isOnline: normalizeOptionalBoolean(raw.isOnline),
   };
 }
 
@@ -197,7 +218,7 @@ export function deserializeLegacyPlayer(data: unknown): PlayerState {
     tileY: typeof raw.tileY === 'number' && Number.isFinite(raw.tileY) ? raw.tileY : fallback.tileY,
     dayCount: raw.dayCount ?? fallback.dayCount,
     gameTimeMinutes: raw.gameTimeMinutes ?? fallback.gameTimeMinutes,
-    creatures: raw.creatures ?? fallback.creatures,
+    creatures: normalizeLegacyCreatures(raw.creatures, fallback.creatures),
     inventory: raw.inventory ?? fallback.inventory,
     activeQuests: raw.activeQuests ?? fallback.activeQuests,
     completedQuests: raw.completedQuests ?? fallback.completedQuests,
@@ -209,7 +230,7 @@ export function deserializeLegacyPlayer(data: unknown): PlayerState {
       ...raw.settings,
     },
     archetype: raw.archetype,
-    isOnline: raw.isOnline,
+    isOnline: normalizeOptionalBoolean(raw.isOnline),
   };
 }
 
@@ -388,22 +409,23 @@ export function createSaveEnvelopeV2(params: {
   };
 }
 
-function normalizeRuntime(data: Record<string, unknown>): SaveRuntimeState {
-  const source = isRecord(data.runtime) ? data.runtime : data;
+function normalizeRuntime(data: unknown): SaveRuntimeState {
+  const root = isRecord(data) ? data : {};
+  const source = isRecord(root.runtime) ? root.runtime : root;
   return {
     worlds: normalizeSerializedWorlds(source.worlds),
     currentWorldId: typeof source.currentWorldId === 'number' ? source.currentWorldId : 1,
     turnCount: typeof source.turnCount === 'number' ? source.turnCount : 0,
     screen: isScreen(source.screen) ? source.screen : 'explore',
-    combat: isRecord(source.combat) ? source.combat as unknown as CombatState : null,
-    dungeon: isRecord(source.dungeon) ? source.dungeon as unknown as DungeonState : null,
+    combat: normalizeCombatState(source.combat),
+    dungeon: normalizeDungeonState(source.dungeon),
     activity: isRecord(source.activity) ? source.activity as PlayerState['activity'] : null,
     missions: Array.isArray(source.missions) ? source.missions as ActiveMission[] : [],
     exploring: source.exploring ?? null,
     searching: source.searching ?? null,
     capturing: source.capturing ?? null,
     lastLogoutTimestamp: typeof source.lastLogoutTimestamp === 'number' ? source.lastLogoutTimestamp : undefined,
-    log: Array.isArray(source.log) ? source.log as LogEntry[] : [],
+    log: normalizeLogEntries(source.log),
   };
 }
 
@@ -412,6 +434,70 @@ function normalizeSerializedWorlds(data: unknown): SerializedWorldData[] {
     ...world,
     tiles: Array.from(world.tiles.entries()),
   }));
+}
+
+function normalizeCreatureContracts(
+  contracts: unknown,
+  defaults: PlayerCoreState['creatureContracts']
+): PlayerCoreState['creatureContracts'] {
+  if (!Array.isArray(contracts)) return defaults;
+
+  return contracts.filter(isRecord).map((contract) => ({
+    ...contract,
+    instance: isRecord(contract.instance)
+      ? {
+          ...contract.instance,
+          experience: toBigInt(contract.instance.experience),
+        }
+      : contract.instance,
+  })) as PlayerCoreState['creatureContracts'];
+}
+
+function normalizeLegacyCreatures(
+  creatures: unknown,
+  defaults: PlayerState['creatures']
+): PlayerState['creatures'] {
+  if (!Array.isArray(creatures)) return defaults;
+
+  return creatures.filter(isRecord).map((creature) => ({
+    ...creature,
+    experience: toBigInt(creature.experience),
+  })) as PlayerState['creatures'];
+}
+
+function normalizeCombatState(value: unknown): CombatState | null {
+  if (!isRecord(value)) return null;
+  if (typeof value.active !== 'boolean') return null;
+  if (typeof value.phase !== 'string') return null;
+  if (!Array.isArray(value.log)) return null;
+  if (typeof value.turns !== 'number') return null;
+  return value as unknown as CombatState;
+}
+
+function normalizeDungeonState(value: unknown): DungeonState | null {
+  if (!isRecord(value)) return null;
+  if (typeof value.active !== 'boolean') return null;
+  if (typeof value.worldId !== 'number') return null;
+  if (typeof value.currentFloor !== 'number') return null;
+  if (typeof value.totalFloors !== 'number') return null;
+  if (!Array.isArray(value.clearedFloors)) return null;
+  if (typeof value.bossDefeated !== 'boolean') return null;
+  if (typeof value.inEncounter !== 'boolean') return null;
+  return value as unknown as DungeonState;
+}
+
+function normalizeLogEntries(value: unknown): LogEntry[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((entry): entry is LogEntry => {
+    if (!isRecord(entry)) return false;
+    return (
+      typeof entry.id === 'string' &&
+      typeof entry.turn === 'number' &&
+      typeof entry.text === 'string' &&
+      typeof entry.type === 'string' &&
+      typeof entry.timestamp === 'number'
+    );
+  });
 }
 
 function serializeValue(value: unknown): JsonValue {
@@ -463,10 +549,14 @@ function normalizeStringSet(value: unknown): Set<string> {
   return new Set(value.filter((entry): entry is string => typeof entry === 'string'));
 }
 
+function normalizeOptionalBoolean(value: unknown): boolean | undefined {
+  return typeof value === 'boolean' ? value : undefined;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function isScreen(value: unknown): value is Screen {
-  return typeof value === 'string';
+  return typeof value === 'string' && (VALID_SCREENS as readonly string[]).includes(value);
 }
