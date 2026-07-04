@@ -85,9 +85,23 @@ export interface TalentNode {
   unlocked: boolean;
 }
 
+export type PlayerAchievementCategoryId =
+  | 'exploration'
+  | 'creature_collection'
+  | 'crafting'
+  | 'economy'
+  | 'housing'
+  | 'dungeons'
+  | 'pvp'
+  | 'guilds'
+  | 'world_completion'
+  | 'rare_events';
+
 export interface TitleEntry {
   key: string;
   name: string;
+  category: PlayerAchievementCategoryId;
+  description?: string;
   unlockedAt?: number;
 }
 
@@ -95,6 +109,7 @@ export interface AchievementEntry {
   key: string;
   name: string;
   description: string;
+  category: PlayerAchievementCategoryId;
   unlocked: boolean;
   unlockedAt?: number;
   progress?: number;

@@ -9,6 +9,7 @@ export type {
   TalentTreeCategory,
   TalentTreeCategoryId,
   TalentNode,
+  PlayerAchievementCategoryId,
   TitleEntry,
   AchievementEntry,
   PlayerStatistics,
@@ -39,6 +40,22 @@ export {
   createSkillEntry,
   createTalentNode,
 } from './skillTalentCore.ts';
+export {
+  TITLE_DEFINITIONS,
+  ACHIEVEMENT_DEFINITIONS,
+  getAllTitleDefinitions,
+  getAllAchievementDefinitions,
+  isPlayerAchievementCategory,
+  normalizeTitleEntry,
+  normalizeAchievementEntry,
+  createTitleEntry,
+  createAchievementEntry,
+  evaluateAchievementProgress,
+  evaluateAchievements,
+  getUnlockedTitlesForAchievements,
+  refreshTitleAchievementState,
+} from './titleAchievementCore.ts';
+export type { TitleDefinition, AchievementDefinition } from './titleAchievementCore.ts';
 export { createDefaultPlayerCoreState, migratePlayerStateToCore, ARCHETYPE_TO_CLASS } from './factory.ts';
 export { createCharacter, CONTRACT_PATHS } from './characterCreation.ts';
 export type {

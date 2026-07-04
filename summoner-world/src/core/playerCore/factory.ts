@@ -6,6 +6,7 @@ import { createDefaultCreatureSlots } from './creatureSlotCore';
 import { createContract } from './contractCore';
 import { getNodeById } from '../../data/careerTree';
 import { createSkillEntry, createTalentNode, inferTalentCategory } from './skillTalentCore';
+import { refreshTitleAchievementState } from './titleAchievementCore';
 
 export const ARCHETYPE_TO_CLASS: Record<string, SummonerClass> = {
   fighter: 'tactician',
@@ -34,8 +35,10 @@ export function createDefaultPlayerCoreState(
 
   const primaryStats = calculatePrimaryStats(sClass, 1);
   const secondaryStats = calculateSecondaryStats(primaryStats, []);
+  const createdAt = Date.now();
+  const createdAtIso = new Date(createdAt).toISOString();
 
-  return {
+  const core: PlayerCoreState = {
     identity: {
       id: generateId(),
       name,
@@ -90,15 +93,15 @@ export function createDefaultPlayerCoreState(
       activeWorldId: startingWorldId,
     },
     saveMetadata: {
-      lastSavedAt: new Date().toISOString(),
+      lastSavedAt: createdAtIso,
       playtimeSeconds: 0,
       saveVersion: '1.0.0',
     },
     resources: {
-      energy: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
-      nerve: { current: 15, max: 15, lastUpdate: new Date().toISOString() },
-      happy: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
-      life: { current: 100, max: 100, lastUpdate: new Date().toISOString() },
+      energy: { current: 100, max: 100, lastUpdate: createdAtIso },
+      nerve: { current: 15, max: 15, lastUpdate: createdAtIso },
+      happy: { current: 100, max: 100, lastUpdate: createdAtIso },
+      life: { current: 100, max: 100, lastUpdate: createdAtIso },
     },
     position: {
       worldId: startingWorldId,
@@ -115,6 +118,8 @@ export function createDefaultPlayerCoreState(
     dayCount: 1,
     gameTimeMinutes: 420,
   };
+
+  return refreshTitleAchievementState(core, createdAt);
 }
 
 function generateId(): string {
@@ -144,7 +149,7 @@ export function migratePlayerStateToCore(player: PlayerState): PlayerCoreState {
 
   const secondaryStats = calculateSecondaryStats(primaryStats, []);
 
-  return {
+  const migrated: PlayerCoreState = {
     identity: {
       id: player.id,
       name: player.name,
@@ -241,4 +246,6 @@ export function migratePlayerStateToCore(player: PlayerState): PlayerCoreState {
     gameTimeMinutes: player.gameTimeMinutes,
     isOnline: player.isOnline,
   };
+
+  return refreshTitleAchievementState(migrated);
 }

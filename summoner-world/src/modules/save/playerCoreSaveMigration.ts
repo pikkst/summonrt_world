@@ -3,6 +3,12 @@ import type { PlayerCoreState } from '../../types/playerCore.ts';
 import type { ActiveMission } from '../../core/missionQueue.ts';
 import { createDefaultPlayerCoreState, migratePlayerStateToCore } from '../../core/playerCore/index.ts';
 import { normalizeSkillEntry, normalizeTalentNode } from '../../core/playerCore/skillTalentCore.ts';
+import {
+  getUnlockedTitlesForAchievements,
+  normalizeAchievementEntry,
+  normalizeTitleEntry,
+  evaluateAchievements,
+} from '../../core/playerCore/titleAchievementCore.ts';
 
 export const ACTIVE_SAVE_KEY = 'summonerworld-save';
 export const LEGACY_HELPER_SAVE_KEY = 'summonerworld-save-v1';
@@ -67,6 +73,19 @@ export function deserializePlayerCore(data: unknown): PlayerCoreState {
     affinity: raw.elements,
   });
 
+  const statistics = {
+    ...defaults.statistics,
+    ...raw.statistics,
+  };
+  const achievements = evaluateAchievements(
+    statistics,
+    normalizeAchievementEntries(raw.achievements, defaults.achievements)
+  );
+  const titles = getUnlockedTitlesForAchievements(
+    achievements,
+    normalizeTitleEntries(raw.titles, defaults.titles)
+  );
+
   return {
     ...defaults,
     ...raw,
@@ -87,10 +106,7 @@ export function deserializePlayerCore(data: unknown): PlayerCoreState {
       ...defaults.secondaryStats,
       ...raw.secondaryStats,
     },
-    statistics: {
-      ...defaults.statistics,
-      ...raw.statistics,
-    },
+    statistics,
     reputation: {
       ...defaults.reputation,
       ...raw.reputation,
@@ -136,8 +152,8 @@ export function deserializePlayerCore(data: unknown): PlayerCoreState {
     equipment: raw.equipment ?? defaults.equipment,
     skills: normalizeSkillEntries(raw.skills, defaults.skills),
     talents: normalizeTalentNodes(raw.talents, defaults.talents),
-    titles: raw.titles ?? defaults.titles,
-    achievements: raw.achievements ?? defaults.achievements,
+    titles,
+    achievements,
     creatureContracts: raw.creatureContracts ?? defaults.creatureContracts,
     level: raw.level ?? defaults.level,
     experience: toBigInt(raw.experience),
@@ -216,8 +232,7 @@ export function deserializeLegacyPlayer(data: unknown): PlayerState {
 
 export function migrateLegacyPlayerToCore(player: PlayerState, previous?: PlayerCoreState): PlayerCoreState {
   const migrated = migratePlayerStateToCore(player);
-
-  return {
+  const merged: PlayerCoreState = {
     ...migrated,
     equipment: previous?.equipment ?? migrated.equipment,
     titles: previous?.titles ?? migrated.titles,
@@ -229,6 +244,15 @@ export function migrateLegacyPlayerToCore(player: PlayerState, previous?: Player
       lastSavedAt: new Date().toISOString(),
       saveVersion: PLAYER_CORE_SAVE_VERSION,
     },
+  };
+
+  const achievements = evaluateAchievements(merged.statistics, merged.achievements);
+  const titles = getUnlockedTitlesForAchievements(achievements, merged.titles);
+
+  return {
+    ...merged,
+    achievements,
+    titles,
   };
 }
 
@@ -435,6 +459,28 @@ function normalizeTalentNodes(
   return talents
     .filter((entry): entry is { nodeId: string } => isRecord(entry) && typeof entry.nodeId === 'string')
     .map((entry) => normalizeTalentNode(entry));
+}
+
+function normalizeTitleEntries(
+  titles: unknown,
+  defaults: PlayerCoreState['titles']
+): PlayerCoreState['titles'] {
+  if (!Array.isArray(titles)) return defaults;
+
+  return titles
+    .filter((entry): entry is { key: string } => isRecord(entry) && typeof entry.key === 'string')
+    .map((entry) => normalizeTitleEntry(entry));
+}
+
+function normalizeAchievementEntries(
+  achievements: unknown,
+  defaults: PlayerCoreState['achievements']
+): PlayerCoreState['achievements'] {
+  if (!Array.isArray(achievements)) return defaults;
+
+  return achievements
+    .filter((entry): entry is { key: string } => isRecord(entry) && typeof entry.key === 'string')
+    .map((entry) => normalizeAchievementEntry(entry));
 }
 
 function serializeValue(value: unknown): JsonValue {
