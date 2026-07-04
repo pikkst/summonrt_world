@@ -52,6 +52,9 @@ Implemented Equipment Core for Sprint 6.5 Player Core Architecture Alignment.
 - `summoner-world/src/test/playerStatistics.test.ts` - Added tests for summoningCost and travelUtility modifiers
 - `summoner-world/src/test/playerCore.test.ts` - Updated equipment assertion from empty array to 12 slots
 
+## Additional refactoring
+- Consolidated duplicate reduce logic in `getSummoningCostModifier` and `getTravelUtilityModifier` into a shared helper function `getEquipmentModifierSum`
+
 ## Validation Results
 
 ```
