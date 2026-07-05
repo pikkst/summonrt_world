@@ -411,7 +411,7 @@ Sprint goal: align implementation with the new Player Core Bible before expandin
 Sprint goal: expand world generation with weather, fast travel, biomes and settlements.
 
 - [x] T7.1 – Implement full Perlin/Voronoi biome generation (not just gradient)
-- [ ] T7.2 – Add 5-8 major biomes per world (per GDD)
+- [x] T7.2 – Add 5-8 major biomes per world (per GDD)
 - [ ] T7.3 – Implement weather system (Clear, Cloudy, Rainy, Stormy, Foggy, Hail, Blizzard)
 - [ ] T7.4 – Add weather effects: encounter tables, resource yield, elemental affinity bonus
 - [ ] T7.5 – Implement fast travel: unlocked via discovered settlements, roads or creature-mounted traversal

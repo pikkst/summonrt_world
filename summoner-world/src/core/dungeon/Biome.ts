@@ -87,6 +87,26 @@ function fractalPerlin2D(x: number, y: number, seed: number, salt: number): numb
   return clamp01((total / maxAmplitude) * 0.5 + 0.5);
 }
 
+function getBiomeCountForWorld(seed: number): number {
+  const hash = hashInt(0, 0, seed, 9002);
+  return 5 + (hash % 4);
+}
+
+function getSelectedBiomesForWorld(seed: number): BiomeType[] {
+  const biomeCount = getBiomeCountForWorld(seed);
+  const shuffled = [...BIOME_REGION_ORDER];
+
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.abs(hashInt(i, 0, seed, 9997)) % (i + 1));
+    const tempI: BiomeType = shuffled[i]!;
+    const tempJ: BiomeType = shuffled[j]!;
+    shuffled[i] = tempJ;
+    shuffled[j] = tempI;
+  }
+
+  return shuffled.slice(0, biomeCount);
+}
+
 function pickVoronoiRegion(x: number, y: number, seed: number): {
   biome: BiomeType;
   influence: number;
@@ -117,12 +137,13 @@ function pickVoronoiRegion(x: number, y: number, seed: number): {
     }
   }
 
-  const biomeIndex = hashInt(closestCellX, closestCellY, seed, 9001) % BIOME_REGION_ORDER.length;
+  const selectedBiomes = getSelectedBiomesForWorld(seed);
+  const biomeIndex = Math.abs(hashInt(closestCellX, closestCellY, seed, 9001)) % selectedBiomes.length;
   const borderDistance = Math.max(0, secondClosestDistance - closestDistance);
   const influence = clamp01(borderDistance / (VORONOI_CELL_SIZE * 0.55));
 
   return {
-    biome: BIOME_REGION_ORDER[biomeIndex]!,
+    biome: selectedBiomes[biomeIndex]!,
     influence,
   };
 }
