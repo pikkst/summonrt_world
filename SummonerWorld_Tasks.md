@@ -414,7 +414,7 @@ Sprint goal: expand world generation with weather, fast travel, biomes and settl
 - [x] T7.2 – Add 5-8 major biomes per world (per GDD)
 - [x] T7.3 – Implement weather system (Clear, Cloudy, Rainy, Stormy, Foggy, Hail, Blizzard)
 - [x] T7.4 – Add weather effects: encounter tables, resource yield, elemental affinity bonus
-- [ ] T7.5 – Implement fast travel: unlocked via discovered settlements, roads or creature-mounted traversal
+- [x] T7.5 – Implement fast travel: unlocked via discovered settlements, roads or creature-mounted traversal
 - [ ] T7.6 – Add settlement placement (cities near rivers, forts on ridges, biased by biome)
 - [ ] T7.7 – Implement `getBiomeForCoords` fully (not just dist-based gradient)
 - [ ] T7.8 – Add resource respawn logic: plants 30 days, ore 90 days (game-time based)

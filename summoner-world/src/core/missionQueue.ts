@@ -16,7 +16,8 @@ export type MissionType =
   | 'GATHER_RESOURCE'
   | 'CAPTURE_CREATURE'
   | 'DEMONLORD_ENCOUNTER'
-  | 'WILD_ENCOUNTER';
+  | 'WILD_ENCOUNTER'
+  | 'TRAVEL';
 
 export type MissionStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 

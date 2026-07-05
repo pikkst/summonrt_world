@@ -36,6 +36,7 @@ import {
   migrateSaveToV2,
   projectCoreToLegacyPlayer,
 } from '../../../modules/save/playerCoreSaveMigration.ts';
+import { getFastTravelPointsNear } from '../../../core/fastTravel.ts';
 
 function buildValidatedUrl(baseUrl: string, playerId: string): string {
   try {
@@ -1119,5 +1120,67 @@ const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(cu
     }));
 
     appendLog(`${fortuneMessage} Found: ${itemName}`, 'success');
+  },
+
+  startTravel: (destination: { worldId: number; x: number; y: number }, isMount: boolean = false) => {
+    const { player, appendLog } = get();
+    const playerCore = get().playerCore;
+    if (!player) return;
+
+    const travelDistance = Math.hypot(destination.x - player.tileX, destination.y - player.tileY);
+    const baseDurationMs = travelDistance * 100;
+
+    let speedBonus = 0;
+    if (isMount) speedBonus += 50;
+    if (playerCore?.fastTravel) {
+      const nearPoint = getFastTravelPointsNear(
+        playerCore.fastTravel,
+        player.tileX,
+        player.tileY,
+        50
+      )[0];
+      if (nearPoint?.type === 'settlement') speedBonus += 40;
+    }
+
+    const finalDuration = Math.max(1000, baseDurationMs * (1 - Math.min(0.9, speedBonus / 100)));
+
+    const travelId = `travel_${Date.now()}`;
+    set((state) => ({
+      exploring: {
+        tileKey: `${destination.worldId}:${destination.x},${destination.y}`,
+        endTime: Date.now() + finalDuration,
+        totalDuration: finalDuration,
+        targetX: destination.x,
+        targetY: destination.y,
+      },
+      log: [...state.log.slice(-499), createLog(`Traveling to (${destination.x}, ${destination.y})... Estimated time: ${(finalDuration / 1000).toFixed(1)}s`, 'info', state.turnCount)]
+    }));
+
+    setTimeout(() => {
+      get().finishMovement(destination.x, destination.y, `${destination.worldId}:${destination.x},${destination.y}`, true);
+    }, finalDuration);
+  },
+
+  discoverSettlement: (settlementId: string) => {
+    const { playerCore, appendLog } = get();
+    if (!playerCore) return;
+
+    const currentlyDiscovered = playerCore.fastTravel.discoveredPointIds.has(settlementId);
+    if (currentlyDiscovered) return;
+
+    set((state) => {
+      const newDiscovered = new Set(state.playerCore!.fastTravel.discoveredPointIds);
+      newDiscovered.add(settlementId);
+      return {
+        playerCore: {
+          ...state.playerCore!,
+          fastTravel: {
+            ...state.playerCore!.fastTravel,
+            discoveredPointIds: newDiscovered,
+          },
+        },
+        log: [...state.log.slice(-499), createLog(`Settlement discovered! Fast travel unlocked.`, 'success', state.turnCount)]
+      };
+    });
   },
 });

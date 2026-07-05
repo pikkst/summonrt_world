@@ -1,4 +1,4 @@
-import type { PlayerCoreState, SummonerClass, PlayerPrimaryStats, PlayerSecondaryStats, CreatureSlots } from '../../types/playerCore.ts';
+import type { PlayerCoreState, SummonerClass, PlayerPrimaryStats, PlayerSecondaryStats, CreatureSlots, FastTravelState } from '../../types/playerCore.ts';
 import type { PlayerState } from '../../types/game.ts';
 import { calculatePrimaryStats, calculateSecondaryStats, useFinalStats } from './playerStatistics';
 import { createEmptyEquipmentSlots } from './equipmentCore';
@@ -76,6 +76,11 @@ export function createDefaultPlayerCoreState(
     worldUnlocks: {
       unlockedWorlds: [startingWorldId],
       activeWorldId: startingWorldId,
+    },
+    fastTravel: {
+      points: [],
+      discoveredPointIds: new Set(),
+      activeTravel: undefined,
     },
     saveMetadata: {
       lastSavedAt: createdAtIso,
@@ -195,6 +200,11 @@ export function migratePlayerStateToCore(player: PlayerState): PlayerCoreState {
     worldUnlocks: {
       unlockedWorlds,
       activeWorldId: currentWorldId,
+    },
+    fastTravel: {
+      points: [],
+      discoveredPointIds: new Set(),
+      activeTravel: undefined,
     },
     saveMetadata: {
       lastSavedAt: new Date().toISOString(),
