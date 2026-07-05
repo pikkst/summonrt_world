@@ -6,6 +6,7 @@ import { generateCreatureTemplate, registerSpeciesLine } from '../../modules/cre
 import { SeededRandom } from '../../utils/SeededRandom.ts';
 import { SUMMONER_CLASSES } from '../../data/summonerClasses';
 import { createContract } from './contractCore';
+import { recalculateAllStats } from './playerStatistics';
 
 export type ContractPath = 'companion' | 'drake' | 'shade' | 'golem' | 'wisp';
 
@@ -107,6 +108,13 @@ export function createCharacter(options: CharacterCreationOptions): CharacterCre
   playerCore.summonerProfile.firstContractPath = contractPathKey;
   playerCore.class = className as SummonerClass;
   playerCore.identity.appearance = options.appearance ?? {};
+  const recalculatedStats = recalculateAllStats({
+    level: playerCore.level,
+    classId: playerCore.class,
+    equipment: playerCore.equipment,
+  });
+  playerCore.primaryStats = recalculatedStats.primaryStats;
+  playerCore.secondaryStats = recalculatedStats.secondaryStats;
 
   const startingCreature: CreatureInstance = {
     id: crypto.randomUUID?.() ?? `creature-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,

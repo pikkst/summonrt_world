@@ -136,6 +136,32 @@ export function validateContract(contract: CreatureContract): ContractValidation
   return { valid: errors.length === 0, errors };
 }
 
+export function validatePlayerContractOwnership(state: PlayerCoreState): ContractValidationResult {
+  const errors: string[] = [];
+  const ownerId = state.identity?.id;
+
+  if (state.creatureContracts.length > 0 && (!ownerId || ownerId.length === 0)) {
+    errors.push('Creature contracts require a player owner');
+  }
+
+  const contractIds = new Set<string>();
+  for (const contract of state.creatureContracts) {
+    const contractResult = validateContract(contract);
+    errors.push(...contractResult.errors.map((error) => `${contract.id || 'unknown'}: ${error}`));
+
+    if (contractIds.has(contract.id)) {
+      errors.push(`Duplicate creature contract id: ${contract.id}`);
+    }
+    contractIds.add(contract.id);
+
+    if (contract.instance?.id && contract.instance.id !== contract.id) {
+      errors.push(`Creature contract ${contract.id} must own matching creature instance ${contract.instance.id}`);
+    }
+  }
+
+  return { valid: errors.length === 0, errors };
+}
+
 export function getContractById(
   state: PlayerCoreState,
   contractId: string

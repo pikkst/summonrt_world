@@ -399,7 +399,7 @@ Sprint goal: align implementation with the new Player Core Bible before expandin
 * Creature AI state remains creature/world state
 * Quest history, housing, economy state, reputation, achievements, statistics, and world unlocks persist under Player Core
 
-- [ ] T6P.17 – Add Player Core tests
+- [x] T6P.17 – Add Player Core tests
 
 * Character creation creates valid PlayerCoreState
 * Element/class decisions produce deterministic modifiers
