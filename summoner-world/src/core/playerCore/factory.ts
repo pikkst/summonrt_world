@@ -6,6 +6,7 @@ import { createDefaultCreatureSlots } from './creatureSlotCore';
 import { createContract } from './contractCore';
 import { getNodeById } from '../../data/careerTree';
 import { createSkillEntry, createTalentNode, inferTalentCategory } from './skillTalentCore';
+import { createDefaultReputationState } from './reputationCore';
 import { refreshTitleAchievementState } from './titleAchievementCore';
 import { createDefaultPlayerStatistics } from './playerStatisticsTracking';
 
@@ -65,12 +66,7 @@ export function createDefaultPlayerCoreState(
     titles: [],
     achievements: [],
     statistics: createDefaultPlayerStatistics(1),
-    reputation: {
-      world_rep: {},
-      faction_rep: {},
-      settlement_rep: {},
-      creature_rep: {},
-    },
+    reputation: createDefaultReputationState(startingWorldId),
     questHistory: {
       active: [],
       completed: [],
@@ -181,12 +177,7 @@ export function migratePlayerStateToCore(player: PlayerState): PlayerCoreState {
       goldEarned: player.money,
       questsCompleted: player.completedQuests.length,
     },
-    reputation: {
-      world_rep: {},
-      faction_rep: {},
-      settlement_rep: {},
-      creature_rep: {},
-    },
+    reputation: createDefaultReputationState(currentWorldId),
     questHistory: {
       active: player.activeQuests,
       completed: player.completedQuests,

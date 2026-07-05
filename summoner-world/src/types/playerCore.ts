@@ -164,6 +164,29 @@ export interface ReputationState {
   creature_rep: Record<string, number>;
 }
 
+export type ReputationDomain = 'world' | 'faction' | 'settlement' | 'creature';
+
+export type ReputationChangeSource =
+  | 'quest'
+  | 'trading'
+  | 'ecosystem_impact'
+  | 'dungeon_clearing';
+
+export interface ReputationChange {
+  domain: ReputationDomain;
+  targetId: number | string;
+  amount: number;
+  source: ReputationChangeSource;
+}
+
+export interface ReputationEffects {
+  merchantPriceMultiplier: number;
+  creatureCaptureChanceModifierPct: number;
+  settlementGrowthModifierPct: number;
+  dungeonDifficultyModifierPct: number;
+  npcReactionModifierPct: number;
+}
+
 export type ItemCategory =
   | 'equipment'
   | 'consumable'

@@ -78,6 +78,7 @@ model Player {
   maxHealth       Int
   mana            Int
   maxMana         Int
+  reputation      Json?     // {world_rep, faction_rep, settlement_rep, creature_rep}
 
   // Position & world
   currentWorldId  Int
