@@ -324,7 +324,7 @@ describe('Player Statistics - Progress Tracking', () => {
 
   it('normalizes invalid statistic payloads for save compatibility', () => {
     const statistics = normalizePlayerStatistics({
-      worldsUnlocked: Number.NaN,
+      worldsUnlocked: 0,
       goldEarned: -20,
       questsCompleted: 4.8,
     });
@@ -332,6 +332,12 @@ describe('Player Statistics - Progress Tracking', () => {
     expect(statistics.worldsUnlocked).toBe(1);
     expect(statistics.goldEarned).toBe(0);
     expect(statistics.questsCompleted).toBe(4);
+  });
+
+  it('does not create impossible zero-world statistic defaults', () => {
+    const statistics = createDefaultPlayerStatistics(0);
+
+    expect(statistics.worldsUnlocked).toBe(1);
   });
 
   it('merges legacy-derived statistics without losing player-core counters', () => {

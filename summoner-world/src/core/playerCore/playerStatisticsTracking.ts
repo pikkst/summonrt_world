@@ -95,7 +95,7 @@ export const PLAYER_STATISTIC_DEFINITIONS: Record<PlayerStatisticKey, PlayerStat
 
 export function createDefaultPlayerStatistics(startingWorldCount = 1): PlayerStatistics {
   return {
-    worldsUnlocked: Math.max(0, Math.floor(startingWorldCount)),
+    worldsUnlocked: normalizeStatisticValue(startingWorldCount, 1, 1),
     creaturesContracted: 0,
     dungeonsCleared: 0,
     itemsCrafted: 0,
@@ -112,7 +112,7 @@ export function createDefaultPlayerStatistics(startingWorldCount = 1): PlayerSta
 export function normalizePlayerStatistics(value: Partial<PlayerStatistics> | undefined): PlayerStatistics {
   const defaults = createDefaultPlayerStatistics();
   return {
-    worldsUnlocked: normalizeStatisticValue(value?.worldsUnlocked, defaults.worldsUnlocked),
+    worldsUnlocked: normalizeStatisticValue(value?.worldsUnlocked, defaults.worldsUnlocked, 1),
     creaturesContracted: normalizeStatisticValue(value?.creaturesContracted, defaults.creaturesContracted),
     dungeonsCleared: normalizeStatisticValue(value?.dungeonsCleared, defaults.dungeonsCleared),
     itemsCrafted: normalizeStatisticValue(value?.itemsCrafted, defaults.itemsCrafted),
@@ -199,9 +199,9 @@ export function applyPlayerStatisticEvent(
   }
 }
 
-function normalizeStatisticValue(value: unknown, fallback: number): number {
+function normalizeStatisticValue(value: unknown, fallback: number, minimum = 0): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) return fallback;
-  return Math.max(0, Math.floor(value));
+  return Math.max(minimum, Math.floor(value));
 }
 
 function assertNever(value: never): never {
