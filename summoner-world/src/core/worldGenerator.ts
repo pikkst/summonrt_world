@@ -1,8 +1,9 @@
 import { SeededRandom } from '../utils/SeededRandom.ts';
-import type { TileData, WorldData, ElementalAffinity, NPC, WeatherState } from '../types/game.ts';
+import type { TileData, WorldData, ElementalAffinity, NPC, WeatherState, Settlement } from '../types/game.ts';
 import { RESOURCES, getWorldName, getFloorSeed, getTileKey, getNeighbors } from '../data/constants.ts';
 import { getBiomeForCoords } from './dungeon/Biome';
 import { createInitialWeatherState } from './Weather';
+import { generateSettlements } from './settlementGenerator';
 
 const WORLD_SIZE = 2000; // 2000x2000 = 4 million sectors
 
@@ -108,6 +109,7 @@ export function generateWorld(worldId: number, _playerAffinity: ElementalAffinit
     }
 
    const weather = createInitialWeatherState(floorSeed, 0);
+   const settlements = generateSettlements(worldId, floorSeed);
 
    return {
       id: worldId,
@@ -119,5 +121,6 @@ export function generateWorld(worldId: number, _playerAffinity: ElementalAffinit
       tiles,
       startTile: { x: startX, y: startY },
       weather,
+      settlements,
     };
   }

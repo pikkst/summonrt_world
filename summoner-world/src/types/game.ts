@@ -177,6 +177,21 @@ export interface WeatherState {
   baseDuration: number;
 }
 
+export type SettlementType = 'city' | 'fort' | 'village' | 'settlement' | 'outpost';
+
+export interface Settlement {
+  id: string;
+  type: SettlementType;
+  worldId: number;
+  x: number;
+  y: number;
+  name: string;
+  biome: BiomeType;
+  elevation: number;
+  nearWater: boolean;
+  discovered: boolean;
+}
+
 export interface TileData {
   x: number;
   y: number;
@@ -189,6 +204,7 @@ export interface TileData {
   resourceRespawnTurn?: number;
   encounterSeed?: number;
   npc?: NPC;
+  settlement?: Settlement;
 }
 
 export interface WorldData {
@@ -201,6 +217,7 @@ export interface WorldData {
   tiles: Map<string, TileData>;
   startTile: { x: number; y: number };
   weather: WeatherState;
+  settlements: Settlement[];
 }
 
 export interface Resource {

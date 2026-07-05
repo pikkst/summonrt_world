@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useGameStore } from '../stores/gameStore';
 import { generateDungeonTower } from '../core/dungeon/DungeonTowerGenerator';
-import type { WorldData, TileData, WeatherState } from '../types/game';
+import type { WorldData, TileData, WeatherState, Settlement } from '../types/game';
 
 function createTestPlayer(overrides: { inventory?: { templateKey: string; quantity: number }[] } = {}) {
    return {
@@ -57,17 +57,18 @@ function setupDungeon(worldIndex = 1, clearedFloors: number[] = [], inventory: {
      nextChangeTurn: 100,
      baseDuration: 100,
    };
-   worlds.set(worldIndex, {
-     id: worldIndex,
-     seed: 12345,
-     name: 'Test World',
-     tier: 1,
-     bossDefeated: false,
-     dungeonFloors: tower.totalFloors,
-     tiles: new Map<string, TileData>(),
-     startTile: { x: 10, y: 10 },
-     weather: weatherState,
-   });
+worlds.set(worldIndex, {
+      id: worldIndex,
+      seed: 12345,
+      name: 'Test World',
+      tier: 1,
+      bossDefeated: false,
+      dungeonFloors: tower.totalFloors,
+      tiles: new Map<string, TileData>(),
+      startTile: { x: 10, y: 10 },
+      weather: weatherState,
+      settlements: [] as Settlement[],
+    });
   const testPlayer = createTestPlayer({ inventory });
   useGameStore.setState({
     player: testPlayer,

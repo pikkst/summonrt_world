@@ -13,7 +13,7 @@ import {
   serializeLegacyPlayer,
 } from '../modules/save/playerCoreSaveMigration.ts';
 import { createDefaultPlayerCoreState } from '../core/playerCore/index.ts';
-import type { PlayerState, WorldData, WeatherState } from '../types/game.ts';
+import type { PlayerState, WorldData, WeatherState, Settlement } from '../types/game.ts';
 
 function makeLegacyPlayer(): PlayerState {
   return {
@@ -111,6 +111,7 @@ function makeWorld(): WorldData {
       ['22,33', { x: 22, y: 33, biome: 'forest', discovered: true, explored: true }],
     ]),
     weather,
+    settlements: [] as Settlement[],
   };
 }
 
