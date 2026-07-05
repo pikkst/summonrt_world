@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useGameStore } from '../stores/gameStore';
 import { generateDungeonTower } from '../core/dungeon/DungeonTowerGenerator';
-import type { WorldData, TileData } from '../types/game';
+import type { WorldData, TileData, WeatherState } from '../types/game';
 
 function createTestPlayer(overrides: { inventory?: { templateKey: string; quantity: number }[] } = {}) {
    return {
@@ -49,18 +49,25 @@ function createTestPlayer(overrides: { inventory?: { templateKey: string; quanti
  }
 
 function setupDungeon(worldIndex = 1, clearedFloors: number[] = [], inventory: { templateKey: string; quantity: number }[] = []) {
-  const tower = generateDungeonTower(worldIndex, 12345);
-  const worlds = new Map<number, WorldData>();
-  worlds.set(worldIndex, {
-    id: worldIndex,
-    seed: 12345,
-    name: 'Test World',
-    tier: 1,
-    bossDefeated: false,
-    dungeonFloors: tower.totalFloors,
-    tiles: new Map<string, TileData>(),
-    startTile: { x: 10, y: 10 },
-  });
+   const tower = generateDungeonTower(worldIndex, 12345);
+   const worlds = new Map<number, WorldData>();
+   const weatherState: WeatherState = {
+     currentWeather: 'Clear',
+     weatherIntensity: 1.0,
+     nextChangeTurn: 100,
+     baseDuration: 100,
+   };
+   worlds.set(worldIndex, {
+     id: worldIndex,
+     seed: 12345,
+     name: 'Test World',
+     tier: 1,
+     bossDefeated: false,
+     dungeonFloors: tower.totalFloors,
+     tiles: new Map<string, TileData>(),
+     startTile: { x: 10, y: 10 },
+     weather: weatherState,
+   });
   const testPlayer = createTestPlayer({ inventory });
   useGameStore.setState({
     player: testPlayer,

@@ -1,7 +1,8 @@
 import { SeededRandom } from '../utils/SeededRandom.ts';
-import type { TileData, WorldData, ElementalAffinity, NPC } from '../types/game.ts';
+import type { TileData, WorldData, ElementalAffinity, NPC, WeatherState } from '../types/game.ts';
 import { RESOURCES, getWorldName, getFloorSeed, getTileKey, getNeighbors } from '../data/constants.ts';
 import { getBiomeForCoords } from './dungeon/Biome';
+import { createInitialWeatherState } from './Weather';
 
 const WORLD_SIZE = 2000; // 2000x2000 = 4 million sectors
 
@@ -96,24 +97,27 @@ export function generateWorld(worldId: number, _playerAffinity: ElementalAffinit
 
    // Generate only the starting tile and its immediate neighbors
    for (let dy = -2; dy <= 2; dy++) {
-     for (let dx = -2; dx <= 2; dx++) {
-       const tx = startX + dx;
-       const ty = startY + dy;
-       const tile = generateTile(tx, ty, worldId);
-       tile.discovered = true;
-       if (dx === 0 && dy === 0) tile.explored = true;
-       tiles.set(getTileKey(tx, ty), tile);
-     }
-   }
+      for (let dx = -2; dx <= 2; dx++) {
+        const tx = startX + dx;
+        const ty = startY + dy;
+        const tile = generateTile(tx, ty, worldId);
+        tile.discovered = true;
+        if (dx === 0 && dy === 0) tile.explored = true;
+        tiles.set(getTileKey(tx, ty), tile);
+      }
+    }
+
+   const weather = createInitialWeatherState(floorSeed, 0);
 
    return {
-     id: worldId,
-     seed: floorSeed,
-     name: getWorldName(worldId),
-     tier: worldId,
-     bossDefeated: false,
-     dungeonFloors: 3 + worldId,
-     tiles,
-     startTile: { x: startX, y: startY },
-   };
- }
+      id: worldId,
+      seed: floorSeed,
+      name: getWorldName(worldId),
+      tier: worldId,
+      bossDefeated: false,
+      dungeonFloors: 3 + worldId,
+      tiles,
+      startTile: { x: startX, y: startY },
+      weather,
+    };
+  }

@@ -40,6 +40,27 @@ export function getFloorSeed(floor: number): number {
 
 export const BIOME_NAMES = { forest:'Enchanted Forest', plains:'Verdant Plains', mountains:'Stone Peaks', swamp:'Murky Swamp', desert:'Scorched Desert', tundra:'Frozen Tundra', coast:'Azure Coast', volcanic:'Volcanic Wastes', crystal_caves:'Crystal Caverns', sky_islands:'Sky Islands' };
 export const WEATHER_TYPES = ['Clear','Cloudy','Rainy','Stormy','Foggy','Hail','Blizzard'] as const;
+export type WeatherType = typeof WEATHER_TYPES[number];
+
+export const WEATHER_EFFECTS = {
+  Clear: { encounterModifier: 1.0, resourceYieldModifier: 1.0, elementalBonus: 0 },
+  Cloudy: { encounterModifier: 1.1, resourceYieldModifier: 1.05, elementalBonus: 0 },
+  Rainy: { encounterModifier: 1.2, resourceYieldModifier: 1.1, elementalBonus: 0 },
+  Stormy: { encounterModifier: 1.3, resourceYieldModifier: 1.15, elementalBonus: 0 },
+  Foggy: { encounterModifier: 1.15, resourceYieldModifier: 0.95, elementalBonus: 0 },
+  Hail: { encounterModifier: 1.05, resourceYieldModifier: 0.9, elementalBonus: 0 },
+  Blizzard: { encounterModifier: 1.1, resourceYieldModifier: 0.85, elementalBonus: 0 },
+} as const;
+
+export const WEATHER_TRANSITION_WEIGHTS: Record<string, Record<string, number>> = {
+  Clear: { Cloudy: 30, Rainy: 20, Stormy: 5, Foggy: 15, Hail: 3, Blizzard: 2, Clear: 25 },
+  Cloudy: { Clear: 20, Rainy: 25, Stormy: 15, Foggy: 20, Hail: 5, Blizzard: 5, Cloudy: 10 },
+  Rainy: { Clear: 10, Cloudy: 20, Stormy: 20, Foggy: 15, Blizzard: 10, Rainy: 5 },
+  Stormy: { Clear: 5, Rainy: 15, Foggy: 20, Blizzard: 25, Stormy: 25 },
+  Foggy: { Clear: 15, Cloudy: 25, Rainy: 20, Stormy: 15, Blizzard: 15, Foggy: 10 },
+  Hail: { Clear: 10, Cloudy: 15, Rainy: 20, Stormy: 25, Blizzard: 20, Hail: 10 },
+  Blizzard: { Clear: 15, Cloudy: 20, Rainy: 15, Stormy: 20, Foggy: 15, Blizzard: 15 },
+};
 export const RESOURCES: Record<string, {name: string, icon: string}> = { 
   wood: { name: 'Wood', icon: '🌲' }, 
   stone: { name: 'Stone', icon: '🪨' }, 
