@@ -1,25 +1,4 @@
-import type { Element } from '../types/game';
-
-export type FastTravelPointType = 'settlement' | 'road' | 'creature_mount';
-
-export interface FastTravelPoint {
-  id: string;
-  type: FastTravelPointType;
-  worldId: number;
-  x: number;
-  y: number;
-  unlocked: boolean;
-  unlockCost?: number;
-  elementBonus?: Element;
-  description?: string;
-}
-
-export interface FastTravelDestination {
-  worldId: number;
-  x: number;
-  y: number;
-  pointId?: string;
-}
+import type { Element, FastTravelPointType, FastTravelPoint, FastTravelDestination } from '../types/game';
 
 export interface FastTravelState {
   points: FastTravelPoint[];

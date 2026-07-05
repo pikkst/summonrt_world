@@ -5,7 +5,11 @@ import type {
   InventoryStack,
   Resource,
   CreatureInstance,
+  FastTravelPointType,
+  FastTravelPoint,
+  FastTravelDestination,
 } from './game.ts';
+import type { FastTravelState } from '../core/fastTravel.ts';
 
 export type SummonerClass =
   | 'beast_binder'
@@ -298,38 +302,6 @@ export interface HousingReference {
 export interface WorldUnlocks {
   unlockedWorlds: number[];
   activeWorldId: number;
-}
-
-export interface FastTravelDestination {
-  worldId: number;
-  x: number;
-  y: number;
-  pointId?: string;
-}
-
-export type FastTravelPointType = 'settlement' | 'road' | 'creature_mount';
-
-export interface FastTravelPoint {
-  id: string;
-  type: FastTravelPointType;
-  worldId: number;
-  x: number;
-  y: number;
-  unlocked: boolean;
-  unlockCost?: number;
-  elementBonus?: Element;
-  description?: string;
-}
-
-export interface FastTravelState {
-  points: FastTravelPoint[];
-  discoveredPointIds: Set<string>;
-  activeTravel?: {
-    destination: FastTravelDestination;
-    startTime: number;
-    duration: number;
-    travelType: 'walking' | 'fast_travel' | 'mount';
-  };
 }
 
 export interface SaveMetadata {
