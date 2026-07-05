@@ -1,36 +1,4 @@
-import type { Element } from '../types/game';
-
-export type FastTravelPointType = 'settlement' | 'road' | 'creature_mount';
-
-export interface FastTravelPoint {
-  id: string;
-  type: FastTravelPointType;
-  worldId: number;
-  x: number;
-  y: number;
-  unlocked: boolean;
-  unlockCost?: number;
-  elementBonus?: Element;
-  description?: string;
-}
-
-export interface FastTravelDestination {
-  worldId: number;
-  x: number;
-  y: number;
-  pointId?: string;
-}
-
-export interface FastTravelState {
-  points: FastTravelPoint[];
-  discoveredPointIds: Set<string>;
-  activeTravel?: {
-    destination: FastTravelDestination;
-    startTime: number;
-    duration: number;
-    travelType: 'walking' | 'fast_travel' | 'mount';
-  };
-}
+import type { Element, FastTravelPointType, FastTravelPoint, FastTravelDestination, FastTravelState } from '../types/game';
 
 export const FAST_TRAVEL_BASE_DURATION_MS = 5000;
 export const FAST_TRAVEL_SPEED_BONUS = 20;

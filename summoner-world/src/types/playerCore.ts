@@ -8,6 +8,7 @@ import type {
   FastTravelDestination,
   FastTravelPointType,
   FastTravelPoint,
+  FastTravelState,
 } from './game.ts';
 
 export type SummonerClass =
@@ -301,17 +302,6 @@ export interface HousingReference {
 export interface WorldUnlocks {
   unlockedWorlds: number[];
   activeWorldId: number;
-}
-
-export interface FastTravelState {
-  points: FastTravelPoint[];
-  discoveredPointIds: Set<string>;
-  activeTravel?: {
-    destination: FastTravelDestination;
-    startTime: number;
-    duration: number;
-    travelType: 'walking' | 'fast_travel' | 'mount';
-  };
 }
 
 export interface SaveMetadata {
