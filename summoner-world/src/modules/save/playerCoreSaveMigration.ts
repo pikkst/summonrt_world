@@ -87,9 +87,19 @@ export function deserializePlayerCore(data: unknown): PlayerCoreState {
     normalizeTitleEntries(raw.titles, defaults.titles)
   );
 
+  const fastTravel = raw.fastTravel && typeof raw.fastTravel === 'object'
+    ? {
+        ...(raw.fastTravel as any),
+        discoveredPointIds: Array.isArray((raw.fastTravel as any).discoveredPointIds)
+          ? new Set((raw.fastTravel as any).discoveredPointIds)
+          : (raw.fastTravel as any).discoveredPointIds,
+      }
+    : raw.fastTravel;
+
   return {
     ...defaults,
     ...raw,
+    fastTravel,
     identity: {
       ...defaults.identity,
       ...raw.identity,
