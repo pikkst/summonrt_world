@@ -205,7 +205,7 @@ describe('T7.5 - Fast Travel System', () => {
       const state = createDefaultFastTravelState();
       const destination = { worldId: 1, x: 100, y: 100 };
 
-      const newState = startFastTravel(state, destination);
+      const newState = startFastTravel(state, destination, 0, 0);
       expect(newState.activeTravel).toBeDefined();
       expect(newState.activeTravel!.destination).toEqual(destination);
       expect(newState.activeTravel!.travelType).toBe('fast_travel');
@@ -215,8 +215,9 @@ describe('T7.5 - Fast Travel System', () => {
       const state = createDefaultFastTravelState();
       const destination = { worldId: 1, x: 100, y: 100 };
 
-      const newState = startFastTravel(state, destination, { isMount: true });
+      const newState = startFastTravel(state, destination, 0, 0, { isMount: true });
       expect(newState.activeTravel!.travelType).toBe('mount');
+      expect(newState.activeTravel!.duration).toBeGreaterThan(0);
     });
 
     it('finishes travel and returns state without active travel', () => {
