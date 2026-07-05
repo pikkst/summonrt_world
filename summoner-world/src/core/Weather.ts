@@ -324,3 +324,149 @@ export function weatherToDisplayString(weather: WeatherType): string {
   };
   return displayNames[weather] ?? weather;
 }
+
+export interface EncounterTableEntry {
+  creatureClass: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythical';
+  weight: number;
+}
+
+export type EncounterTable = EncounterTableEntry[];
+
+export const DEFAULT_ENCOUNTER_TABLE: EncounterTable = [
+  { creatureClass: 'common', weight: 60 },
+  { creatureClass: 'uncommon', weight: 25 },
+  { creatureClass: 'rare', weight: 10 },
+  { creatureClass: 'epic', weight: 4 },
+  { creatureClass: 'legendary', weight: 0.9 },
+  { creatureClass: 'mythical', weight: 0.1 },
+];
+
+const WEATHER_ENCOUNTER_TABLES: Record<WeatherType, EncounterTable> = {
+  Clear: [
+    { creatureClass: 'common', weight: 60 },
+    { creatureClass: 'uncommon', weight: 25 },
+    { creatureClass: 'rare', weight: 10 },
+    { creatureClass: 'epic', weight: 4 },
+    { creatureClass: 'legendary', weight: 0.9 },
+    { creatureClass: 'mythical', weight: 0.1 },
+  ],
+  Cloudy: [
+    { creatureClass: 'common', weight: 55 },
+    { creatureClass: 'uncommon', weight: 28 },
+    { creatureClass: 'rare', weight: 12 },
+    { creatureClass: 'epic', weight: 4 },
+    { creatureClass: 'legendary', weight: 1 },
+    { creatureClass: 'mythical', weight: 0.1 },
+  ],
+  Rainy: [
+    { creatureClass: 'common', weight: 50 },
+    { creatureClass: 'uncommon', weight: 30 },
+    { creatureClass: 'rare', weight: 15 },
+    { creatureClass: 'epic', weight: 4 },
+    { creatureClass: 'legendary', weight: 1 },
+    { creatureClass: 'mythical', weight: 0.1 },
+  ],
+  Stormy: [
+    { creatureClass: 'common', weight: 45 },
+    { creatureClass: 'uncommon', weight: 30 },
+    { creatureClass: 'rare', weight: 18 },
+    { creatureClass: 'epic', weight: 6 },
+    { creatureClass: 'legendary', weight: 1 },
+    { creatureClass: 'mythical', weight: 0.1 },
+  ],
+  Foggy: [
+    { creatureClass: 'common', weight: 55 },
+    { creatureClass: 'uncommon', weight: 27 },
+    { creatureClass: 'rare', weight: 12 },
+    { creatureClass: 'epic', weight: 4 },
+    { creatureClass: 'legendary', weight: 1.5 },
+    { creatureClass: 'mythical', weight: 0.5 },
+  ],
+  Hail: [
+    { creatureClass: 'common', weight: 58 },
+    { creatureClass: 'uncommon', weight: 26 },
+    { creatureClass: 'rare', weight: 11 },
+    { creatureClass: 'epic', weight: 4 },
+    { creatureClass: 'legendary', weight: 1 },
+    { creatureClass: 'mythical', weight: 0.1 },
+  ],
+  Blizzard: [
+    { creatureClass: 'common', weight: 52 },
+    { creatureClass: 'uncommon', weight: 28 },
+    { creatureClass: 'rare', weight: 14 },
+    { creatureClass: 'epic', weight: 5 },
+    { creatureClass: 'legendary', weight: 1 },
+    { creatureClass: 'mythical', weight: 0.1 },
+  ],
+};
+
+export function getEncounterTableForWeather(weather: WeatherType): EncounterTable {
+  return WEATHER_ENCOUNTER_TABLES[weather] ?? DEFAULT_ENCOUNTER_TABLE;
+}
+
+export function calculateEncounterRarityChance(
+  weather: WeatherType,
+  baseTable: EncounterTable = DEFAULT_ENCOUNTER_TABLE
+): Record<string, number> {
+  const weatherTable = getEncounterTableForWeather(weather);
+  const result: Record<string, number> = {};
+  
+  let totalBaseWeight = 0;
+  let totalWeatherWeight = 0;
+  
+  for (let i = 0; i < baseTable.length; i++) {
+    const entry = baseTable[i]!;
+    totalBaseWeight += entry.weight;
+    const weatherEntry = weatherTable[i];
+    totalWeatherWeight += weatherEntry ? weatherEntry.weight : entry.weight;
+  }
+  
+  for (let i = 0; i < baseTable.length; i++) {
+    const entry = baseTable[i]!;
+    const className = entry.creatureClass;
+    const baseWeight = entry.weight;
+    const weatherEntry = weatherTable[i];
+    const weatherWeight = weatherEntry ? weatherEntry.weight : baseWeight;
+    
+    const normalizedBase = baseWeight / totalBaseWeight;
+    const normalizedWeather = weatherWeight / totalWeatherWeight;
+    
+    result[className] = normalizedWeather * 100;
+  }
+  
+  return result;
+}
+
+export function getWeatherResourceYieldModifier(
+  weather: WeatherType,
+  weatherIntensity: number = 1.0
+): number {
+  const baseEffect = getWeatherEffect(weather);
+  const intensityModifier = Math.max(0.8, Math.min(1.2, weatherIntensity));
+  return baseEffect.resourceYieldModifier * intensityModifier;
+}
+
+export function getWeatherEncounterModifier(
+  weather: WeatherType,
+  weatherIntensity: number = 1.0
+): number {
+  const baseEffect = getWeatherEffect(weather);
+  const intensityModifier = Math.max(0.9, Math.min(1.3, weatherIntensity));
+  return baseEffect.encounterModifier * intensityModifier;
+}
+
+export function getPlayerElementalAffinityBonus(
+  weather: WeatherType,
+  playerElements: string[]
+): number {
+  if (!playerElements || playerElements.length === 0) return 1.0;
+  
+  const bonuses: number[] = [];
+  for (const element of playerElements) {
+    const bonus = calculateWeatherModifier(weather, element);
+    bonuses.push(bonus);
+  }
+  
+  const avgBonus = bonuses.reduce((sum, b) => sum + b, 0) / bonuses.length;
+  return avgBonus;
+}
