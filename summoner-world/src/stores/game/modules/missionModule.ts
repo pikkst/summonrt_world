@@ -323,12 +323,21 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
     const found = Math.floor(baseFound * yieldModifier);
     
     if (found > 0 && tile) {
-      const existing = (player.inventory || []).find((i) => i.templateKey === resourceKey);
-      if (existing) {
-        existing.quantity += found;
-      } else {
-        player.inventory.push({ templateKey: resourceKey, quantity: found });
-      }
+      set((state) => {
+        const updatedInventory = (state.player!.inventory || []).map((i) =>
+          i.templateKey === resourceKey ? { ...i, quantity: i.quantity + found } : i
+        );
+        const hasExisting = updatedInventory.some((i) => i.templateKey === resourceKey);
+        if (!hasExisting) {
+          updatedInventory.push({ templateKey: resourceKey, quantity: found });
+        }
+        return {
+          player: {
+            ...state.player!,
+            inventory: updatedInventory,
+          }
+        };
+      });
       tile.resourceQty = Math.max(0, (tile.resourceQty ?? 0) - found);
       const weatherMsg = weatherEffect.description ? ` Under ${weatherState?.currentWeather ?? 'Clear'} skies,` : '';
       get().appendLog(`You found ${found} ${resourceKey}!${weatherMsg} (${Math.round(yieldModifier * 100)}% yield)`, 'success');
