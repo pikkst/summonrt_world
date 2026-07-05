@@ -551,25 +551,26 @@ finishCapture: () => {
            get().startCombat(creature, `Wild ${creature.name}`, 'aggressive');
          }, 500);
        } else {
-         appendLog(`${weatherPrefix}💨 Failed to capture ${creature.name}. The creature escapes but now views your territory as hostile! (Capture Chance: ${Math.round(pCapture * 100)}%)`, 'warning');
-         const tileKey = getTileKey(player.tileX, player.tileY);
-         const hostilityEntry = {
-           creatureKey: creature.key,
-           creatureName: creature.name,
-           class: creature.class,
-           type: creature.type,
-           elements: creature.elements,
-           baseHealth: creature.baseHealth,
-           baseAttack: creature.baseAttack,
-           baseDefense: creature.baseDefense,
-           baseSpeed: creature.baseSpeed,
-           baseMana: creature.baseMana,
-           baseExpValue: creature.baseExpValue,
-           skills: creature.skills.map((s) => typeof s === 'string' ? { key: s, name: '', description: '', power: 0, cost: 0 } : s),
-           description: creature.description,
-           isBoss: creature.isBoss,
-           hostilityTurns: 5 + Math.floor(Math.random() * 5),
-         };
+          appendLog(`${weatherPrefix}💨 Failed to capture ${creature.name}. The creature escapes but now views your territory as hostile! (Capture Chance: ${Math.round(pCapture * 100)}%)`, 'warning');
+          const tileKey = getTileKey(player.tileX, player.tileY);
+          const hostilityRng = new SeededRandom(currentWorldId * 100000 + player.tileX * 1000 + player.tileY);
+          const hostilityEntry = {
+            creatureKey: creature.key,
+            creatureName: creature.name,
+            class: creature.class,
+            type: creature.type,
+            elements: creature.elements,
+            baseHealth: creature.baseHealth,
+            baseAttack: creature.baseAttack,
+            baseDefense: creature.baseDefense,
+            baseSpeed: creature.baseSpeed,
+            baseMana: creature.baseMana,
+            baseExpValue: creature.baseExpValue,
+            skills: creature.skills.map((s) => typeof s === 'string' ? { key: s, name: '', description: '', power: 0, cost: 0 } : s),
+            description: creature.description,
+            isBoss: creature.isBoss,
+            hostilityTurns: 5 + hostilityRng.int(0, 4),
+          };
          set((state) => ({
            player: {
              ...state.player!,
