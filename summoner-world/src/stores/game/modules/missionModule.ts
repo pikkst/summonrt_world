@@ -221,8 +221,9 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
     const weatherEncounterMod = weatherState ? getWeatherEncounterModifier(weatherState.currentWeather, weatherState.weatherIntensity) : 1.0;
     const weatherAdjustedChance = encounterChance * weatherEncounterMod;
     
-    if (Math.random() < weatherAdjustedChance) {
-      const encounterRng = new SeededRandom(tile.encounterSeed || Date.now());
+    const encounterRng = new SeededRandom(tile.encounterSeed || Date.now());
+    
+    if (encounterRng.next() < weatherAdjustedChance) {
       const effectiveTier = currentWorldId + Math.floor(proximityFactor * 10);
       const enemy = generateCreatureTemplate(effectiveTier, encounterRng);
       
