@@ -182,9 +182,8 @@ export function isOnRoad(
     ) / Math.hypot(toY - fromY, toX - fromX);
 
     if (distToLine < threshold) {
-      const pointOnLine = Math.hypot(roadPoint.x - fromX, roadPoint.y - fromY) /
-        Math.hypot(toX - fromX, toY - fromY);
-      if (pointOnLine >= 0 && pointOnLine <= 1) {
+      const t = ((roadPoint.x - fromX) * (toX - fromX) + (roadPoint.y - fromY) * (toY - fromY)) / ((toX - fromX) ** 2 + (toY - fromY) ** 2);
+      if (t >= 0 && t <= 1) {
         return true;
       }
     }
