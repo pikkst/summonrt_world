@@ -13,7 +13,7 @@ import {
   serializeLegacyPlayer,
 } from '../modules/save/playerCoreSaveMigration.ts';
 import { createDefaultPlayerCoreState } from '../core/playerCore/index.ts';
-import type { PlayerState, WorldData } from '../types/game.ts';
+import type { PlayerState, WorldData, WeatherState } from '../types/game.ts';
 
 function makeLegacyPlayer(): PlayerState {
   return {
@@ -93,6 +93,12 @@ function makeLegacyPlayer(): PlayerState {
 }
 
 function makeWorld(): WorldData {
+  const weather: WeatherState = {
+    currentWeather: 'Clear',
+    weatherIntensity: 1.0,
+    nextChangeTurn: 100,
+    baseDuration: 100,
+  };
   return {
     id: 4,
     seed: 404,
@@ -104,6 +110,7 @@ function makeWorld(): WorldData {
     tiles: new Map([
       ['22,33', { x: 22, y: 33, biome: 'forest', discovered: true, explored: true }],
     ]),
+    weather,
   };
 }
 

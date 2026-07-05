@@ -168,6 +168,15 @@ export type BiomeType =
   | 'crystal_caves'
   | 'sky_islands';
 
+export type WeatherType = 'Clear' | 'Cloudy' | 'Rainy' | 'Stormy' | 'Foggy' | 'Hail' | 'Blizzard';
+
+export interface WeatherState {
+  currentWeather: WeatherType;
+  weatherIntensity: number;
+  nextChangeTurn: number;
+  baseDuration: number;
+}
+
 export interface TileData {
   x: number;
   y: number;
@@ -191,6 +200,7 @@ export interface WorldData {
   dungeonFloors: number;
   tiles: Map<string, TileData>;
   startTile: { x: number; y: number };
+  weather: WeatherState;
 }
 
 export interface Resource {
