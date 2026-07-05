@@ -160,6 +160,7 @@ export {
 export {
   createContract,
   validateContract,
+  validatePlayerContractOwnership,
   getContractById,
   hasContract,
   modifyBondLevel,
