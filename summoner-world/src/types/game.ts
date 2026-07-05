@@ -329,6 +329,27 @@ export interface NPC {
 
 export type RoomType = 'entrance' | 'boss' | 'treasure' | 'combat' | 'trap' | 'puzzle' | 'rest' | 'elite' | 'vendor';
 
+export type FastTravelPointType = 'settlement' | 'road' | 'creature_mount';
+
+export interface FastTravelPoint {
+  id: string;
+  type: FastTravelPointType;
+  worldId: number;
+  x: number;
+  y: number;
+  unlocked: boolean;
+  unlockCost?: number;
+  elementBonus?: Element;
+  description?: string;
+}
+
+export interface FastTravelDestination {
+  worldId: number;
+  x: number;
+  y: number;
+  pointId?: string;
+}
+
 export interface DungeonRoom {
   id: string;
   x: number;

@@ -116,6 +116,11 @@ const createMockState = (overrides: Partial<PlayerCoreState> = {}): PlayerCoreSt
   creatureSlots: { groups: [] },
   housing: {},
   worldUnlocks: { unlockedWorlds: [1], activeWorldId: 1 },
+  fastTravel: {
+    points: [],
+    discoveredPointIds: new Set(),
+    activeTravel: undefined,
+  },
   saveMetadata: { lastSavedAt: new Date().toISOString(), playtimeSeconds: 0, saveVersion: '1.0.0' },
   resources: {
     energy: { current: 100, max: 100, lastUpdate: new Date().toISOString() },

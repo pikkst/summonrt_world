@@ -5,7 +5,11 @@ import type {
   InventoryStack,
   Resource,
   CreatureInstance,
+  FastTravelPointType,
+  FastTravelPoint,
+  FastTravelDestination,
 } from './game.ts';
+import type { FastTravelState } from '../core/fastTravel.ts';
 
 export type SummonerClass =
   | 'beast_binder'
@@ -332,6 +336,7 @@ export interface PlayerCoreState {
   creatureSlots: CreatureSlots;
   housing: HousingReference;
   worldUnlocks: WorldUnlocks;
+  fastTravel: FastTravelState;
   saveMetadata: SaveMetadata;
   resources: {
     energy: Resource;

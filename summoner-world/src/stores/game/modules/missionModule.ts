@@ -23,6 +23,7 @@ import { generateDungeonTower, exportDungeonRun } from '../../../core/dungeon/Du
 import { generateTrapInteraction, generatePuzzleInteraction, generateEliteInteraction, generateVendorInteraction, generateTreasureInteraction, TrapRoomInteraction, PuzzleRoomInteraction, EliteRoomInteraction, VendorRoomInteraction, TreasureRoomInteraction } from '../../../core/dungeon/DungeonInteractions';
 import type { RoomInteractionState } from '../../../types/game.ts';
 import { applyPlayerStatisticEvent, type PlayerStatisticEvent } from '../../../core/playerCore/playerStatisticsTracking';
+import { getWeatherEffect, getWeatherResourceYieldModifier, getWeatherEncounterModifier, getPlayerElementalAffinityBonus, getEncounterTableForWeather } from '../../../core/Weather';
 import axios from 'axios';
 
 function recordPlayerCoreStatistic(set: SetState<GameStore>, event: PlayerStatisticEvent): void {
@@ -215,10 +216,18 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
     }
 
     const encounterChance = 0.05 + proximityFactor * 0.15;
-    if (Math.random() < encounterChance) {
-      const encounterRng = new SeededRandom(tile.encounterSeed || Date.now());
+    
+    const weatherState = world?.weather;
+    const weatherEncounterMod = weatherState ? getWeatherEncounterModifier(weatherState.currentWeather, weatherState.weatherIntensity) : 1.0;
+    const weatherAdjustedChance = encounterChance * weatherEncounterMod;
+    
+    const encounterRng = new SeededRandom(tile.encounterSeed);
+    
+    if (encounterRng.next() < weatherAdjustedChance) {
       const effectiveTier = currentWorldId + Math.floor(proximityFactor * 10);
       const enemy = generateCreatureTemplate(effectiveTier, encounterRng);
+      
+      const weatherEffect = weatherState ? getWeatherEffect(weatherState.currentWeather) : { encounterModifier: 1.0, resourceYieldModifier: 1.0, elementalBonus: 0, description: '' };
 
       const encounterDuration = 10 + Math.floor(Math.random() * 15);
       const encounterMission = get().addMissionWithModifiers({
@@ -242,12 +251,15 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
             skills: enemy.skills,
             description: enemy.description,
             isBoss: enemy.isBoss,
+            weather: weatherState?.currentWeather ?? 'Clear',
+            weatherDescription: weatherEffect.description,
           }),
         },
       });
 
       if (encounterMission) {
-        appendLog(`A wild ${enemy.name} appears! Combat will resolve automatically in ${encounterDuration}s...`, 'info');
+        const weatherPrefix = weatherState ? `(${weatherState.currentWeather}) ` : '';
+        appendLog(`${weatherPrefix}A wild ${enemy.name} appears! Combat will resolve automatically in ${encounterDuration}s...`, 'info');
       }
     }
   },
@@ -300,17 +312,35 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
     const world = worlds.get(currentWorldId);
     const tileKey = getTileKey(player.tileX, player.tileY);
     const tile = world?.tiles.get(tileKey);
-
-    const found = Math.min(tile?.resourceQty ?? 0, 1 + Math.floor(Math.random() * 2));
+    
+    const weatherState = world?.weather;
+    const weatherEffect = weatherState ? getWeatherEffect(weatherState.currentWeather) : { encounterModifier: 1.0, resourceYieldModifier: 1.0, elementalBonus: 0, description: '' };
+    const yieldModifier = getWeatherResourceYieldModifier(weatherState?.currentWeather ?? 'Clear', weatherState?.weatherIntensity ?? 1.0);
+    
+    const resourceSeed = tile ? tile.encounterSeed + 1 : (worlds.get(currentWorldId)?.seed ?? currentWorldId);
+    const resourceRng = new SeededRandom(resourceSeed);
+    const baseFound = Math.min(tile?.resourceQty ?? 0, 1 + resourceRng.int(0, 1));
+    const found = Math.floor(baseFound * yieldModifier);
+    
     if (found > 0 && tile) {
-      const existing = (player.inventory || []).find((i) => i.templateKey === resourceKey);
-      if (existing) {
-        existing.quantity += found;
-      } else {
-        player.inventory.push({ templateKey: resourceKey, quantity: found });
-      }
+      set((state) => {
+        const updatedInventory = (state.player!.inventory || []).map((i) =>
+          i.templateKey === resourceKey ? { ...i, quantity: i.quantity + found } : i
+        );
+        const hasExisting = updatedInventory.some((i) => i.templateKey === resourceKey);
+        if (!hasExisting) {
+          updatedInventory.push({ templateKey: resourceKey, quantity: found });
+        }
+        return {
+          player: {
+            ...state.player!,
+            inventory: updatedInventory,
+          }
+        };
+      });
       tile.resourceQty = Math.max(0, (tile.resourceQty ?? 0) - found);
-      get().appendLog(`You found ${found} ${resourceKey}!`, 'success');
+      const weatherMsg = weatherEffect.description ? ` Under ${weatherState?.currentWeather ?? 'Clear'} skies,` : '';
+      get().appendLog(`You found ${found} ${resourceKey}!${weatherMsg} (${Math.round(yieldModifier * 100)}% yield)`, 'success');
     } else {
       get().appendLog('You found nothing of interest here.', 'info');
     }
@@ -427,135 +457,143 @@ if (mission) {
     },
 
 finishCapture: () => {
-    const { player, capturing, appendLog } = get();
-    if (!player || !capturing) return;
+     const { player, capturing, worlds, currentWorldId, appendLog } = get();
+     if (!player || !capturing) return;
 
-    const creature = capturing.creature;
-    const playerElements = getPlayerElements(player);
-    const hasNebulaShroud = player.skillsUnlocked?.['nebula_shroud'] === true;
+     const creature = capturing.creature;
+     const playerElements = getPlayerElements(player);
+     const hasNebulaShroud = player.skillsUnlocked?.['nebula_shroud'] === true;
 
-    const creatureLevel = player.currentWorldId || 1;
+     const world = worlds.get(currentWorldId);
+     const weatherState = world?.weather;
+     const weatherElementalBonus = weatherState ? getPlayerElementalAffinityBonus(weatherState.currentWeather, playerElements) : 1.0;
 
-    if (creatureLevel > player.level + 5 && !hasNebulaShroud) {
-      appendLog(`This ${creature.name} (Level ${creatureLevel}) is far too powerful for you to bind! You need to be at least Level ${creatureLevel - 5}.`, 'warning');
-      set({ capturing: null });
-      return;
-    }
+     const creatureLevel = player.currentWorldId || 1;
 
-    const currentHp = creature.currentHealth ?? creature.baseHealth;
-    const maxHp = creature.baseHealth;
-    
-     let pCapture = calculateBaseCaptureProbability(
-       currentHp,
-       maxHp,
-       playerElements,
-       creature.elements,
-       creature.class,
-       player.level,
-       creatureLevel
-     );
+     if (creatureLevel > player.level + 5 && !hasNebulaShroud) {
+       appendLog(`This ${creature.name} (Level ${creatureLevel}) is far too powerful for you to bind! You need to be at least Level ${creatureLevel - 5}.`, 'warning');
+       set({ capturing: null });
+       return;
+     }
 
-     const treeData = getAllNodes();
-     const aggregatedStats = getAggregateStats(player, treeData);
-     const careerBonuses = getCareerSystemBonuses(aggregatedStats);
+     const currentHp = creature.currentHealth ?? creature.baseHealth;
+     const maxHp = creature.baseHealth;
+     
+      let pCapture = calculateBaseCaptureProbability(
+        currentHp,
+        maxHp,
+        playerElements,
+        creature.elements,
+        creature.class,
+        player.level,
+        creatureLevel
+      );
 
-     const hasWildWhisper = player.skillsUnlocked?.['wild_whisper'] === true;
-     const hasBeastmaster = player.skillsUnlocked?.['beastmaster'] === true;
+      const treeData = getAllNodes();
+      const aggregatedStats = getAggregateStats(player, treeData);
+      const careerBonuses = getCareerSystemBonuses(aggregatedStats);
 
-     const skillBonus = (player.skillPoints * 0.01) + (hasWildWhisper ? 0.15 : 0) + (hasBeastmaster ? 0.3 : 0);
-     const careerCaptureBonus = applyCaptureRateBonus(0, careerBonuses);
+      const hasWildWhisper = player.skillsUnlocked?.['wild_whisper'] === true;
+      const hasBeastmaster = player.skillsUnlocked?.['beastmaster'] === true;
 
-     pCapture = Math.min(0.95, pCapture + skillBonus + careerCaptureBonus);
+      const skillBonus = (player.skillPoints * 0.01) + (hasWildWhisper ? 0.15 : 0) + (hasBeastmaster ? 0.3 : 0);
+      const careerCaptureBonus = applyCaptureRateBonus(0, careerBonuses);
 
-    const roll = Math.random();
-    if (roll < pCapture) {
-      const newCreature = {
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        templateKey: creature.key,
-        nickname: creature.name,
-        level: 1,
-        experience: 0n,
-        currentHealth: creature.baseHealth,
-        currentMana: creature.baseMana,
-        maxHealth: creature.baseHealth,
-        maxMana: creature.baseMana,
-        skills: creature.skills.map((s) => typeof s === 'string' ? s : s.key),
-        traits: [],
-        mutations: [],
-        affection: 10,
-        class: creature.class,
-        attack: creature.baseAttack,
-        defense: creature.baseDefense,
-        speed: creature.baseSpeed,
-        elements: creature.elements,
-        type: creature.type,
-        proceduralIdentity: generateProceduralIdentity(
-          creature.type,
-          creature.elements,
-          () => Math.random()
-        ),
-      };
+      pCapture = Math.min(0.95, pCapture * weatherElementalBonus + skillBonus + careerCaptureBonus);
+      
+      const weatherPrefix = weatherState ? `(${weatherState.currentWeather}) ` : '';
 
-      set((state) => {
-        const updatedQuests = state.player!.activeQuests.map((q: QuestInstance) => {
-          const template = QUEST_TEMPLATES[q.templateKey];
-          if (!template || q.status !== 'active') return q;
-          if (template.type === 'summon') {
-            return { ...q, progress: Math.min(q.targetProgress, q.progress + 1) };
-          }
-          return q;
-        });
+     const roll = Math.random();
+     if (roll < pCapture) {
+       const newCreature = {
+         id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+         templateKey: creature.key,
+         nickname: creature.name,
+         level: 1,
+         experience: 0n,
+         currentHealth: creature.baseHealth,
+         currentMana: creature.baseMana,
+         maxHealth: creature.baseHealth,
+         maxMana: creature.baseMana,
+         skills: creature.skills.map((s) => typeof s === 'string' ? s : s.key),
+         traits: [],
+         mutations: [],
+         affection: 10,
+         class: creature.class,
+         attack: creature.baseAttack,
+         defense: creature.baseDefense,
+         speed: creature.baseSpeed,
+         elements: creature.elements,
+         type: creature.type,
+         proceduralIdentity: generateProceduralIdentity(
+           creature.type,
+           creature.elements,
+           () => Math.random()
+         ),
+       };
 
-        return {
-          player: {
-            ...state.player!,
-            creatures: [...state.player!.creatures, newCreature],
-            activeQuests: updatedQuests,
-          }
-        };
-      });
-      recordPlayerCoreStatistic(set, { type: 'CreatureContracted' });
-      appendLog(`✨ Success! You captured a new creature: ${creature.name} (${creature.class.toUpperCase()})!`, 'success');
-    } else {
-      if (player.creatures.length > 0) {
-        appendLog(`💨 Failed to capture ${creature.name}. The creature's soul broke free of your binding spell! (Capture Chance: ${Math.round(pCapture * 100)}%)`, 'warning');
-        setTimeout(() => {
-          get().startCombat(creature, `Wild ${creature.name}`, 'aggressive');
-        }, 500);
-      } else {
-        appendLog(`💨 Failed to capture ${creature.name}. The creature escapes but now views your territory as hostile! (Capture Chance: ${Math.round(pCapture * 100)}%)`, 'warning');
-        const tileKey = getTileKey(player.tileX, player.tileY);
-        const hostilityEntry = {
-          creatureKey: creature.key,
-          creatureName: creature.name,
-          class: creature.class,
-          type: creature.type,
-          elements: creature.elements,
-          baseHealth: creature.baseHealth,
-          baseAttack: creature.baseAttack,
-          baseDefense: creature.baseDefense,
-          baseSpeed: creature.baseSpeed,
-          baseMana: creature.baseMana,
-          baseExpValue: creature.baseExpValue,
-          skills: creature.skills.map((s) => typeof s === 'string' ? { key: s, name: '', description: '', power: 0, cost: 0 } : s),
-          description: creature.description,
-          isBoss: creature.isBoss,
-          hostilityTurns: 5 + Math.floor(Math.random() * 5),
-        };
-        set((state) => ({
-          player: {
-            ...state.player!,
-            territorialHostilities: {
-              ...(state.player!.territorialHostilities || {}),
-              [tileKey]: hostilityEntry,
-            },
-          }
-        }));
-      }
-    }
+       set((state) => {
+         const updatedQuests = state.player!.activeQuests.map((q: QuestInstance) => {
+           const template = QUEST_TEMPLATES[q.templateKey];
+           if (!template || q.status !== 'active') return q;
+           if (template.type === 'summon') {
+             return { ...q, progress: Math.min(q.targetProgress, q.progress + 1) };
+           }
+           return q;
+         });
 
-    set({ capturing: null });
-  },
+         return {
+           player: {
+             ...state.player!,
+             creatures: [...state.player!.creatures, newCreature],
+             activeQuests: updatedQuests,
+           }
+         };
+       });
+       recordPlayerCoreStatistic(set, { type: 'CreatureContracted' });
+       const weatherBonusMsg = weatherElementalBonus > 1 ? ` (${Math.round((weatherElementalBonus - 1) * 100)}% elemental affinity bonus)` : '';
+       appendLog(`${weatherPrefix}✨ Success! You captured a new creature: ${creature.name} (${creature.class.toUpperCase()})!${weatherBonusMsg}`, 'success');
+     } else {
+       if (player.creatures.length > 0) {
+         appendLog(`${weatherPrefix}💨 Failed to capture ${creature.name}. The creature's soul broke free of your binding spell! (Capture Chance: ${Math.round(pCapture * 100)}%)`, 'warning');
+         setTimeout(() => {
+           get().startCombat(creature, `Wild ${creature.name}`, 'aggressive');
+         }, 500);
+       } else {
+          appendLog(`${weatherPrefix}💨 Failed to capture ${creature.name}. The creature escapes but now views your territory as hostile! (Capture Chance: ${Math.round(pCapture * 100)}%)`, 'warning');
+          const tileKey = getTileKey(player.tileX, player.tileY);
+          const hostilityRng = new SeededRandom(currentWorldId * 100000 + player.tileX * 1000 + player.tileY);
+          const hostilityEntry = {
+            creatureKey: creature.key,
+            creatureName: creature.name,
+            class: creature.class,
+            type: creature.type,
+            elements: creature.elements,
+            baseHealth: creature.baseHealth,
+            baseAttack: creature.baseAttack,
+            baseDefense: creature.baseDefense,
+            baseSpeed: creature.baseSpeed,
+            baseMana: creature.baseMana,
+            baseExpValue: creature.baseExpValue,
+            skills: creature.skills.map((s) => typeof s === 'string' ? { key: s, name: '', description: '', power: 0, cost: 0 } : s),
+            description: creature.description,
+            isBoss: creature.isBoss,
+            hostilityTurns: 5 + hostilityRng.int(0, 4),
+          };
+         set((state) => ({
+           player: {
+             ...state.player!,
+             territorialHostilities: {
+               ...(state.player!.territorialHostilities || {}),
+               [tileKey]: hostilityEntry,
+             },
+           }
+         }));
+       }
+     }
+
+     set({ capturing: null });
+   },
 
   interactNPC: () => {
     const { player, worlds, currentWorldId, appendLog } = get();
