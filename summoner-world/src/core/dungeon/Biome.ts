@@ -88,8 +88,8 @@ function fractalPerlin2D(x: number, y: number, seed: number, salt: number): numb
 }
 
 function getBiomeCountForWorld(seed: number): number {
-  const hash = Math.abs(Math.sin(seed * 0.1) * 10000);
-  return 5 + (Math.floor(hash) % 4);
+  const hash = hashInt(0, 0, seed, 9002);
+  return 5 + (hash % 4);
 }
 
 function getSelectedBiomesForWorld(seed: number): BiomeType[] {
