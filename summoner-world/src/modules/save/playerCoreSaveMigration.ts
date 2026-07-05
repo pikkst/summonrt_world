@@ -92,9 +92,9 @@ export function deserializePlayerCore(data: unknown): PlayerCoreState {
         ...(raw.fastTravel as any),
         discoveredPointIds: Array.isArray((raw.fastTravel as any).discoveredPointIds)
           ? new Set((raw.fastTravel as any).discoveredPointIds)
-          : (raw.fastTravel as any).discoveredPointIds,
+          : new Set<string>(),
       }
-    : raw.fastTravel;
+    : defaults.fastTravel;
 
   return {
     ...defaults,
