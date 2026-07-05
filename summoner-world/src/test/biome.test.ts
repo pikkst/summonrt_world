@@ -26,6 +26,21 @@ describe('Biome generation', () => {
     expect(biome2).toBeDefined();
   });
 
+  it('produces varied biomes at the same distance from world center (not a distance gradient)', () => {
+    const centerX = 1000;
+    const centerY = 1000;
+    const radius = 400;
+    const seed = 1337;
+
+    const north = getBiomeForCoords(centerX, centerY - radius, seed);
+    const east = getBiomeForCoords(centerX + radius, centerY, seed);
+    const south = getBiomeForCoords(centerX, centerY + radius, seed);
+    const west = getBiomeForCoords(centerX - radius, centerY, seed);
+
+    const cardinalBiomes = new Set([north, east, south, west]);
+    expect(cardinalBiomes.size).toBeGreaterThanOrEqual(2);
+  });
+
   it('samples return elevation, moisture, temperature values', () => {
     const sample = sampleBiomeGeneration(500, 500, 12345);
     expect(sample.biome).toBeDefined();
