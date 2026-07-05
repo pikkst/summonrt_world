@@ -5,6 +5,9 @@ import type {
   InventoryStack,
   Resource,
   CreatureInstance,
+  FastTravelDestination,
+  FastTravelPointType,
+  FastTravelPoint,
 } from './game.ts';
 
 export type SummonerClass =
@@ -298,27 +301,6 @@ export interface HousingReference {
 export interface WorldUnlocks {
   unlockedWorlds: number[];
   activeWorldId: number;
-}
-
-export interface FastTravelDestination {
-  worldId: number;
-  x: number;
-  y: number;
-  pointId?: string;
-}
-
-export type FastTravelPointType = 'settlement' | 'road' | 'creature_mount';
-
-export interface FastTravelPoint {
-  id: string;
-  type: FastTravelPointType;
-  worldId: number;
-  x: number;
-  y: number;
-  unlocked: boolean;
-  unlockCost?: number;
-  elementBonus?: Element;
-  description?: string;
 }
 
 export interface FastTravelState {
