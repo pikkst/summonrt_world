@@ -195,6 +195,8 @@ export function isOnRoad(
 export function startFastTravel(
   state: FastTravelState,
   destination: FastTravelDestination,
+  fromX: number,
+  fromY: number,
   options?: {
     isMount?: boolean;
     elementTravelSpeedPct?: number;
@@ -206,7 +208,7 @@ export function startFastTravel(
   if (state.activeTravel?.travelType === 'fast_travel') {
     duration = state.activeTravel.duration;
   } else if (options?.isMount) {
-    duration = MOUNT_SPEED_BONUS;
+    duration = calculateTravelDuration(fromX, fromY, destination.x, destination.y, { isMount: true, elementTravelSpeedPct: options.elementTravelSpeedPct });
   } else {
     duration = FAST_TRAVEL_BASE_DURATION_MS;
   }
