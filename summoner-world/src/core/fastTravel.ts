@@ -231,9 +231,6 @@ export function finishTravel(state: FastTravelState): FastTravelState {
   if (!state.activeTravel) return state;
 
   const travel = state.activeTravel;
-  const newX = travel.destination.x;
-  const newY = travel.destination.y;
-  const newWorldId = travel.destination.worldId;
 
   return {
     ...state,
