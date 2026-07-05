@@ -221,7 +221,7 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
     const weatherEncounterMod = weatherState ? getWeatherEncounterModifier(weatherState.currentWeather, weatherState.weatherIntensity) : 1.0;
     const weatherAdjustedChance = encounterChance * weatherEncounterMod;
     
-    const encounterRng = new SeededRandom(tile.encounterSeed || Date.now());
+    const encounterRng = new SeededRandom(tile.encounterSeed);
     
     if (encounterRng.next() < weatherAdjustedChance) {
       const effectiveTier = currentWorldId + Math.floor(proximityFactor * 10);
