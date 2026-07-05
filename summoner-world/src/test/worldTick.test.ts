@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { calculateWorldTicks, MINUTES_PER_TURN, TURNS_PER_DAY } from '../core/worldTick';
+import { calculateWorldTicks, MINUTES_PER_TURN, TURNS_PER_DAY, getRespawnDays, processResourceRespawn, RESOURCE_MAX_QTY, PLANT_RESPAWN_DAYS, ORE_RESPAWN_DAYS } from '../core/worldTick';
+import type { WorldData, TileData } from '../types/game';
 
 describe('T3.11 - World Tick System', () => {
   describe('calculateWorldTicks', () => {
@@ -84,6 +85,130 @@ describe('T3.11 - World Tick System', () => {
 
     it('should define TURNS_PER_DAY as 240 turns', () => {
       expect(TURNS_PER_DAY).toBe(240);
+    });
+  });
+});
+
+describe('T7.8 - Resource Respawn Logic', () => {
+  describe('getRespawnDays', () => {
+    it('returns 30 days for plant resources', () => {
+      expect(getRespawnDays('wood')).toBe(30);
+      expect(getRespawnDays('herbs')).toBe(30);
+    });
+
+    it('returns 90 days for ore resources', () => {
+      expect(getRespawnDays('stone')).toBe(90);
+      expect(getRespawnDays('ore')).toBe(90);
+      expect(getRespawnDays('crystal')).toBe(90);
+      expect(getRespawnDays('essence')).toBe(90);
+    });
+
+    it('defaults to ore respawn time for unknown resources', () => {
+      expect(getRespawnDays('unknown')).toBe(90);
+    });
+  });
+
+  describe('processResourceRespawn', () => {
+    const createWorld = (tiles: Array<{ key: string; resourceType?: string; resourceQty?: number; resourceRespawnTurn?: number }>): Map<number, WorldData> => {
+      const tileMap = new Map<string, TileData>();
+      for (const tile of tiles) {
+      const [xStr, yStr] = tile.key.split(',');
+      const x = Number(xStr) || 0;
+      const y = Number(yStr) || 0;
+      tileMap.set(tile.key, {
+        x,
+        y,
+        biome: 'plains',
+          discovered: true,
+          explored: true,
+          resourceType: tile.resourceType,
+          resourceQty: tile.resourceQty,
+          resourceRespawnTurn: tile.resourceRespawnTurn,
+          encounterSeed: 1,
+        });
+      }
+      const worlds = new Map<number, WorldData>();
+      worlds.set(1, {
+        id: 1,
+        seed: 1,
+        name: 'World 1',
+        tier: 1,
+        bossDefeated: false,
+        dungeonFloors: 3,
+        tiles: tileMap,
+        startTile: { x: 10, y: 10 },
+        weather: { currentWeather: 'Clear', weatherIntensity: 1, nextChangeTurn: 0, baseDuration: 0 },
+        settlements: [],
+      });
+      return worlds;
+    };
+
+    it('does nothing when no world exists for currentWorldId', () => {
+      const worlds = new Map<number, WorldData>();
+      processResourceRespawn({ dayCount: 10, worlds, currentWorldId: 99 });
+    });
+
+    it('does nothing when tile has no resourceType', () => {
+      const worlds = createWorld([{ key: '0,0', resourceQty: 3 }]);
+      processResourceRespawn({ dayCount: 10, worlds, currentWorldId: 1 });
+    });
+
+    it('does nothing when tile resourceQty is undefined', () => {
+      const worlds = createWorld([{ key: '0,0', resourceType: 'wood' }]);
+      processResourceRespawn({ dayCount: 10, worlds, currentWorldId: 1 });
+    });
+
+    it('does nothing when tile resourceQty is already at max', () => {
+      const worlds = createWorld([{ key: '0,0', resourceType: 'wood', resourceQty: RESOURCE_MAX_QTY }]);
+      processResourceRespawn({ dayCount: 10, worlds, currentWorldId: 1 });
+    });
+
+    it('respawns plants after 30 days', () => {
+      const worlds = createWorld([
+        { key: '5,5', resourceType: 'wood', resourceQty: 0, resourceRespawnTurn: 35 },
+        { key: '10,10', resourceType: 'herbs', resourceQty: 0, resourceRespawnTurn: 35 },
+      ]);
+      processResourceRespawn({ dayCount: 35, worlds, currentWorldId: 1 });
+      expect(worlds.get(1)!.tiles.get('5,5')!.resourceQty).toBe(1);
+      expect(worlds.get(1)!.tiles.get('10,10')!.resourceQty).toBe(1);
+    });
+
+    it('respawns ore after 90 days', () => {
+      const worlds = createWorld([
+        { key: '5,5', resourceType: 'stone', resourceQty: 0, resourceRespawnTurn: 95 },
+        { key: '10,10', resourceType: 'crystal', resourceQty: 0, resourceRespawnTurn: 95 },
+      ]);
+      processResourceRespawn({ dayCount: 95, worlds, currentWorldId: 1 });
+      expect(worlds.get(1)!.tiles.get('5,5')!.resourceQty).toBe(1);
+      expect(worlds.get(1)!.tiles.get('10,10')!.resourceQty).toBe(1);
+    });
+
+    it('schedules next plant respawn 30 days after respawning when not at max', () => {
+      const worlds = createWorld([{ key: '5,5', resourceType: 'wood', resourceQty: 0, resourceRespawnTurn: 35 }]);
+      processResourceRespawn({ dayCount: 35, worlds, currentWorldId: 1 });
+      expect(worlds.get(1)!.tiles.get('5,5')!.resourceQty).toBe(1);
+      expect(worlds.get(1)!.tiles.get('5,5')!.resourceRespawnTurn).toBe(35 + PLANT_RESPAWN_DAYS);
+    });
+
+    it('schedules next ore respawn 90 days after respawning when not at max', () => {
+      const worlds = createWorld([{ key: '5,5', resourceType: 'stone', resourceQty: 4, resourceRespawnTurn: 95 }]);
+      processResourceRespawn({ dayCount: 95, worlds, currentWorldId: 1 });
+      expect(worlds.get(1)!.tiles.get('5,5')!.resourceQty).toBe(5);
+      expect(worlds.get(1)!.tiles.get('5,5')!.resourceRespawnTurn).toBeUndefined();
+    });
+
+    it('does not respawn before scheduled day', () => {
+      const worlds = createWorld([{ key: '5,5', resourceType: 'wood', resourceQty: 0, resourceRespawnTurn: 35 }]);
+      processResourceRespawn({ dayCount: 34, worlds, currentWorldId: 1 });
+      expect(worlds.get(1)!.tiles.get('5,5')!.resourceQty).toBe(0);
+      expect(worlds.get(1)!.tiles.get('5,5')!.resourceRespawnTurn).toBe(35);
+    });
+
+    it('clears respawn timer when resource reaches max', () => {
+      const worlds = createWorld([{ key: '5,5', resourceType: 'wood', resourceQty: 4, resourceRespawnTurn: 35 }]);
+      processResourceRespawn({ dayCount: 35, worlds, currentWorldId: 1 });
+      expect(worlds.get(1)!.tiles.get('5,5')!.resourceQty).toBe(5);
+      expect(worlds.get(1)!.tiles.get('5,5')!.resourceRespawnTurn).toBeUndefined();
     });
   });
 });

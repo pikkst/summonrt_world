@@ -13,6 +13,7 @@ import { applyAffectionGain } from '../../../core/affection.ts';
 import type { GameEngineState } from '../../../core/gameEngine.ts';
 import { createHeartbeat } from '../../../core/heartbeat.ts';
 import { getAggregateStats, getAllNodes, getCareerModifiers } from '../../../data/careerTree/index';
+import { RESOURCE_MAX_QTY, getRespawnDays, processResourceRespawn } from '../../../core/worldTick.ts';
 import { applyCaptureRateBonus, applyXPBoost, getCareerSystemBonuses } from '../../../data/careerTreeIntegration';
 import { getFusionResult, calculateFusionRarityWithSpecial } from '../../../data/fusionMatrix.ts';
 import { inheritSkills } from '../../../data/fusionUtils.ts';
@@ -339,6 +340,9 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
         };
       });
       tile.resourceQty = Math.max(0, (tile.resourceQty ?? 0) - found);
+      if (found > 0 && tile.resourceQty < RESOURCE_MAX_QTY) {
+        tile.resourceRespawnTurn = (player.dayCount ?? 1) + getRespawnDays(resourceKey);
+      }
       const weatherMsg = weatherEffect.description ? ` Under ${weatherState?.currentWeather ?? 'Clear'} skies,` : '';
       get().appendLog(`You found ${found} ${resourceKey}!${weatherMsg} (${Math.round(yieldModifier * 100)}% yield)`, 'success');
     } else {
@@ -1733,48 +1737,53 @@ const modifiers: MissionModifiers = {
         return Math.floor((baseByType[mission.type] || 10) * worldScale);
       };
 
-     const applyWorldTickCareerBonuses = (): void => {
-       const state = get();
-       if (!state.player) return;
-       const treeData = getAllNodes();
-       const aggregatedStats = getAggregateStats(state.player, treeData);
-        const bonuses = getCareerSystemBonuses(aggregatedStats);
+      const applyWorldTickCareerBonuses = (): void => {
+        const state = get();
+        if (!state.player) return;
+        const treeData = getAllNodes();
+        const aggregatedStats = getAggregateStats(state.player, treeData);
+         const bonuses = getCareerSystemBonuses(aggregatedStats);
 
-        const energyRegenBoost = 1 + ((bonuses.energy_regen_pct || 0) / 100);
-       const nerveRegenBoost = 1 + ((bonuses.nerve_regen_pct || 0) / 100);
-       const happyRegenBoost = 1 + ((bonuses.happy_regen_pct || 0) / 100);
-       const lifeRegenBoost = 1 + ((bonuses.life_regen_pct || 0) / 100);
+         const energyRegenBoost = 1 + ((bonuses.energy_regen_pct || 0) / 100);
+        const nerveRegenBoost = 1 + ((bonuses.nerve_regen_pct || 0) / 100);
+        const happyRegenBoost = 1 + ((bonuses.happy_regen_pct || 0) / 100);
+        const lifeRegenBoost = 1 + ((bonuses.life_regen_pct || 0) / 100);
 
-       if (energyRegenBoost > 1 || nerveRegenBoost > 1 || happyRegenBoost > 1 || lifeRegenBoost > 1) {
-         set((s) => {
-           const p = s.player;
-           if (!p) return {};
-           return {
-             player: {
-               ...p,
-               energy: {
-                 ...p.energy,
-                 current: Math.min(p.energy.max, Math.floor(p.energy.current * Math.max(1, energyRegenBoost * 0.01))),
-               },
-               nerve: {
-                 ...p.nerve,
-                 current: Math.min(p.nerve.max, Math.floor(p.nerve.current * Math.max(1, nerveRegenBoost * 0.01))),
-               },
-               happy: {
-                 ...p.happy,
-                 current: Math.min(p.happy.max, Math.floor(p.happy.current * Math.max(1, happyRegenBoost * 0.01))),
-               },
-               life: {
-                 ...p.life,
-                 current: Math.min(p.life.max, Math.floor(p.life.current * Math.max(1, lifeRegenBoost * 0.01))),
-               },
-             },
-           };
-         });
-       }
-     };
+        if (energyRegenBoost > 1 || nerveRegenBoost > 1 || happyRegenBoost > 1 || lifeRegenBoost > 1) {
+          set((s) => {
+            const p = s.player;
+            if (!p) return {};
+            return {
+              player: {
+                ...p,
+                energy: {
+                  ...p.energy,
+                  current: Math.min(p.energy.max, Math.floor(p.energy.current * Math.max(1, energyRegenBoost * 0.01))),
+                },
+                nerve: {
+                  ...p.nerve,
+                  current: Math.min(p.nerve.max, Math.floor(p.nerve.current * Math.max(1, nerveRegenBoost * 0.01))),
+                },
+                happy: {
+                  ...p.happy,
+                  current: Math.min(p.happy.max, Math.floor(p.happy.current * Math.max(1, happyRegenBoost * 0.01))),
+                },
+                life: {
+                  ...p.life,
+                  current: Math.min(p.life.max, Math.floor(p.life.current * Math.max(1, lifeRegenBoost * 0.01))),
+                },
+              },
+            };
+          });
+        }
+      };
 
- const instance = createHeartbeat({
+      const applyResourceRespawn = (): void => {
+        const { worlds, currentWorldId, dayCount } = get();
+        processResourceRespawn({ dayCount, worlds, currentWorldId });
+      };
+
+  const instance = createHeartbeat({
         getCurrentTime: Date.now,
         getMissions: () => get().missions,
         removeMission: (id) => get().removeMission(id),
@@ -1793,6 +1802,7 @@ const modifiers: MissionModifiers = {
         })),
          onWorldTick: () => {
            applyWorldTickCareerBonuses();
+           applyResourceRespawn();
          },
          onMissionsProgress: () => {},
        resolveMissionCallbacks: {
