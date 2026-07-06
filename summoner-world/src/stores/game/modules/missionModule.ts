@@ -1,7 +1,7 @@
 import type { GameStore, GameStoreState, PlayerState, WorldData, LogEntry, QuestInstance, Element, CreatureInstance, SetState, CreatureTemplate } from '../types.ts';
 import { createLog, calculateMovementModifiers, processTileDiscovery, getPlayerElements, addPlayerXP, getWorldModifier, applyMinViableLevelScaling, calculateMinViableLevel } from '../helpers.ts';
 import { generateTile } from '../../../core/worldGenerator.ts';
-import { getTileKey, getAffinityWeight, calculateBaseCaptureProbability, DUNGEON_ASCEND_SCROLL } from '../../../data/constants.ts';
+import { getTileKey, getAffinityWeight, calculateBaseCaptureProbability, DUNGEON_ASCEND_SCROLL, WORLD_SIZE } from '../../../data/constants.ts';
 import { QUEST_TEMPLATES } from '../../../data/quests.ts';
 import { generateCreatureTemplate, SKILL_TEMPLATES } from '../../../modules/creatures/creatureFactory.ts';
 import { SeededRandom } from '../../../utils/SeededRandom.ts';
@@ -46,8 +46,13 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
 
     const newX = player.tileX + dx;
     const newY = player.tileY + dy;
-    const newTileKey = getTileKey(newX, newY);
 
+    if (newX < 0 || newX >= WORLD_SIZE || newY < 0 || newY >= WORLD_SIZE) {
+      appendLog('You have reached the edge of the world. Beyond this boundary, only the void awaits.', 'warning');
+      return;
+    }
+
+    const newTileKey = getTileKey(newX, newY);
     const { energyCost } = calculateMovementModifiers(newX, newY);
 
     if (player.energy.current < energyCost) {

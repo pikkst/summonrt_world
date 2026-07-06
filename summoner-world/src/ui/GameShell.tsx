@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { useGameStore } from '../stores/gameStore.ts';
-import { getTileKey, DIRECTIONS, BIOME_NAMES, RESOURCES, ELEMENTS } from '../data/constants.ts';
+import { getTileKey, DIRECTIONS, BIOME_NAMES, RESOURCES, ELEMENTS, WORLD_SIZE } from '../data/constants.ts';
 import type { Screen, CreatureInstance, CreatureTemplate } from '../types/game.ts';
 import { generateCreatureTemplate } from '../modules/creatures/creatureFactory.ts';
 import { SeededRandom } from '../utils/SeededRandom.ts';
@@ -338,12 +338,12 @@ export const GameShell: React.FC = () => {
     const actions: { key: string; label: string; action: () => void }[] = [];
     if (exploring || activity) return []; // No actions while moving or busy
 
-    const WORLD_LIMIT = 2000;
+    const WORLD_LIMIT = WORLD_SIZE;
     for (const d of DIRECTIONS) {
       const nx = player.tileX + d.dx;
       const ny = player.tileY + d.dy;
       
-      const inBounds = nx >= 0 && nx <= WORLD_LIMIT && ny >= 0 && ny <= WORLD_LIMIT;
+      const inBounds = nx >= 0 && nx < WORLD_LIMIT && ny >= 0 && ny < WORLD_LIMIT;
       
       if (inBounds) {
         actions.push({ key: d.name, label: `Move ${capitalize(d.name)}`, action: () => movePlayer(d.dx, d.dy) });
@@ -552,14 +552,14 @@ export const GameShell: React.FC = () => {
                 <div className="mt-12 pt-8 border-t border-gray-900">
                    <div className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] mb-4">Visible Exits</div>
                    <div className="flex flex-wrap gap-3">
-                     {DIRECTIONS.map(d => {
-                       const nx = player.tileX + d.dx;
-                       const ny = player.tileY + d.dy;
-                       const nk = getTileKey(nx, ny);
-                       
-                       const WORLD_LIMIT = 2000;
-                       const inBounds = nx >= 0 && nx <= WORLD_LIMIT && ny >= 0 && ny <= WORLD_LIMIT;
-                       const isTarget = exploring?.tileKey === nk;
+                      {DIRECTIONS.map(d => {
+                        const nx = player.tileX + d.dx;
+                        const ny = player.tileY + d.dy;
+                        const nk = getTileKey(nx, ny);
+                        
+                        const WORLD_LIMIT = WORLD_SIZE;
+                        const inBounds = nx >= 0 && nx < WORLD_LIMIT && ny >= 0 && ny < WORLD_LIMIT;
+                        const isTarget = exploring?.tileKey === nk;
                        
                        return (
                          <button 
