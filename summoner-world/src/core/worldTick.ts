@@ -1,5 +1,20 @@
+import type { WorldData } from '../types/game';
+
 export const MINUTES_PER_TURN = 6;
 export const TURNS_PER_DAY = 1440 / MINUTES_PER_TURN;
+
+export const RESOURCE_MAX_QTY = 5;
+
+export const PLANT_RESOURCE_TYPES = ['wood', 'herbs'] as const;
+export const ORE_RESOURCE_TYPES = ['stone', 'ore', 'crystal', 'essence'] as const;
+
+export const PLANT_RESPAWN_DAYS = 30;
+export const ORE_RESPAWN_DAYS = 90;
+
+export function getRespawnDays(resourceType: string): number {
+  if ((PLANT_RESOURCE_TYPES as readonly string[]).includes(resourceType)) return PLANT_RESPAWN_DAYS;
+  return ORE_RESPAWN_DAYS;
+}
 
 export interface WorldTickStats {
   turnCount: number;
@@ -39,7 +54,7 @@ export function calculateWorldTicks(params: WorldTickParams): WorldTickStats {
 }
 
 export interface WorldTickCallbacks {
-  onWorldTick: (turnCount: number, gameTimeMinutes: number, dayCount: number) => void;
+  onWorldTick?: (turnCount: number, gameTimeMinutes: number, dayCount: number) => void;
   getMissions: () => { mission_id: string; end_time: number }[];
   onMissionsProgress: (minutesElapsed: number) => void;
 }
@@ -51,7 +66,7 @@ export function processWorldTick(
   const stats = calculateWorldTicks(params);
 
   const turnsAdvanced = stats.turnCount - params.turnCount;
-  if (turnsAdvanced > 0) {
+  if (turnsAdvanced > 0 && callbacks.onWorldTick) {
     callbacks.onWorldTick(stats.turnCount, stats.gameTimeMinutes, stats.dayCount);
   }
 
@@ -61,81 +76,32 @@ export function processWorldTick(
   return stats;
 }
 
-export interface EcosystemState {
-  overhuntingActive: boolean;
-  overhuntingTurnsRemaining: number;
-  baselineResourceLevel: number;
-}
-
-export interface EcosystemUpdate {
-  overhuntingActive: boolean;
-  overhuntingTurnsRemaining: number;
-  biomeShifted?: boolean;
-  sanctuaryTriggered?: boolean;
-}
-
-export const ECOSYSTEM_BASELINE_THRESHOLD = 0.1;
-export const BIOME_SHIFT_THRESHOLD = 0.1;
-
-export function updateEcosystem(
+export function processResourceRespawn(
   params: {
-    turnCount: number;
-    worlds: Map<number, { tiles: Map<string, { resourceQty?: number; resourceRespawnTurn?: number }> }>;
+    dayCount: number;
+    worlds: Map<number, WorldData>;
     currentWorldId: number;
-    ecosystem: EcosystemState;
   }
-): EcosystemUpdate {
-  const { turnCount, worlds, currentWorldId, ecosystem } = params;
-  let overhuntingActive = ecosystem.overhuntingActive;
-  let overhuntingTurnsRemaining = ecosystem.overhuntingTurnsRemaining;
-  let sanctuaryTriggered = false;
-  let biomeShifted = false;
+): void {
+  const world = params.worlds.get(params.currentWorldId);
+  if (!world) return;
 
-  if (overhuntingActive && overhuntingTurnsRemaining > 0) {
-    overhuntingTurnsRemaining--;
-    if (overhuntingTurnsRemaining <= 0) {
-      overhuntingActive = false;
-    }
-  }
+  world.tiles.forEach(tile => {
+    if (tile.resourceQty === undefined || tile.resourceQty >= RESOURCE_MAX_QTY) return;
 
-  const world = worlds.get(currentWorldId);
-  if (world) {
-    let totalResourceQty = 0;
-    let tileCount = 0;
+    const resourceType = tile.resourceType;
+    if (!resourceType) return;
 
-    world.tiles.forEach(tile => {
-      totalResourceQty += tile.resourceQty ?? 0;
-      tileCount++;
-    });
-
-    const averageResource = tileCount > 0 ? totalResourceQty / tileCount : 1;
-    const baselineRatio = averageResource / 5;
-
-    if (baselineRatio < ECOSYSTEM_BASELINE_THRESHOLD && !overhuntingActive) {
-      sanctuaryTriggered = true;
-      overhuntingActive = true;
-      overhuntingTurnsRemaining = 180;
-    }
-
-    world.tiles.forEach(tile => {
-      if (tile.resourceQty !== undefined && tile.resourceQty < 5) {
-        if (tile.resourceRespawnTurn === undefined || turnCount >= tile.resourceRespawnTurn) {
-          const rng = Math.random();
-          if (rng < 0.05) {
-            tile.resourceQty = (tile.resourceQty || 0) + 1;
-            tile.resourceRespawnTurn = turnCount + 30 + Math.floor(Math.random() * 60);
-          }
-        }
+    const respawnDay = tile.resourceRespawnTurn;
+    if (respawnDay !== undefined && params.dayCount >= respawnDay) {
+      tile.resourceQty = (tile.resourceQty || 0) + 1;
+      if (tile.resourceQty < RESOURCE_MAX_QTY) {
+        tile.resourceRespawnTurn = params.dayCount + getRespawnDays(resourceType);
+      } else {
+        tile.resourceRespawnTurn = undefined;
       }
-    });
-  }
-
-  return {
-    overhuntingActive,
-    overhuntingTurnsRemaining,
-    biomeShifted,
-    sanctuaryTriggered,
-  };
+    }
+  });
 }
 
 export function getTurnTime(currentRealTime: number, turnCount: number): number {

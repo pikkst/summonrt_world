@@ -417,7 +417,7 @@ Sprint goal: expand world generation with weather, fast travel, biomes and settl
 - [x] T7.5 – Implement fast travel: unlocked via discovered settlements, roads or creature-mounted traversal
 - [x] T7.6 – Add settlement placement (cities near rivers, forts on ridges, biased by biome)
 - [x] T7.7 – Implement `getBiomeForCoords` fully (not just dist-based gradient)
-- [ ] T7.8 – Add resource respawn logic: plants 30 days, ore 90 days (game-time based)
+- [x] T7.8 – Add resource respawn logic: plants 30 days, ore 90 days (game-time based)
 - [ ] T7.9 – Implement world boundary handling (edge movement blocked, thematic message)
 - [ ] T7.10 – Add minimap/radar expansion (radius configurable, fog-of-war render)
 - [ ] T7.11 – Implement 100 floor seed system (`FLOOR_SEEDS` 1–100, deterministic PRNG)

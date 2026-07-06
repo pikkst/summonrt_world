@@ -11,6 +11,8 @@ import type {
 } from './game.ts';
 import type { FastTravelState } from '../core/fastTravel.ts';
 
+export type { FastTravelState };
+
 export type SummonerClass =
   | 'beast_binder'
   | 'elementalist'
