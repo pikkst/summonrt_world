@@ -104,6 +104,17 @@ describe('World Boundary Handling (T7.9)', () => {
     expect(player.tileY).toBe(WORLD_SIZE - 1);
   });
 
+  it('blocks movement when attempting to step onto WORLD_SIZE coordinate', () => {
+    useGameStore.setState((state) => ({
+      player: { ...state.player!, tileX: WORLD_SIZE - 1, tileY: 10 },
+    }));
+
+    useGameStore.getState().movePlayer(1, 0);
+
+    const player = useGameStore.getState().player!;
+    expect(player.tileX).toBe(WORLD_SIZE - 1);
+  });
+
   it('emits a thematic warning when the player tries to leave the world', () => {
     useGameStore.setState((state) => ({
       player: { ...state.player!, tileX: 0, tileY: 0 },
