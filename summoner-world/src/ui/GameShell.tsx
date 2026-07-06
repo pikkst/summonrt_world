@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import { useGameStore } from '../stores/gameStore.ts';
-import { getTileKey, DIRECTIONS, BIOME_NAMES, RESOURCES, ELEMENTS } from '../data/constants.ts';
+import { getTileKey, DIRECTIONS, BIOME_NAMES, RESOURCES, ELEMENTS, WORLD_SIZE } from '../data/constants.ts';
 import type { Screen, CreatureInstance, CreatureTemplate } from '../types/game.ts';
 import { generateCreatureTemplate } from '../modules/creatures/creatureFactory.ts';
 import { SeededRandom } from '../utils/SeededRandom.ts';
@@ -14,6 +14,7 @@ import { FusionPanel } from './FusionPanel';
 import { SkillTreePanel } from './SkillTreePanel';
 import { StatAllocationPanel } from './StatAllocationPanel';
 import { MissionProgressPanel } from './MissionProgressPanel';
+import { Minimap } from './Minimap';
 import { SUMMONER_CLASSES } from '../data/summonerClasses';
 import { CONTRACT_PATHS } from '../core/playerCore/characterCreation.ts';
 
@@ -338,12 +339,12 @@ export const GameShell: React.FC = () => {
     const actions: { key: string; label: string; action: () => void }[] = [];
     if (exploring || activity) return []; // No actions while moving or busy
 
-    const WORLD_LIMIT = 2000;
+    const WORLD_LIMIT = WORLD_SIZE;
     for (const d of DIRECTIONS) {
       const nx = player.tileX + d.dx;
       const ny = player.tileY + d.dy;
       
-      const inBounds = nx >= 0 && nx <= WORLD_LIMIT && ny >= 0 && ny <= WORLD_LIMIT;
+      const inBounds = nx >= 0 && nx < WORLD_LIMIT && ny >= 0 && ny < WORLD_LIMIT;
       
       if (inBounds) {
         actions.push({ key: d.name, label: `Move ${capitalize(d.name)}`, action: () => movePlayer(d.dx, d.dy) });
@@ -552,14 +553,14 @@ export const GameShell: React.FC = () => {
                 <div className="mt-12 pt-8 border-t border-gray-900">
                    <div className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em] mb-4">Visible Exits</div>
                    <div className="flex flex-wrap gap-3">
-                     {DIRECTIONS.map(d => {
-                       const nx = player.tileX + d.dx;
-                       const ny = player.tileY + d.dy;
-                       const nk = getTileKey(nx, ny);
-                       
-                       const WORLD_LIMIT = 2000;
-                       const inBounds = nx >= 0 && nx <= WORLD_LIMIT && ny >= 0 && ny <= WORLD_LIMIT;
-                       const isTarget = exploring?.tileKey === nk;
+                      {DIRECTIONS.map(d => {
+                        const nx = player.tileX + d.dx;
+                        const ny = player.tileY + d.dy;
+                        const nk = getTileKey(nx, ny);
+                        
+                        const WORLD_LIMIT = WORLD_SIZE;
+                        const inBounds = nx >= 0 && nx < WORLD_LIMIT && ny >= 0 && ny < WORLD_LIMIT;
+                        const isTarget = exploring?.tileKey === nk;
                        
                        return (
                          <button 
@@ -665,55 +666,19 @@ export const GameShell: React.FC = () => {
              </div>
            </div>
 
-           <div className="border-t border-gray-900 pt-6">
-             <div className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] mb-4 flex justify-between items-center">
-               <span>Atlas Radar</span>
-               <span className="text-[9px] font-mono opacity-50">{player.tileX}, {player.tileY}</span>
-             </div>
-             
-             <div className="bg-black/40 p-3 rounded-2xl border border-gray-900 shadow-inner">
-                <div className="grid grid-cols-7 gap-1">
-                  {(() => {
-                    const radius = 3;
-                    const cells = [];
-                    for (let dy = -radius; dy <= radius; dy++) {
-                      for (let dx = -radius; dx <= radius; dx++) {
-                        const tx = player.tileX + dx;
-                        const ty = player.tileY + dy;
-                        const key = getTileKey(tx, ty);
-                        const t = world.tiles.get(key);
-                        const isPlayer = dx === 0 && dy === 0;
-                        
-                        cells.push(
-                          <div 
-                            key={`${tx}-${ty}`}
-                            className={`aspect-square rounded-sm transition-all duration-300 ${
-                              isPlayer 
-                                ? 'bg-white shadow-[0_0_5px_white] z-10 scale-110' 
-                                : t?.discovered 
-                                  ? getBiomeColor(t.biome) 
-                                  : 'bg-gray-950/50 border border-gray-900/50'
-                            } ${t?.explored ? 'ring-1 ring-emerald-500/20' : ''}`}
-                            title={t?.discovered ? `${t.biome}${t.specialType ? ` - ${t.specialType}` : ''}` : 'Fog'}
-                          >
-                            {!isPlayer && t?.explored && t.specialType && (
-                              <div className="w-full h-full flex items-center justify-center text-[6px]">
-                                {t.specialType === 'city' ? '🏙️' : t.specialType === 'dungeon' ? '🏰' : '•'}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      }
-                    }
-                    return cells;
-                  })()}
-                </div>
-                <div className="mt-3 flex justify-between items-center">
-                   <span className="text-[8px] font-black text-emerald-500/60 uppercase">{tile?.biome || 'Unknown'}</span>
-                   <button onClick={openWorldMap} className="text-[8px] font-black text-sky-500 uppercase hover:underline">Full Atlas »</button>
-                </div>
-             </div>
-           </div>
+            <div className="border-t border-gray-900 pt-6">
+              <div className="text-[10px] font-black text-gray-600 uppercase tracking-[0.2em] mb-4 flex justify-between items-center">
+                <span>Atlas Radar</span>
+                <span className="text-[9px] font-mono opacity-50">{player.tileX}, {player.tileY}</span>
+              </div>
+              
+              <Minimap 
+                player={{ tileX: player.tileX, tileY: player.tileY }} 
+                world={world} 
+                radius={player.settings.minimapRadius ?? 3}
+                onExpand={openWorldMap}
+              />
+            </div>
         </div>
 
         {/* Global Log (Mini) */}
@@ -1234,6 +1199,7 @@ function SettingsPanel() {
       <div className="space-y-8">
         {renderSlider('Interface Speed', player.settings.textSpeed || 30, 0, 200, (v) => updateSettings({ textSpeed: v }))}
         {renderSlider('Matrix Font Size', player.settings.fontSize || 15, 12, 24, (v) => updateSettings({ fontSize: v }))}
+        {renderSlider('Radar Radius', player.settings.minimapRadius ?? 3, 1, 10, (v) => updateSettings({ minimapRadius: v }))}
         
         <div className="flex items-center justify-between p-4 bg-black/40 rounded-2xl border border-gray-800">
           <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">High Contrast Filter</span>

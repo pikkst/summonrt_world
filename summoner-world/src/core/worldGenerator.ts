@@ -1,11 +1,9 @@
 import { SeededRandom } from '../utils/SeededRandom.ts';
 import type { TileData, WorldData, ElementalAffinity, NPC, WeatherState, Settlement } from '../types/game.ts';
-import { RESOURCES, getWorldName, getFloorSeed, getTileKey, getNeighbors } from '../data/constants.ts';
+import { RESOURCES, getWorldName, getFloorSeed, getTileKey, getNeighbors, WORLD_SIZE } from '../data/constants.ts';
 import { getBiomeForCoords } from './dungeon/Biome';
 import { createInitialWeatherState } from './Weather';
 import { generateSettlements } from './settlementGenerator';
-
-const WORLD_SIZE = 2000; // 2000x2000 = 4 million sectors
 
 const NPC_NAMES = ['Elder Thorne', 'Summoner Kai', 'Merchant Jace', 'Healer Aria', 'Guide Lyra'];
 
