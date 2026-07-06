@@ -1,4 +1,4 @@
-import type { PlayerCoreState, SummonerClass, PlayerPrimaryStats, PlayerSecondaryStats, CreatureSlots, FastTravelState } from '../../types/playerCore.ts';
+import type { PlayerCoreState, SummonerClass, PlayerPrimaryStats, PlayerSecondaryStats, CreatureSlots } from '../../types/playerCore.ts';
 import type { PlayerState } from '../../types/game.ts';
 import { calculatePrimaryStats, calculateSecondaryStats, useFinalStats } from './playerStatistics';
 import { createEmptyEquipmentSlots } from './equipmentCore';

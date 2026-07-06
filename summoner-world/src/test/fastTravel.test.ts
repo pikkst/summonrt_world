@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { FastTravelState, FastTravelPoint } from '../types/game';
 import {
   createFastTravelPoint,
   calculateTravelDuration,
@@ -12,8 +13,6 @@ import {
   finishTravel,
   createDefaultFastTravelState,
 } from '../core/fastTravel';
-import type { FastTravelPoint } from '../types/game';
-import type { FastTravelState } from '../core/fastTravel';
 
 describe('T7.5 - Fast Travel System', () => {
   describe('createFastTravelPoint', () => {
