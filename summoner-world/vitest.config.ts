@@ -7,12 +7,6 @@ import { fileURLToPath } from 'node:url'
 const projectRoot = dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
-  root: projectRoot,
-  server: {
-    fs: {
-      allow: [projectRoot],
-    },
-  },
   plugins: [react(), tailwindcss()],
   test: {
     environment: 'jsdom',
