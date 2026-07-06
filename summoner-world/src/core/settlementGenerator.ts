@@ -1,8 +1,8 @@
 import type { BiomeType, Settlement, SettlementType } from '../types/game';
 import { getBiomeForCoords } from './dungeon/Biome';
 import { SeededRandom } from '../utils/SeededRandom';
+import { WORLD_SIZE } from '../data/constants';
 
-const WORLD_SIZE = 2000;
 const MIN_SETTLEMENT_DISTANCE = 200;
 const MAX_SETTLEMENTS_PER_WORLD = 15;
 
