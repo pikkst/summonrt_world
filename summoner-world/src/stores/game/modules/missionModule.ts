@@ -24,6 +24,7 @@ import { generateDungeonTower, exportDungeonRun } from '../../../core/dungeon/Du
 import { generateTrapInteraction, generatePuzzleInteraction, generateEliteInteraction, generateVendorInteraction, generateTreasureInteraction, TrapRoomInteraction, PuzzleRoomInteraction, EliteRoomInteraction, VendorRoomInteraction, TreasureRoomInteraction } from '../../../core/dungeon/DungeonInteractions';
 import type { RoomInteractionState } from '../../../types/game.ts';
 import { applyPlayerStatisticEvent, type PlayerStatisticEvent } from '../../../core/playerCore/playerStatisticsTracking';
+import { applyWorldBossCompletion } from '../../../core/worldProgression';
 import { getWeatherEffect, getWeatherResourceYieldModifier, getWeatherEncounterModifier, getPlayerElementalAffinityBonus, getEncounterTableForWeather, updateWeather } from '../../../core/Weather';
 import { worldEventBus } from '../../../core/worldEventBus.ts';
 import axios from 'axios';
@@ -1278,16 +1279,19 @@ resolveDungeonEncounter: (victory: boolean) => {
              creatures: scaledCreatures,
              activeQuests: updatedQuests,
            },
-           playerCore: state.playerCore && isBoss ? {
-             ...state.playerCore,
-             statistics: [
-               { type: 'BossDefeated', worldId: currentWorldId } as const,
-               { type: 'DungeonCleared', worldId: currentWorldId, floorCount: dungeon.totalFloors } as const,
-             ].reduce(
-               (statistics, event) => applyPlayerStatisticEvent(statistics, event),
-               state.playerCore.statistics
-             ),
-           } : state.playerCore,
+            playerCore: state.playerCore && isBoss ? applyWorldBossCompletion(
+              {
+                ...state.playerCore,
+                statistics: [
+                  { type: 'BossDefeated', worldId: currentWorldId } as const,
+                  { type: 'DungeonCleared', worldId: currentWorldId, floorCount: dungeon.totalFloors } as const,
+                ].reduce(
+                  (statistics, event) => applyPlayerStatisticEvent(statistics, event),
+                  state.playerCore.statistics
+                ),
+              },
+              currentWorldId
+            ) : state.playerCore,
            dungeon: {
              ...state.dungeon,
              clearedFloors: newCleared,
