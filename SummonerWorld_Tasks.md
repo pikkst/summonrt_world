@@ -421,7 +421,7 @@ Sprint goal: expand world generation with weather, fast travel, biomes and settl
 - [ ] T7.9 – Implement world boundary handling (edge movement blocked, thematic message)
 - [ ] T7.10 – Add minimap/radar expansion (radius configurable, fog-of-war render)
 - [ ] T7.11 – Implement 100 floor seed system (`FLOOR_SEEDS` 1–100, deterministic PRNG)
-- [ ] T7.12 – Verify same seed + coords gives identical tile for all players (determinism test)
+- [x] T7.12 – Verify same seed + coords gives identical tile for all players (determinism test)
 - [ ] T7.13 – Add World Travel system from Player Core Bible
   - [ ] T7.13.1 – Walking travel
   - [ ] T7.13.2 – Mount creature travel
