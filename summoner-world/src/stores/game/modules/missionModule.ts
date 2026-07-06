@@ -221,8 +221,9 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
     const weatherEncounterMod = weatherState ? getWeatherEncounterModifier(weatherState.currentWeather, weatherState.weatherIntensity) : 1.0;
     const weatherAdjustedChance = encounterChance * weatherEncounterMod;
     
-    if (Math.random() < weatherAdjustedChance) {
-      const encounterRng = new SeededRandom(tile.encounterSeed || Date.now());
+    const encounterRng = new SeededRandom(tile.encounterSeed);
+    
+    if (encounterRng.next() < weatherAdjustedChance) {
       const effectiveTier = currentWorldId + Math.floor(proximityFactor * 10);
       const enemy = generateCreatureTemplate(effectiveTier, encounterRng);
       
@@ -316,16 +317,27 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
     const weatherEffect = weatherState ? getWeatherEffect(weatherState.currentWeather) : { encounterModifier: 1.0, resourceYieldModifier: 1.0, elementalBonus: 0, description: '' };
     const yieldModifier = getWeatherResourceYieldModifier(weatherState?.currentWeather ?? 'Clear', weatherState?.weatherIntensity ?? 1.0);
     
-    const baseFound = Math.min(tile?.resourceQty ?? 0, 1 + Math.floor(Math.random() * 2));
+    const resourceSeed = tile ? tile.encounterSeed + 1 : (worlds.get(currentWorldId)?.seed ?? currentWorldId);
+    const resourceRng = new SeededRandom(resourceSeed);
+    const baseFound = Math.min(tile?.resourceQty ?? 0, 1 + resourceRng.int(0, 1));
     const found = Math.floor(baseFound * yieldModifier);
     
     if (found > 0 && tile) {
-      const existing = (player.inventory || []).find((i) => i.templateKey === resourceKey);
-      if (existing) {
-        existing.quantity += found;
-      } else {
-        player.inventory.push({ templateKey: resourceKey, quantity: found });
-      }
+      set((state) => {
+        const updatedInventory = (state.player!.inventory || []).map((i) =>
+          i.templateKey === resourceKey ? { ...i, quantity: i.quantity + found } : i
+        );
+        const hasExisting = updatedInventory.some((i) => i.templateKey === resourceKey);
+        if (!hasExisting) {
+          updatedInventory.push({ templateKey: resourceKey, quantity: found });
+        }
+        return {
+          player: {
+            ...state.player!,
+            inventory: updatedInventory,
+          }
+        };
+      });
       tile.resourceQty = Math.max(0, (tile.resourceQty ?? 0) - found);
       const weatherMsg = weatherEffect.description ? ` Under ${weatherState?.currentWeather ?? 'Clear'} skies,` : '';
       get().appendLog(`You found ${found} ${resourceKey}!${weatherMsg} (${Math.round(yieldModifier * 100)}% yield)`, 'success');
@@ -548,25 +560,26 @@ finishCapture: () => {
            get().startCombat(creature, `Wild ${creature.name}`, 'aggressive');
          }, 500);
        } else {
-         appendLog(`${weatherPrefix}💨 Failed to capture ${creature.name}. The creature escapes but now views your territory as hostile! (Capture Chance: ${Math.round(pCapture * 100)}%)`, 'warning');
-         const tileKey = getTileKey(player.tileX, player.tileY);
-         const hostilityEntry = {
-           creatureKey: creature.key,
-           creatureName: creature.name,
-           class: creature.class,
-           type: creature.type,
-           elements: creature.elements,
-           baseHealth: creature.baseHealth,
-           baseAttack: creature.baseAttack,
-           baseDefense: creature.baseDefense,
-           baseSpeed: creature.baseSpeed,
-           baseMana: creature.baseMana,
-           baseExpValue: creature.baseExpValue,
-           skills: creature.skills.map((s) => typeof s === 'string' ? { key: s, name: '', description: '', power: 0, cost: 0 } : s),
-           description: creature.description,
-           isBoss: creature.isBoss,
-           hostilityTurns: 5 + Math.floor(Math.random() * 5),
-         };
+          appendLog(`${weatherPrefix}💨 Failed to capture ${creature.name}. The creature escapes but now views your territory as hostile! (Capture Chance: ${Math.round(pCapture * 100)}%)`, 'warning');
+          const tileKey = getTileKey(player.tileX, player.tileY);
+          const hostilityRng = new SeededRandom(currentWorldId * 100000 + player.tileX * 1000 + player.tileY);
+          const hostilityEntry = {
+            creatureKey: creature.key,
+            creatureName: creature.name,
+            class: creature.class,
+            type: creature.type,
+            elements: creature.elements,
+            baseHealth: creature.baseHealth,
+            baseAttack: creature.baseAttack,
+            baseDefense: creature.baseDefense,
+            baseSpeed: creature.baseSpeed,
+            baseMana: creature.baseMana,
+            baseExpValue: creature.baseExpValue,
+            skills: creature.skills.map((s) => typeof s === 'string' ? { key: s, name: '', description: '', power: 0, cost: 0 } : s),
+            description: creature.description,
+            isBoss: creature.isBoss,
+            hostilityTurns: 5 + hostilityRng.int(0, 4),
+          };
          set((state) => ({
            player: {
              ...state.player!,

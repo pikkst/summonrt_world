@@ -1,5 +1,5 @@
-import type { Settlement, SettlementType, BiomeType } from '../types/game';
-import { sampleBiomeGeneration } from './dungeon/Biome';
+import type { BiomeType, Settlement, SettlementType } from '../types/game';
+import { getBiomeForCoords } from './dungeon/Biome';
 import { SeededRandom } from '../utils/SeededRandom';
 
 const WORLD_SIZE = 2000;
@@ -52,7 +52,7 @@ function getElevation(x: number, y: number, seed: number): number {
 }
 
 function isNearWaterSimple(x: number, y: number, worldSeed: number): boolean {
-  const currentBiome = sampleBiomeGeneration(x, y, worldSeed).biome;
+  const currentBiome = getBiomeForCoords(x, y, worldSeed);
   if (WATER_BIOME_SETTLEMENTS.includes(currentBiome)) {
     return true;
   }
@@ -67,17 +67,13 @@ function isNearWaterSimple(x: number, y: number, worldSeed: number): boolean {
     const nx = x + dx;
     const ny = y + dy;
     if (nx < 0 || nx >= WORLD_SIZE || ny < 0 || ny >= WORLD_SIZE) continue;
-    const neighborBiome = sampleBiomeGeneration(nx, ny, worldSeed).biome;
+    const neighborBiome = getBiomeForCoords(nx, ny, worldSeed);
     if (WATER_BIOME_SETTLEMENTS.includes(neighborBiome)) {
       return true;
     }
   }
   
   return false;
-}
-
-function getBiomeAtCoords(x: number, y: number, worldSeed: number): BiomeType {
-  return sampleBiomeGeneration(x, y, worldSeed).biome;
 }
 
 function generateSettlementName(rng: SeededRandom, biome: BiomeType): string {
@@ -196,7 +192,7 @@ export function generateSettlements(worldId: number, worldSeed: number): Settlem
       continue;
     }
     
-    const biome = getBiomeAtCoords(x, y, worldSeed);
+    const biome = getBiomeForCoords(x, y, worldSeed);
     const elevation = getElevation(x, y, worldSeed);
     const nearWater = isNearWaterSimple(x, y, worldSeed);
     
@@ -225,7 +221,7 @@ export function generateSettlements(worldId: number, worldSeed: number): Settlem
   if (settlements.length === 0) {
     const fallbackX = WORLD_SIZE / 2;
     const fallbackY = WORLD_SIZE / 2;
-    const biome = getBiomeAtCoords(fallbackX, fallbackY, worldSeed);
+    const biome = getBiomeForCoords(fallbackX, fallbackY, worldSeed);
     const elevation = getElevation(fallbackX, fallbackY, worldSeed);
     const nearWater = isNearWaterSimple(fallbackX, fallbackY, worldSeed);
     

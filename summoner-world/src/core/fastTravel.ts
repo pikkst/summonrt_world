@@ -1,4 +1,15 @@
-import type { Element, FastTravelPointType, FastTravelPoint, FastTravelDestination, FastTravelState } from '../types/game';
+import type { Element, FastTravelPointType, FastTravelPoint, FastTravelDestination } from '../types/game';
+
+export interface FastTravelState {
+  points: FastTravelPoint[];
+  discoveredPointIds: Set<string>;
+  activeTravel?: {
+    destination: FastTravelDestination;
+    startTime: number;
+    duration: number;
+    travelType: 'walking' | 'fast_travel' | 'mount';
+  };
+}
 
 export const FAST_TRAVEL_BASE_DURATION_MS = 5000;
 export const FAST_TRAVEL_SPEED_BONUS = 20;
@@ -142,16 +153,20 @@ export function isOnRoad(
   roadPoints: { x: number; y: number }[],
   threshold: number = 50
 ): boolean {
+  const denominator = Math.hypot(toY - fromY, toX - fromX);
+  if (denominator === 0) return false;
+
   for (const roadPoint of roadPoints) {
     const distToLine = Math.abs(
       (toY - fromY) * roadPoint.x -
       (toX - fromX) * roadPoint.y +
       toX * fromY - fromY * toX
-    ) / Math.hypot(toY - fromY, toX - fromX);
+    ) / denominator;
 
     if (distToLine < threshold) {
-      const t = ((roadPoint.x - fromX) * (toX - fromX) + (roadPoint.y - fromY) * (toY - fromY)) / ((toX - fromX) ** 2 + (toY - fromY) ** 2);
-      if (t >= 0 && t <= 1) {
+      const pointOnLine = Math.hypot(roadPoint.x - fromX, roadPoint.y - fromY) /
+        denominator;
+      if (pointOnLine >= 0 && pointOnLine <= 1) {
         return true;
       }
     }
@@ -162,6 +177,8 @@ export function isOnRoad(
 export function startFastTravel(
   state: FastTravelState,
   destination: FastTravelDestination,
+  fromX: number,
+  fromY: number,
   options?: {
     isMount?: boolean;
     elementTravelSpeedPct?: number;
@@ -173,7 +190,7 @@ export function startFastTravel(
   if (state.activeTravel?.travelType === 'fast_travel') {
     duration = state.activeTravel.duration;
   } else if (options?.isMount) {
-    duration = MOUNT_SPEED_BONUS;
+    duration = calculateTravelDuration(fromX, fromY, destination.x, destination.y, { isMount: true, elementTravelSpeedPct: options.elementTravelSpeedPct });
   } else {
     duration = FAST_TRAVEL_BASE_DURATION_MS;
   }
@@ -193,9 +210,6 @@ export function finishTravel(state: FastTravelState): FastTravelState {
   if (!state.activeTravel) return state;
 
   const travel = state.activeTravel;
-  const newX = travel.destination.x;
-  const newY = travel.destination.y;
-  const newWorldId = travel.destination.worldId;
 
   return {
     ...state,

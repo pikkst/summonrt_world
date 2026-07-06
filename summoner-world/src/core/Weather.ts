@@ -202,7 +202,8 @@ export function updateWeather(
   if (turn >= weatherState.nextChangeTurn) {
     const newWeather = getNextWeather(weatherState.currentWeather, worldSeed, turn, biome);
     const duration = MIN_WEATHER_TURNS + (worldSeed + turn) % (MAX_WEATHER_TURNS - MIN_WEATHER_TURNS);
-    const intensityChange = (Math.random() * 0.2) - 0.1;
+    const rng = new SeededRandom(worldSeed + turn);
+    const intensityChange = (rng.next() * 0.2) - 0.1;
     const newIntensity = Math.max(0.5, Math.min(1.5, weatherState.weatherIntensity + intensityChange));
     
     return {

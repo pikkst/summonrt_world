@@ -5,11 +5,11 @@ import type {
   InventoryStack,
   Resource,
   CreatureInstance,
-  FastTravelDestination,
   FastTravelPointType,
   FastTravelPoint,
-  FastTravelState,
+  FastTravelDestination,
 } from './game.ts';
+import type { FastTravelState } from '../core/fastTravel.ts';
 
 export type SummonerClass =
   | 'beast_binder'
