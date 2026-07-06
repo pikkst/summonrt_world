@@ -38,10 +38,12 @@ import {
 } from '../../../modules/save/playerCoreSaveMigration.ts';
 import {
   getFastTravelPointsNear,
-  startWorldTravel,
   calculateTravelDuration,
   canTravelByWorldGate,
-  isOnRoad,
+  canTravelByBoat,
+  canTravelByPortal,
+  canTravelByAir,
+  createDefaultFastTravelState,
   type TravelMode,
 } from '../../../core/fastTravel.ts';
 
@@ -1136,11 +1138,15 @@ const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(cu
     const playerCore = get().playerCore;
     if (!player) return;
 
-    const travelDistance = Math.hypot(destination.x - player.tileX, destination.y - player.tileY);
     const fromWorldId = currentWorldId;
     const worldUnlocks = playerCore?.worldUnlocks;
+    const fastTravelState = playerCore?.fastTravel ?? createDefaultFastTravelState();
 
-    if (travelMode === 'world_gate' && worldUnlocks) {
+    if (travelMode === 'world_gate') {
+      if (!worldUnlocks) {
+        appendLog('World gate is not available yet.', 'warning');
+        return;
+      }
       const canGate = canTravelByWorldGate(fromWorldId, destination.worldId, worldUnlocks.unlockedWorlds);
       if (!canGate) {
         appendLog('World gate is not accessible from here. Unlock the target world first.', 'warning');
@@ -1152,33 +1158,48 @@ const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(cu
       }
     }
 
-    const nearPoint = playerCore?.fastTravel
-      ? getFastTravelPointsNear(playerCore.fastTravel, player.tileX, player.tileY, 50)[0]
-      : null;
+    if (travelMode === 'boat') {
+      if (!canTravelByBoat(player.tileX, player.tileY, destination.x, destination.y, fromWorldId, fastTravelState.points)) {
+        appendLog('Boat travel requires an unlocked boat point in this world.', 'warning');
+        return;
+      }
+    }
 
-    const isNearSettlement = nearPoint?.type === 'settlement';
-    const isOnRoadPath = isOnRoad(player.tileX, player.tileY, destination.x, destination.y, []);
+    if (travelMode === 'portal') {
+      const hasUnlockedPortal = fastTravelState.points.some(
+        p => p.worldId === destination.worldId && p.type === 'portal' && p.unlocked && fastTravelState.discoveredPointIds.has(p.id)
+      );
+      if (!hasUnlockedPortal) {
+        appendLog('Portal travel requires an unlocked destination portal.', 'warning');
+        return;
+      }
+    }
+
+    if (travelMode === 'air') {
+      const hasAirAffinity = player.affinity.primary === 'air' || player.affinity.secondary === 'air';
+      if (!canTravelByAir(player.tileX, player.tileY, destination.x, destination.y, hasAirAffinity, false)) {
+        appendLog('Air travel requires air affinity or a flying mount creature.', 'warning');
+        return;
+      }
+    }
+
+    const nearPoint = getFastTravelPointsNear(fastTravelState, player.tileX, player.tileY, 50)[0];
+    const settlementSpeedPct = nearPoint?.type === 'settlement' ? 40 : 0;
 
     const duration = calculateTravelDuration(player.tileX, player.tileY, destination.x, destination.y, {
       travelMode,
-      isOnRoad: isOnRoadPath,
+      settlementSpeedPct,
     });
-
-    const finalDuration = Math.max(
-      duration,
-      travelMode === 'portal' ? 500 :
-      travelMode === 'world_gate' ? 2000 : 1000
-    );
 
     set((state) => ({
       exploring: {
         tileKey: `${destination.worldId}:${destination.x},${destination.y}`,
-        endTime: Date.now() + finalDuration,
-        totalDuration: finalDuration,
+        endTime: Date.now() + duration,
+        totalDuration: duration,
         targetX: destination.x,
         targetY: destination.y,
       },
-      log: [...state.log.slice(-499), createLog(`Traveling to (${destination.x}, ${destination.y}) via ${travelMode}... Estimated time: ${(finalDuration / 1000).toFixed(1)}s`, 'info', state.turnCount)]
+      log: [...state.log.slice(-499), createLog(`Traveling to (${destination.x}, ${destination.y}) via ${travelMode}... Estimated time: ${(duration / 1000).toFixed(1)}s`, 'info', state.turnCount)]
     }));
 
     setTimeout(() => {
@@ -1187,7 +1208,7 @@ const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(cu
         set({ currentWorldId: targetWorldId });
       }
       get().finishMovement(destination.x, destination.y, `${targetWorldId}:${destination.x},${destination.y}`, true);
-    }, finalDuration);
+    }, duration);
   },
 
   discoverSettlement: (settlementId: string) => {

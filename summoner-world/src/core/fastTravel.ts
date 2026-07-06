@@ -98,6 +98,7 @@ export function calculateTravelDuration(
     travelMode?: TravelMode;
     isOnRoad?: boolean;
     elementTravelSpeedPct?: number;
+    settlementSpeedPct?: number;
   }
 ): number {
   const travelMode = options?.travelMode || 'walking';
@@ -116,6 +117,9 @@ export function calculateTravelDuration(
   }
   if (options?.elementTravelSpeedPct) {
     speedBonus += options.elementTravelSpeedPct;
+  }
+  if (options?.settlementSpeedPct) {
+    speedBonus += options.settlementSpeedPct;
   }
 
   const finalDuration = baseDuration * (1 - Math.min(0.9, speedBonus / 100));
@@ -272,9 +276,7 @@ export function canTravelByWorldGate(
 ): boolean {
   if (fromWorldId === toWorldId) return true;
   const targetUnlocked = unlockedWorlds.includes(toWorldId);
-  const adjacentWorld =
-    Math.abs(toWorldId - fromWorldId) === 1 ||
-    unlockedWorlds.includes(toWorldId);
+  const adjacentWorld = Math.abs(toWorldId - fromWorldId) === 1;
   return targetUnlocked && adjacentWorld;
 }
 
