@@ -422,14 +422,14 @@ Sprint goal: expand world generation with weather, fast travel, biomes and settl
 - [x] T7.10 – Add minimap/radar expansion (radius configurable, fog-of-war render)
 - [x] T7.11 – Implement 100 floor seed system (`FLOOR_SEEDS` 1–100, deterministic PRNG)
 - [ ] T7.12 – Verify same seed + coords gives identical tile for all players (determinism test)
-- [ ] T7.13 – Add World Travel system from Player Core Bible
-  - [ ] T7.13.1 – Walking travel
-  - [ ] T7.13.2 – Mount creature travel
-  - [ ] T7.13.3 – Road travel bonuses
-  - [ ] T7.13.4 – Boat travel
-  - [ ] T7.13.5 – Portal travel
-  - [ ] T7.13.6 – Air travel
-  - [ ] T7.13.7 – World gates
+- [x] T7.13 – Add World Travel system from Player Core Bible
+  - [x] T7.13.1 – Walking travel
+  - [x] T7.13.2 – Mount creature travel
+  - [x] T7.13.3 – Road travel bonuses
+  - [x] T7.13.4 – Boat travel
+  - [x] T7.13.5 – Portal travel
+  - [x] T7.13.6 – Air travel
+  - [x] T7.13.7 – World gates
 - [ ] T7.14 – Publish world travel events
   - [ ] T7.14.1 – PlayerEnteredWorld
   - [ ] T7.14.2 – PlayerEnteredBiome

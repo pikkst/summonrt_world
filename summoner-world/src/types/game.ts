@@ -347,7 +347,7 @@ export interface NPC {
 
 export type RoomType = 'entrance' | 'boss' | 'treasure' | 'combat' | 'trap' | 'puzzle' | 'rest' | 'elite' | 'vendor';
 
-export type FastTravelPointType = 'settlement' | 'road' | 'creature_mount';
+export type FastTravelPointType = 'settlement' | 'road' | 'creature_mount' | 'boat' | 'portal' | 'air' | 'world_gate';
 
 export interface FastTravelPoint {
   id: string;
@@ -359,6 +359,8 @@ export interface FastTravelPoint {
   unlockCost?: number;
   elementBonus?: Element;
   description?: string;
+  requiresWorldId?: number;
+  requiresItem?: string;
 }
 
 export interface FastTravelDestination {
@@ -375,7 +377,7 @@ export interface FastTravelState {
     destination: FastTravelDestination;
     startTime: number;
     duration: number;
-    travelType: 'walking' | 'fast_travel' | 'mount';
+    travelType: 'walking' | 'fast_travel' | 'mount' | 'road' | 'boat' | 'portal' | 'air' | 'world_gate';
   };
 }
 

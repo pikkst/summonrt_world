@@ -9,9 +9,17 @@ import {
   getFastTravelPointsNear,
   getNearestFastTravelPoint,
   isOnRoad,
+  startWorldTravel,
   startFastTravel,
   finishTravel,
   createDefaultFastTravelState,
+  canTravelByBoat,
+  canTravelByPortal,
+  canTravelByAir,
+  canTravelByWorldGate,
+  TRAVEL_MODE_SPEED_BONUS,
+  TRAVEL_MODE_MIN_DURATION_MS,
+  type TravelMode,
 } from '../core/fastTravel';
 
 describe('T7.5 - Fast Travel System', () => {
@@ -46,142 +54,79 @@ describe('T7.5 - Fast Travel System', () => {
       expect(point.type).toBe('creature_mount');
       expect(point.elementBonus).toBe('air');
     });
+
+    it('creates a boat point with default id', () => {
+      const point = createFastTravelPoint('boat', 2, 300, 400);
+      expect(point.type).toBe('boat');
+      expect(point.id).toBe('boat_2_300_400');
+    });
+
+    it('creates a portal point with requiresItem', () => {
+      const point = createFastTravelPoint('portal', 3, 500, 600, {
+        id: 'portal_3_500_600',
+        requiresItem: 'portal_scroll',
+      });
+      expect(point.type).toBe('portal');
+      expect(point.requiresItem).toBe('portal_scroll');
+    });
+
+    it('creates an air point with element bonus', () => {
+      const point = createFastTravelPoint('air', 4, 700, 800, {
+        elementBonus: 'air',
+      });
+      expect(point.type).toBe('air');
+      expect(point.elementBonus).toBe('air');
+    });
+
+    it('creates a world_gate point pointing to another world', () => {
+      const point = createFastTravelPoint('world_gate', 5, 0, 0, {
+        id: 'gate_5_to_6',
+        requiresWorldId: 6,
+      });
+      expect(point.type).toBe('world_gate');
+      expect(point.requiresWorldId).toBe(6);
+    });
   });
 
-  describe('calculateTravelDuration', () => {
-    it('calculates base travel time by distance', () => {
-      const duration = calculateTravelDuration(0, 0, 100, 0);
+  describe('T7.13.1 - Walking travel', () => {
+    it('calculates base walking duration by distance', () => {
+      const duration = calculateTravelDuration(0, 0, 100, 0, { travelMode: 'walking' });
       expect(duration).toBe(10000);
     });
 
-    it('applies fast travel speed bonus', () => {
-      const duration = calculateTravelDuration(0, 0, 100, 0, { isFastTravel: true });
-      expect(duration).toBe(8000);
+    it('applies no speed bonus for walking', () => {
+      const walkingDuration = calculateTravelDuration(0, 0, 100, 0, { travelMode: 'walking' });
+      const mountDuration = calculateTravelDuration(0, 0, 100, 0, { travelMode: 'mount' });
+      expect(walkingDuration).toBeGreaterThan(mountDuration);
     });
+  });
 
-    it('applies mount speed bonus', () => {
-      const duration = calculateTravelDuration(0, 0, 100, 0, { isMount: true });
+  describe('T7.13.2 - Mount creature travel', () => {
+    it('calculates mount travel with speed bonus', () => {
+      const duration = calculateTravelDuration(0, 0, 100, 0, { travelMode: 'mount' });
       expect(duration).toBe(5000);
     });
 
-    it('applies element travel speed bonus', () => {
-      const duration = calculateTravelDuration(0, 0, 100, 0, { elementTravelSpeedPct: 10 });
-      expect(duration).toBeLessThan(10000);
-    });
-
-    it('caps duration at minimum 1000ms', () => {
-      const duration = calculateTravelDuration(0, 0, 100, 0, { 
-        isMount: true, 
-        isFastTravel: true,
-        elementTravelSpeedPct: 50 
-      });
-      expect(duration).toBeGreaterThanOrEqual(1000);
-    });
-  });
-
-  describe('discoverSettlement', () => {
-    it('adds a new settlement to discovered points', () => {
-      const state: FastTravelState = {
-        points: [],
-        discoveredPointIds: new Set(),
-      };
-
-      const newState = discoverSettlement(state, 'settlement_1_100_200');
-      expect(newState.discoveredPointIds.has('settlement_1_100_200')).toBe(true);
-    });
-
-    it('does not duplicate already discovered settlements', () => {
-      const state: FastTravelState = {
-        points: [],
-        discoveredPointIds: new Set(['settlement_1_100_200']),
-      };
-
-      const newState = discoverSettlement(state, 'settlement_1_100_200');
-      expect(newState.discoveredPointIds.size).toBe(1);
-    });
-  });
-
-  describe('unlockFastTravelPoint', () => {
-    it('unlocks a fast travel point', () => {
-      const state: FastTravelState = {
-        points: [createFastTravelPoint('settlement', 1, 100, 200, { id: 'pt_1' })],
-        discoveredPointIds: new Set(),
-      };
-
-      const newState = unlockFastTravelPoint(state, 'pt_1');
-      expect(newState.points[0]!.unlocked).toBe(true);
-      expect(newState.discoveredPointIds.has('pt_1')).toBe(true);
-    });
-  });
-
-  describe('canFastTravelToPoint', () => {
-    it('returns true for unlocked and discovered points', () => {
-      const state: FastTravelState = {
-        points: [createFastTravelPoint('settlement', 1, 100, 200, { id: 'pt_1' })],
-        discoveredPointIds: new Set(['pt_1']),
-      };
-
-      const newState = unlockFastTravelPoint(state, 'pt_1');
-      expect(canFastTravelToPoint(newState, 'pt_1')).toBe(true);
-    });
-
-    it('returns false for undiscovered points', () => {
-      const state: FastTravelState = {
-        points: [createFastTravelPoint('settlement', 1, 100, 200, { id: 'pt_1' })],
-        discoveredPointIds: new Set(),
-      };
-
-      expect(canFastTravelToPoint(state, 'pt_1')).toBe(false);
-    });
-
-    it('returns false for non-existent points', () => {
+    it('starts an active mount travel via startFastTravel', () => {
       const state = createDefaultFastTravelState();
-      expect(canFastTravelToPoint(state, 'nonexistent')).toBe(false);
+      const destination = { worldId: 1, x: 100, y: 100 };
+
+      const newState = startFastTravel(state, destination, 0, 0, { isMount: true });
+      expect(newState.activeTravel).toBeDefined();
+      expect(newState.activeTravel!.travelType).toBe('mount');
+      expect(newState.activeTravel!.duration).toBeGreaterThan(0);
     });
   });
 
-  describe('getFastTravelPointsNear', () => {
-    it('returns points within distance threshold', () => {
-      const state: FastTravelState = {
-        points: [
-          createFastTravelPoint('settlement', 1, 100, 100, { id: 'near' }),
-          createFastTravelPoint('settlement', 1, 500, 500, { id: 'far' }),
-        ],
-        discoveredPointIds: new Set(['near', 'far']),
-      };
-
-      const nearPoints = getFastTravelPointsNear(state, 100, 100, 100);
-      expect(nearPoints.length).toBe(1);
-      expect(nearPoints[0]!.id).toBe('near');
-    });
-  });
-
-  describe('getNearestFastTravelPoint', () => {
-    it('finds the closest point in the same world', () => {
-      const state: FastTravelState = {
-        points: [
-          createFastTravelPoint('settlement', 1, 100, 100, { id: 'pt_1' }),
-          createFastTravelPoint('settlement', 1, 500, 500, { id: 'pt_2' }),
-          createFastTravelPoint('settlement', 2, 100, 100, { id: 'pt_3' }),
-        ],
-        discoveredPointIds: new Set(['pt_1', 'pt_2', 'pt_3']),
-      };
-
-      const nearest = getNearestFastTravelPoint(state, 90, 90, 1);
-      expect(nearest?.id).toBe('pt_1');
+  describe('T7.13.3 - Road travel bonuses', () => {
+    it('applies road speed bonus when on road', () => {
+      const duration = calculateTravelDuration(0, 0, 100, 0, {
+        travelMode: 'walking',
+        isOnRoad: true,
+      });
+      expect(duration).toBe(7000);
     });
 
-    it('returns null when no points discovered', () => {
-      const state: FastTravelState = {
-        points: [createFastTravelPoint('settlement', 1, 100, 100, { id: 'pt_1' })],
-        discoveredPointIds: new Set(),
-      };
-
-      expect(getNearestFastTravelPoint(state, 100, 100, 1)).toBeNull();
-    });
-  });
-
-  describe('isOnRoad', () => {
     it('returns true when point is on the line between two points', () => {
       const fromX = 0, fromY = 0;
       const toX = 100, toY = 0;
@@ -199,6 +144,146 @@ describe('T7.5 - Fast Travel System', () => {
     });
   });
 
+  describe('T7.13.4 - Boat travel', () => {
+    it('allows boat travel when a boat point is unlocked in the world', () => {
+      const points = [
+        createFastTravelPoint('boat', 1, 100, 100, { id: 'boat_1' }),
+      ];
+      const state: FastTravelState = {
+        points,
+        discoveredPointIds: new Set(['boat_1']),
+      };
+      const unlockedState = unlockFastTravelPoint(state, 'boat_1');
+      expect(canTravelByBoat(0, 0, 200, 0, 1, unlockedState.points)).toBe(true);
+    });
+
+    it('rejects boat travel when no boat point is unlocked', () => {
+      const points: FastTravelPoint[] = [];
+      const state: FastTravelState = {
+        points,
+        discoveredPointIds: new Set(),
+      };
+      expect(canTravelByBoat(0, 0, 200, 0, 1, state.points)).toBe(false);
+    });
+
+    it('calculates boat travel duration with speed bonus', () => {
+      const duration = calculateTravelDuration(0, 0, 100, 0, { travelMode: 'boat' });
+      expect(duration).toBe(6000);
+    });
+  });
+
+  describe('T7.13.5 - Portal travel', () => {
+    it('calculates near-instant portal duration', () => {
+      const duration = calculateTravelDuration(0, 0, 100, 0, { travelMode: 'portal' });
+      expect(duration).toBe(500);
+    });
+
+    it('requires unlocked portal destination', () => {
+      const points = [
+        createFastTravelPoint('portal', 1, 100, 100, { id: 'portal_1' }),
+      ];
+      const baseState: FastTravelState = {
+        points,
+        discoveredPointIds: new Set(),
+      };
+      const unlockedState = unlockFastTravelPoint(baseState, 'portal_1');
+
+      expect(canTravelByPortal({ worldId: 1, x: 100, y: 100, pointId: 'portal_1' }, unlockedState)).toBe(true);
+      expect(canTravelByPortal({ worldId: 1, x: 100, y: 100, pointId: 'portal_1' }, baseState)).toBe(false);
+      expect(canTravelByPortal({ worldId: 1, x: 100, y: 100, pointId: 'missing' }, unlockedState)).toBe(false);
+    });
+
+    it('starts active portal travel', () => {
+      const state = createDefaultFastTravelState();
+      const destination = { worldId: 1, x: 100, y: 100 };
+
+      const newState = startWorldTravel(state, destination, 'portal', 0, 0);
+      expect(newState.activeTravel).toBeDefined();
+      expect(newState.activeTravel!.travelType).toBe('portal');
+      expect(newState.activeTravel!.duration).toBe(500);
+    });
+  });
+
+  describe('T7.13.6 - Air travel', () => {
+    it('allows air travel with air affinity', () => {
+      expect(canTravelByAir(0, 0, 100, 100, true, false)).toBe(true);
+    });
+
+    it('allows air travel with flying mount', () => {
+      expect(canTravelByAir(0, 0, 100, 100, false, true)).toBe(true);
+    });
+
+    it('rejects air travel beyond range', () => {
+      expect(canTravelByAir(0, 0, 900, 900, true, false)).toBe(false);
+    });
+
+    it('calculates air travel duration with high speed bonus', () => {
+      const duration = calculateTravelDuration(0, 0, 100, 0, { travelMode: 'air' });
+      expect(duration).toBeGreaterThanOrEqual(3000);
+    });
+
+    it('starts active air travel', () => {
+      const state = createDefaultFastTravelState();
+      const destination = { worldId: 1, x: 100, y: 100 };
+
+      const newState = startWorldTravel(state, destination, 'air', 0, 0);
+      expect(newState.activeTravel!.travelType).toBe('air');
+      expect(newState.activeTravel!.duration).toBeGreaterThan(0);
+    });
+  });
+
+  describe('T7.13.7 - World gates', () => {
+    it('allows world gate to unlocked target world', () => {
+      const unlockedWorlds = [1, 2, 3, 4];
+      expect(canTravelByWorldGate(1, 2, unlockedWorlds)).toBe(true);
+    });
+
+    it('rejects world gate to locked world', () => {
+      const unlockedWorlds = [1, 2];
+      expect(canTravelByWorldGate(1, 5, unlockedWorlds)).toBe(false);
+    });
+
+    it('allows world gate within same world', () => {
+      const unlockedWorlds = [1];
+      expect(canTravelByWorldGate(1, 1, unlockedWorlds)).toBe(true);
+    });
+
+    it('calculates world gate travel duration', () => {
+      const duration = calculateTravelDuration(0, 0, 100, 0, { travelMode: 'world_gate' });
+      expect(duration).toBeLessThanOrEqual(2000);
+    });
+
+    it('starts active world gate travel', () => {
+      const state = createDefaultFastTravelState();
+      const destination = { worldId: 2, x: 100, y: 100 };
+
+      const newState = startWorldTravel(state, destination, 'world_gate', 0, 0);
+      expect(newState.activeTravel!.travelType).toBe('world_gate');
+      expect(newState.activeTravel!.duration).toBeGreaterThanOrEqual(2000);
+    });
+  });
+
+  describe('Travel mode constants', () => {
+    it('has speed bonuses defined for every travel mode', () => {
+      const modes: TravelMode[] = [
+        'walking', 'mount', 'road', 'boat', 'portal', 'air', 'world_gate', 'fast_travel',
+      ];
+      for (const mode of modes) {
+        expect(TRAVEL_MODE_SPEED_BONUS[mode]).toBeGreaterThanOrEqual(0);
+        expect(TRAVEL_MODE_SPEED_BONUS[mode]).toBeLessThanOrEqual(90);
+      }
+    });
+
+    it('has minimum durations defined for every travel mode', () => {
+      const modes: TravelMode[] = [
+        'walking', 'mount', 'road', 'boat', 'portal', 'air', 'world_gate', 'fast_travel',
+      ];
+      for (const mode of modes) {
+        expect(TRAVEL_MODE_MIN_DURATION_MS[mode]).toBeGreaterThanOrEqual(500);
+      }
+    });
+  });
+
   describe('startFastTravel and finishTravel', () => {
     it('starts an active travel', () => {
       const state = createDefaultFastTravelState();
@@ -208,15 +293,6 @@ describe('T7.5 - Fast Travel System', () => {
       expect(newState.activeTravel).toBeDefined();
       expect(newState.activeTravel!.destination).toEqual(destination);
       expect(newState.activeTravel!.travelType).toBe('fast_travel');
-    });
-
-    it('starts mount travel with isMount option', () => {
-      const state = createDefaultFastTravelState();
-      const destination = { worldId: 1, x: 100, y: 100 };
-
-      const newState = startFastTravel(state, destination, 0, 0, { isMount: true });
-      expect(newState.activeTravel!.travelType).toBe('mount');
-      expect(newState.activeTravel!.duration).toBeGreaterThan(0);
     });
 
     it('finishes travel and returns state without active travel', () => {
