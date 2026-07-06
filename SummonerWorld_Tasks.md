@@ -430,13 +430,13 @@ Sprint goal: expand world generation with weather, fast travel, biomes and settl
   - [x] T7.13.5 – Portal travel
   - [x] T7.13.6 – Air travel
   - [x] T7.13.7 – World gates
-- [ ] T7.14 – Publish world travel events
-  - [ ] T7.14.1 – PlayerEnteredWorld
-  - [ ] T7.14.2 – PlayerEnteredBiome
-  - [ ] T7.14.3 – BiomeEntered
-  - [ ] T7.14.4 – WeatherChanged
-  - [ ] T7.14.5 – ResourceSpawned
-  - [ ] T7.14.6 – DungeonDiscovered
+- [x] T7.14 – Publish world travel events
+  - [x] T7.14.1 – PlayerEnteredWorld
+  - [x] T7.14.2 – PlayerEnteredBiome
+  - [x] T7.14.3 – BiomeEntered
+  - [x] T7.14.4 – WeatherChanged
+  - [x] T7.14.5 – ResourceSpawned
+  - [x] T7.14.6 – DungeonDiscovered
 - [ ] T7.15 – Add World 100 progression map
   - [ ] T7.15.1 – Define unlock rules per world tier
   - [ ] T7.15.2 – Define world completion criteria

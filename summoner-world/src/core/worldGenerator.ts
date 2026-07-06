@@ -4,6 +4,7 @@ import { RESOURCES, getWorldName, getFloorSeed, getTileKey, getNeighbors, WORLD_
 import { getBiomeForCoords } from './dungeon/Biome';
 import { createInitialWeatherState } from './Weather';
 import { generateSettlements } from './settlementGenerator';
+import { worldEventBus } from './worldEventBus.ts';
 
 const NPC_NAMES = ['Elder Thorne', 'Summoner Kai', 'Merchant Jace', 'Healer Aria', 'Guide Lyra'];
 
@@ -27,7 +28,20 @@ function generateNPC(rng: SeededRandom, role: NPC['role']): NPC {
 }
 
 export function generateTile(x: number, y: number, worldId: number): TileData {
-  return generateTileFromSeed(x, y, getFloorSeed(worldId));
+  const tile = generateTileFromSeed(x, y, getFloorSeed(worldId));
+  if (tile.resourceType && tile.resourceQty && tile.resourceQty > 0) {
+    worldEventBus.publish({
+      type: 'ResourceSpawned',
+      worldId,
+      x,
+      y,
+      resourceType: tile.resourceType,
+      quantity: tile.resourceQty,
+      gameTimeMinutes: 0,
+      turnCount: 0,
+    });
+  }
+  return tile;
 }
 
 export function generateTileFromSeed(x: number, y: number, seed: number): TileData {

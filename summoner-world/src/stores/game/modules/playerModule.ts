@@ -46,6 +46,7 @@ import {
   createDefaultFastTravelState,
   type TravelMode,
 } from '../../../core/fastTravel.ts';
+import { worldEventBus } from '../../../core/worldEventBus.ts';
 
 function buildValidatedUrl(baseUrl: string, playerId: string): string {
   try {
@@ -115,6 +116,19 @@ function syncCharacterCoreWithLegacy(core: PlayerCoreState, player: PlayerState)
 }
 
 export const playerActions = (set: SetState<GameStore>, get: () => GameStore) => ({
+  publishPlayerEnteredWorld: (fromWorldId?: number) => {
+    const { player, currentWorldId, turnCount } = get();
+    if (!player) return;
+    worldEventBus.publish({
+      type: 'PlayerEnteredWorld',
+      playerId: player.id,
+      worldId: currentWorldId,
+      fromWorldId,
+      gameTimeMinutes: player.gameTimeMinutes,
+      turnCount,
+    });
+  },
+
   initGame: (playerName: string, archetype: string = 'fighter') => {
     const affinity = rollAffinity();
     const startWorld = generateWorld(1, affinity);
@@ -237,6 +251,7 @@ const className = ARCHETYPE_TO_CLASS[archetype] ?? 'elementalist';
       exploring: null,
     });
 
+    get().publishPlayerEnteredWorld();
     get().startHeartbeat();
   },
 
@@ -346,6 +361,7 @@ const bonusStats = classDef.statBias;
       exploring: null,
     });
 
+    get().publishPlayerEnteredWorld();
     get().startHeartbeat();
   },
 
@@ -445,6 +461,7 @@ const bonusStats = classDef.statBias;
           log: [createLog(`Welcome back, ${serverPlayer.username}!`, 'system', 0)],
         });
           get().startHeartbeat();
+        get().publishPlayerEnteredWorld();
         set({
           nearbyPlayers: res.data.nearby?.areaPlayers || res.data.nearby || [],
           community: {
@@ -1211,6 +1228,7 @@ const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(cu
       const targetWorldId = destination.worldId;
       if (travelMode === 'world_gate' && targetWorldId !== get().currentWorldId) {
         set({ currentWorldId: targetWorldId });
+        get().publishPlayerEnteredWorld(fromWorldId);
       }
       get().finishMovement(destination.x, destination.y, `${targetWorldId}:${destination.x},${destination.y}`, true);
     }, duration);

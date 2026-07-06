@@ -24,7 +24,8 @@ import { generateDungeonTower, exportDungeonRun } from '../../../core/dungeon/Du
 import { generateTrapInteraction, generatePuzzleInteraction, generateEliteInteraction, generateVendorInteraction, generateTreasureInteraction, TrapRoomInteraction, PuzzleRoomInteraction, EliteRoomInteraction, VendorRoomInteraction, TreasureRoomInteraction } from '../../../core/dungeon/DungeonInteractions';
 import type { RoomInteractionState } from '../../../types/game.ts';
 import { applyPlayerStatisticEvent, type PlayerStatisticEvent } from '../../../core/playerCore/playerStatisticsTracking';
-import { getWeatherEffect, getWeatherResourceYieldModifier, getWeatherEncounterModifier, getPlayerElementalAffinityBonus, getEncounterTableForWeather } from '../../../core/Weather';
+import { getWeatherEffect, getWeatherResourceYieldModifier, getWeatherEncounterModifier, getPlayerElementalAffinityBonus, getEncounterTableForWeather, updateWeather } from '../../../core/Weather';
+import { worldEventBus } from '../../../core/worldEventBus.ts';
 import axios from 'axios';
 
 function recordPlayerCoreStatistic(set: SetState<GameStore>, event: PlayerStatisticEvent): void {
@@ -104,6 +105,12 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
     const tile = world?.tiles.get(tileKey);
     if (!tile) return;
 
+    const oldTileKey = getTileKey(player.tileX, player.tileY);
+    const oldTile = world?.tiles.get(oldTileKey);
+    const oldBiome = oldTile?.biome;
+    const newBiome = tile.biome;
+    const biomeChanged = oldBiome !== undefined && newBiome !== undefined && oldBiome !== newBiome;
+
     const { energyCost, proximityFactor, difficultyScale } = calculateMovementModifiers(x, y);
 
     if (player.energy.current < energyCost) {
@@ -157,6 +164,40 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
         exploring: null,
       };
     });
+
+    if (biomeChanged) {
+      worldEventBus.publish({
+        type: 'PlayerEnteredBiome',
+        playerId: player.id,
+        worldId: currentWorldId,
+        x,
+        y,
+        biome: newBiome,
+        gameTimeMinutes: player.gameTimeMinutes,
+        turnCount: get().turnCount,
+      });
+      worldEventBus.publish({
+        type: 'BiomeEntered',
+        worldId: currentWorldId,
+        x,
+        y,
+        biome: newBiome,
+        gameTimeMinutes: player.gameTimeMinutes,
+        turnCount: get().turnCount,
+      });
+    }
+
+    if (tile.specialType === 'dungeon') {
+      worldEventBus.publish({
+        type: 'DungeonDiscovered',
+        playerId: player.id,
+        worldId: currentWorldId,
+        x,
+        y,
+        gameTimeMinutes: player.gameTimeMinutes,
+        turnCount: get().turnCount,
+      });
+    }
 
     axios.post('http://localhost:5000/api/player/location', {
       playerId: player.id,
@@ -931,6 +972,15 @@ finishCapture: () => {
     const tower = generateDungeonTower(currentWorldId, globalSeed);
     const dungeonRun = exportDungeonRun(tower);
     set({ screen: 'dungeon', dungeon: { active: true, worldId: currentWorldId, currentFloor: 0, totalFloors: tower.totalFloors, clearedFloors: [], bossDefeated: false, inEncounter: false, tower } });
+    worldEventBus.publish({
+      type: 'DungeonDiscovered',
+      playerId: player.id,
+      worldId: currentWorldId,
+      x: player.tileX,
+      y: player.tileY,
+      gameTimeMinutes: player.gameTimeMinutes,
+      turnCount: get().turnCount,
+    });
   },
 
   descendDungeon: () => {
@@ -1784,8 +1834,31 @@ const modifiers: MissionModifiers = {
       };
 
       const applyResourceRespawn = (): void => {
-        const { worlds, currentWorldId, dayCount } = get();
-        processResourceRespawn({ dayCount, worlds, currentWorldId });
+        const { worlds, currentWorldId, dayCount, turnCount, player } = get();
+        processResourceRespawn({ dayCount, worlds, currentWorldId, turnCount, gameTimeMinutes: player?.gameTimeMinutes });
+      };
+
+      const applyWeatherUpdate = (): void => {
+        const { worlds, currentWorldId, turnCount, player } = get();
+        const world = worlds.get(currentWorldId);
+        if (!world || !player) return;
+        const oldWeather = world.weather.currentWeather;
+        const tileKey = getTileKey(player.tileX, player.tileY);
+        const tile = world.tiles.get(tileKey);
+        const biome = tile?.biome as any;
+        const newWeatherState = updateWeather(world.weather, world.seed, turnCount, biome);
+        if (newWeatherState.currentWeather !== oldWeather) {
+          worldEventBus.publish({
+            type: 'WeatherChanged',
+            worldId: currentWorldId,
+            previousWeather: oldWeather,
+            currentWeather: newWeatherState.currentWeather,
+            intensity: newWeatherState.weatherIntensity,
+            gameTimeMinutes: player.gameTimeMinutes,
+            turnCount,
+          });
+        }
+        world.weather = newWeatherState;
       };
 
   const instance = createHeartbeat({
@@ -1806,9 +1879,10 @@ const modifiers: MissionModifiers = {
           player: state.player ? { ...state.player, dayCount: count } : state.player,
         })),
          onWorldTick: () => {
-           applyWorldTickCareerBonuses();
-           applyResourceRespawn();
-         },
+            applyWorldTickCareerBonuses();
+            applyResourceRespawn();
+            applyWeatherUpdate();
+          },
          onMissionsProgress: () => {},
        resolveMissionCallbacks: {
           EXPLORE_TIER_1: (mission) => {
