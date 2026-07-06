@@ -112,13 +112,13 @@ describe('T7.8 - Resource Respawn Logic', () => {
     const createWorld = (tiles: Array<{ key: string; resourceType?: string; resourceQty?: number; resourceRespawnTurn?: number }>): Map<number, WorldData> => {
       const tileMap = new Map<string, TileData>();
       for (const tile of tiles) {
-      const [xStr, yStr] = tile.key.split(',');
-      const x = Number(xStr) || 0;
-      const y = Number(yStr) || 0;
-      tileMap.set(tile.key, {
-        x,
-        y,
-        biome: 'plains',
+        const [xStr, yStr] = tile.key.split(',');
+        const x = Number(xStr) || 0;
+        const y = Number(yStr) || 0;
+        tileMap.set(tile.key, {
+          x,
+          y,
+          biome: 'plains',
           discovered: true,
           explored: true,
           resourceType: tile.resourceType,
@@ -158,6 +158,13 @@ describe('T7.8 - Resource Respawn Logic', () => {
       processResourceRespawn({ dayCount: 10, worlds, currentWorldId: 1 });
     });
 
+    it('does nothing when tile has no scheduled respawn day', () => {
+      const worlds = createWorld([{ key: '0,0', resourceType: 'wood', resourceQty: 0 }]);
+      processResourceRespawn({ dayCount: 10, worlds, currentWorldId: 1 });
+      expect(worlds.get(1)!.tiles.get('0,0')!.resourceQty).toBe(0);
+      expect(worlds.get(1)!.tiles.get('0,0')!.resourceRespawnTurn).toBeUndefined();
+    });
+
     it('does nothing when tile resourceQty is already at max', () => {
       const worlds = createWorld([{ key: '0,0', resourceType: 'wood', resourceQty: RESOURCE_MAX_QTY }]);
       processResourceRespawn({ dayCount: 10, worlds, currentWorldId: 1 });
@@ -183,14 +190,21 @@ describe('T7.8 - Resource Respawn Logic', () => {
       expect(worlds.get(1)!.tiles.get('10,10')!.resourceQty).toBe(1);
     });
 
-    it('schedules next plant respawn 30 days after respawning when not at max', () => {
+    it('respawns on the scheduled plant day and schedules the next plant respawn', () => {
       const worlds = createWorld([{ key: '5,5', resourceType: 'wood', resourceQty: 0, resourceRespawnTurn: 35 }]);
       processResourceRespawn({ dayCount: 35, worlds, currentWorldId: 1 });
       expect(worlds.get(1)!.tiles.get('5,5')!.resourceQty).toBe(1);
       expect(worlds.get(1)!.tiles.get('5,5')!.resourceRespawnTurn).toBe(35 + PLANT_RESPAWN_DAYS);
     });
 
-    it('schedules next ore respawn 90 days after respawning when not at max', () => {
+    it('respawns on the scheduled ore day and schedules the next ore respawn', () => {
+      const worlds = createWorld([{ key: '5,5', resourceType: 'stone', resourceQty: 3, resourceRespawnTurn: 95 }]);
+      processResourceRespawn({ dayCount: 95, worlds, currentWorldId: 1 });
+      expect(worlds.get(1)!.tiles.get('5,5')!.resourceQty).toBe(4);
+      expect(worlds.get(1)!.tiles.get('5,5')!.resourceRespawnTurn).toBe(95 + ORE_RESPAWN_DAYS);
+    });
+
+    it('clears ore respawn timer when ore reaches max', () => {
       const worlds = createWorld([{ key: '5,5', resourceType: 'stone', resourceQty: 4, resourceRespawnTurn: 95 }]);
       processResourceRespawn({ dayCount: 95, worlds, currentWorldId: 1 });
       expect(worlds.get(1)!.tiles.get('5,5')!.resourceQty).toBe(5);

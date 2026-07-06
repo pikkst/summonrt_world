@@ -93,7 +93,7 @@ export function processResourceRespawn(
     if (!resourceType) return;
 
     const respawnDay = tile.resourceRespawnTurn;
-    if (respawnDay === undefined || params.dayCount >= respawnDay) {
+    if (respawnDay !== undefined && params.dayCount >= respawnDay) {
       tile.resourceQty = (tile.resourceQty || 0) + 1;
       if (tile.resourceQty < RESOURCE_MAX_QTY) {
         tile.resourceRespawnTurn = params.dayCount + getRespawnDays(resourceType);
