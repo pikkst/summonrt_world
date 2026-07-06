@@ -1144,7 +1144,6 @@ const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(cu
 
     const finalDuration = Math.max(1000, baseDurationMs * (1 - Math.min(0.9, speedBonus / 100)));
 
-    const travelId = `travel_${Date.now()}`;
     set((state) => ({
       exploring: {
         tileKey: `${destination.worldId}:${destination.x},${destination.y}`,

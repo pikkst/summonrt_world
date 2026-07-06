@@ -367,6 +367,17 @@ export interface FastTravelDestination {
   pointId?: string;
 }
 
+export interface FastTravelState {
+  points: FastTravelPoint[];
+  discoveredPointIds: Set<string>;
+  activeTravel?: {
+    destination: FastTravelDestination;
+    startTime: number;
+    duration: number;
+    travelType: 'walking' | 'fast_travel' | 'mount';
+  };
+}
+
 export interface DungeonRoom {
   id: string;
   x: number;
