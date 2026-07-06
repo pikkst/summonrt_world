@@ -2,6 +2,16 @@ export const DUNGEON_ASCEND_SCROLL = 'dungeon_ascend_scroll';
 
 export const WORLD_SIZE = 2000;
 
+import { SeededRandom } from '../utils/SeededRandom';
+
+const FLOOR_SEED_RNG = new SeededRandom(42);
+
+export const FLOOR_SEEDS: Record<number, number> = {};
+
+for (let i = 1; i <= 100; i++) {
+  FLOOR_SEEDS[i] = FLOOR_SEED_RNG.int(1000, 999999);
+}
+
 export const ELEMENTS = ['fire','water','earth','air','lightning','iron','nature','ice','light','darkness'] as const;
 
 export const AFFINITY_WEIGHT = {
@@ -26,15 +36,6 @@ export type RarityPenaltyType = 'common' | 'uncommon' | 'rare' | 'epic' | 'legen
 export const ALL_ELEMENTS = ['fire','water','earth','air','lightning','iron','nature','ice','light','darkness','void','starlight','chaos','omni'] as const;
 export type AllElement = typeof ALL_ELEMENTS[number];
 export const BIOME_TYPES = ['forest','plains','mountains','swamp','desert','tundra','coast','volcanic','crystal_caves','sky_islands'] as const;
-
-// Global Seeds for each Floor (1-100)
-// This ensures that coordinates (X,Y) are identical for all players globally.
-export const FLOOR_SEEDS: Record<number, number> = {
-  1: 1337,
-  2: 8888,
-  3: 4242,
-  // ... can be expanded or generated deterministically
-};
 
 export function getFloorSeed(floor: number): number {
   return FLOOR_SEEDS[floor] || (floor * 999 + 123456);
