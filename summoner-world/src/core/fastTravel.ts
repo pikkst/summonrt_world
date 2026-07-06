@@ -1,5 +1,7 @@
 import type { Element, FastTravelPointType, FastTravelPoint, FastTravelDestination } from '../types/game';
 
+export type { FastTravelPointType, FastTravelPoint, FastTravelDestination } from '../types/game';
+
 export interface FastTravelState {
   points: FastTravelPoint[];
   discoveredPointIds: Set<string>;
