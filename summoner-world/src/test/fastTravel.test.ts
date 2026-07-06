@@ -11,9 +11,9 @@ import {
   startFastTravel,
   finishTravel,
   createDefaultFastTravelState,
-  type FastTravelState,
-  type FastTravelPoint,
 } from '../core/fastTravel';
+import type { FastTravelPoint } from '../types/game';
+import type { FastTravelState } from '../core/fastTravel';
 
 describe('T7.5 - Fast Travel System', () => {
   describe('createFastTravelPoint', () => {
