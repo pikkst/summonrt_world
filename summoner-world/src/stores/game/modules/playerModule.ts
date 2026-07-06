@@ -1166,10 +1166,7 @@ const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(cu
     }
 
     if (travelMode === 'portal') {
-      const hasUnlockedPortal = fastTravelState.points.some(
-        p => p.worldId === destination.worldId && p.type === 'portal' && p.unlocked && fastTravelState.discoveredPointIds.has(p.id)
-      );
-      if (!hasUnlockedPortal) {
+      if (!canTravelByPortal(destination, fastTravelState)) {
         appendLog('Portal travel requires an unlocked destination portal.', 'warning');
         return;
       }
@@ -1177,7 +1174,10 @@ const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(cu
 
     if (travelMode === 'air') {
       const hasAirAffinity = player.affinity.primary === 'air' || player.affinity.secondary === 'air';
-      if (!canTravelByAir(player.tileX, player.tileY, destination.x, destination.y, hasAirAffinity, false)) {
+      const hasFlyingMount = player.creatures.some(
+        creature => creature.elements?.includes('air')
+      );
+      if (!canTravelByAir(player.tileX, player.tileY, destination.x, destination.y, hasAirAffinity, hasFlyingMount)) {
         appendLog('Air travel requires air affinity or a flying mount creature.', 'warning');
         return;
       }
