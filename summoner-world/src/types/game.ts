@@ -284,6 +284,7 @@ isOnline?: boolean;
     textSpeed?: number;
     fontSize?: number;
     highContrast?: boolean;
+    minimapRadius?: number;
   };
 }
 

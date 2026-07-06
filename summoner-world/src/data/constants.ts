@@ -9,8 +9,9 @@ const FLOOR_SEED_RNG = new SeededRandom(42);
 export const FLOOR_SEEDS: Record<number, number> = {};
 
 for (let i = 1; i <= 100; i++) {
-  FLOOR_SEEDS[i] = Math.floor(FLOOR_SEED_RNG.range(1000, 999999));
+  FLOOR_SEEDS[i] = FLOOR_SEED_RNG.int(1000, 999999);
 }
+
 export const ELEMENTS = ['fire','water','earth','air','lightning','iron','nature','ice','light','darkness'] as const;
 
 export const AFFINITY_WEIGHT = {

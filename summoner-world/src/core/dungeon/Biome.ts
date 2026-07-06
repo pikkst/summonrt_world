@@ -1,6 +1,6 @@
 import type { BiomeType } from '../../types/game';
+import { WORLD_SIZE } from '../../data/constants';
 
-const WORLD_SIZE = 2000;
 const VORONOI_CELL_SIZE = 260;
 const BIOME_REGION_ORDER: BiomeType[] = [
   'forest',

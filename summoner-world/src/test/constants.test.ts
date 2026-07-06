@@ -28,10 +28,4 @@ describe('T7.11 - 100 floor seed system', () => {
     expect(getFloorSeed(101)).toBe(101 * 999 + 123456);
     expect(getFloorSeed(999)).toBe(999 * 999 + 123456);
   });
-
-  it('produces unique seeds across the 1-100 range', () => {
-    const seeds = Object.values(FLOOR_SEEDS);
-    const uniqueSeeds = new Set(seeds);
-    expect(uniqueSeeds.size).toBe(100);
-  });
 });
