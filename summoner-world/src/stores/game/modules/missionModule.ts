@@ -221,7 +221,7 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
     const weatherEncounterMod = weatherState ? getWeatherEncounterModifier(weatherState.currentWeather, weatherState.weatherIntensity) : 1.0;
     const weatherAdjustedChance = encounterChance * weatherEncounterMod;
     
-    const encounterRng = new SeededRandom(tile.encounterSeed);
+    const encounterRng = new SeededRandom(tile.encounterSeed ?? (x * 1000 + y));
     
     if (encounterRng.next() < weatherAdjustedChance) {
       const effectiveTier = currentWorldId + Math.floor(proximityFactor * 10);
@@ -317,7 +317,7 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
     const weatherEffect = weatherState ? getWeatherEffect(weatherState.currentWeather) : { encounterModifier: 1.0, resourceYieldModifier: 1.0, elementalBonus: 0, description: '' };
     const yieldModifier = getWeatherResourceYieldModifier(weatherState?.currentWeather ?? 'Clear', weatherState?.weatherIntensity ?? 1.0);
     
-    const resourceSeed = tile ? tile.encounterSeed + 1 : (worlds.get(currentWorldId)?.seed ?? currentWorldId);
+    const resourceSeed = tile ? (tile.encounterSeed ?? 0) + 1 : (worlds.get(currentWorldId)?.seed ?? currentWorldId);
     const resourceRng = new SeededRandom(resourceSeed);
     const baseFound = Math.min(tile?.resourceQty ?? 0, 1 + resourceRng.int(0, 1));
     const found = Math.floor(baseFound * yieldModifier);
