@@ -1133,7 +1133,7 @@ const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(cu
     appendLog(`${fortuneMessage} Found: ${itemName}`, 'success');
   },
 
-  startTravel: (destination: { worldId: number; x: number; y: number }, travelMode: TravelMode = 'walking') => {
+  startTravel: (destination: { worldId: number; x: number; y: number; pointId?: string }, travelMode: TravelMode = 'walking') => {
     const { player, currentWorldId, worlds, appendLog } = get();
     const playerCore = get().playerCore;
     if (!player) return;
@@ -1166,7 +1166,12 @@ const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(cu
     }
 
     if (travelMode === 'portal') {
-      if (!canTravelByPortal(destination, fastTravelState)) {
+      const canPortal = destination.pointId
+        ? canTravelByPortal(destination, fastTravelState)
+        : fastTravelState.points.some(
+            p => p.worldId === destination.worldId && p.type === 'portal' && p.unlocked && fastTravelState.discoveredPointIds.has(p.id)
+          );
+      if (!canPortal) {
         appendLog('Portal travel requires an unlocked destination portal.', 'warning');
         return;
       }
@@ -1174,10 +1179,10 @@ const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(cu
 
     if (travelMode === 'air') {
       const hasAirAffinity = player.affinity.primary === 'air' || player.affinity.secondary === 'air';
-      const hasFlyingMount = player.creatures.some(
+      const hasAirElementCreature = player.creatures.some(
         creature => creature.elements?.includes('air')
       );
-      if (!canTravelByAir(player.tileX, player.tileY, destination.x, destination.y, hasAirAffinity, hasFlyingMount)) {
+      if (!canTravelByAir(player.tileX, player.tileY, destination.x, destination.y, hasAirAffinity, hasAirElementCreature)) {
         appendLog('Air travel requires air affinity or a flying mount creature.', 'warning');
         return;
       }

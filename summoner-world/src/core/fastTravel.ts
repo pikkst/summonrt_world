@@ -262,11 +262,11 @@ export function canTravelByAir(
   toX: number,
   toY: number,
   hasAirAffinity: boolean,
-  hasFlyingMount: boolean
+  hasAirElementCreature: boolean
 ): boolean {
   const distance = Math.hypot(toX - _fromX, toY - _fromY);
   if (distance > 800) return false;
-  return hasAirAffinity || hasFlyingMount;
+  return hasAirAffinity || hasAirElementCreature;
 }
 
 export function canTravelByWorldGate(
