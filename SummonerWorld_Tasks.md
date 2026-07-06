@@ -419,7 +419,7 @@ Sprint goal: expand world generation with weather, fast travel, biomes and settl
 - [x] T7.7 – Implement `getBiomeForCoords` fully (not just dist-based gradient)
 - [x] T7.8 – Add resource respawn logic: plants 30 days, ore 90 days (game-time based)
 - [x] T7.9 – Implement world boundary handling (edge movement blocked, thematic message)
-- [ ] T7.10 – Add minimap/radar expansion (radius configurable, fog-of-war render)
+- [x] T7.10 – Add minimap/radar expansion (radius configurable, fog-of-war render)
 - [ ] T7.11 – Implement 100 floor seed system (`FLOOR_SEEDS` 1–100, deterministic PRNG)
 - [ ] T7.12 – Verify same seed + coords gives identical tile for all players (determinism test)
 - [ ] T7.13 – Add World Travel system from Player Core Bible
