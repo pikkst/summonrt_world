@@ -36,7 +36,14 @@ import {
   migrateSaveToV2,
   projectCoreToLegacyPlayer,
 } from '../../../modules/save/playerCoreSaveMigration.ts';
-import { getFastTravelPointsNear } from '../../../core/fastTravel.ts';
+import {
+  getFastTravelPointsNear,
+  startWorldTravel,
+  calculateTravelDuration,
+  canTravelByWorldGate,
+  isOnRoad,
+  type TravelMode,
+} from '../../../core/fastTravel.ts';
 
 function buildValidatedUrl(baseUrl: string, playerId: string): string {
   try {
@@ -1124,27 +1131,44 @@ const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(cu
     appendLog(`${fortuneMessage} Found: ${itemName}`, 'success');
   },
 
-  startTravel: (destination: { worldId: number; x: number; y: number }, isMount: boolean = false) => {
-    const { player, appendLog } = get();
+  startTravel: (destination: { worldId: number; x: number; y: number }, travelMode: TravelMode = 'walking') => {
+    const { player, currentWorldId, worlds, appendLog } = get();
     const playerCore = get().playerCore;
     if (!player) return;
 
     const travelDistance = Math.hypot(destination.x - player.tileX, destination.y - player.tileY);
-    const baseDurationMs = travelDistance * 100;
+    const fromWorldId = currentWorldId;
+    const worldUnlocks = playerCore?.worldUnlocks;
 
-    let speedBonus = 0;
-    if (isMount) speedBonus += 50;
-    if (playerCore?.fastTravel) {
-      const nearPoint = getFastTravelPointsNear(
-        playerCore.fastTravel,
-        player.tileX,
-        player.tileY,
-        50
-      )[0];
-      if (nearPoint?.type === 'settlement') speedBonus += 40;
+    if (travelMode === 'world_gate' && worldUnlocks) {
+      const canGate = canTravelByWorldGate(fromWorldId, destination.worldId, worldUnlocks.unlockedWorlds);
+      if (!canGate) {
+        appendLog('World gate is not accessible from here. Unlock the target world first.', 'warning');
+        return;
+      }
+      if (!worlds.has(destination.worldId)) {
+        appendLog(`World ${destination.worldId} has not been generated yet.`, 'warning');
+        return;
+      }
     }
 
-    const finalDuration = Math.max(1000, baseDurationMs * (1 - Math.min(0.9, speedBonus / 100)));
+    const nearPoint = playerCore?.fastTravel
+      ? getFastTravelPointsNear(playerCore.fastTravel, player.tileX, player.tileY, 50)[0]
+      : null;
+
+    const isNearSettlement = nearPoint?.type === 'settlement';
+    const isOnRoadPath = isOnRoad(player.tileX, player.tileY, destination.x, destination.y, []);
+
+    const duration = calculateTravelDuration(player.tileX, player.tileY, destination.x, destination.y, {
+      travelMode,
+      isOnRoad: isOnRoadPath,
+    });
+
+    const finalDuration = Math.max(
+      duration,
+      travelMode === 'portal' ? 500 :
+      travelMode === 'world_gate' ? 2000 : 1000
+    );
 
     set((state) => ({
       exploring: {
@@ -1154,11 +1178,15 @@ const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(cu
         targetX: destination.x,
         targetY: destination.y,
       },
-      log: [...state.log.slice(-499), createLog(`Traveling to (${destination.x}, ${destination.y})... Estimated time: ${(finalDuration / 1000).toFixed(1)}s`, 'info', state.turnCount)]
+      log: [...state.log.slice(-499), createLog(`Traveling to (${destination.x}, ${destination.y}) via ${travelMode}... Estimated time: ${(finalDuration / 1000).toFixed(1)}s`, 'info', state.turnCount)]
     }));
 
     setTimeout(() => {
-      get().finishMovement(destination.x, destination.y, `${destination.worldId}:${destination.x},${destination.y}`, true);
+      const targetWorldId = destination.worldId;
+      if (travelMode === 'world_gate' && targetWorldId !== get().currentWorldId) {
+        set({ currentWorldId: targetWorldId });
+      }
+      get().finishMovement(destination.x, destination.y, `${targetWorldId}:${destination.x},${destination.y}`, true);
     }, finalDuration);
   },
 
