@@ -157,6 +157,7 @@ missions: ActiveMission[];
 
 export interface GameActions {
    initGame: (playerName: string, archetype?: string) => void;
+   publishPlayerEnteredWorld: (fromWorldId?: number) => void;
    login: (username: string, password: string) => Promise<boolean>;
    register: (username: string, password: string, options?: { name?: string; archetype?: string }) => Promise<boolean>;
    logout: () => void;

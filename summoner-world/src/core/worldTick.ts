@@ -1,4 +1,5 @@
 import type { WorldData } from '../types/game';
+import { worldEventBus } from './worldEventBus.ts';
 
 export const MINUTES_PER_TURN = 6;
 export const TURNS_PER_DAY = 1440 / MINUTES_PER_TURN;
@@ -81,6 +82,8 @@ export function processResourceRespawn(
     dayCount: number;
     worlds: Map<number, WorldData>;
     currentWorldId: number;
+    turnCount?: number;
+    gameTimeMinutes?: number;
   }
 ): void {
   const world = params.worlds.get(params.currentWorldId);
@@ -99,6 +102,18 @@ export function processResourceRespawn(
         tile.resourceRespawnTurn = params.dayCount + getRespawnDays(resourceType);
       } else {
         tile.resourceRespawnTurn = undefined;
+      }
+      if (tile.resourceQty > 0) {
+        worldEventBus.publish({
+          type: 'ResourceSpawned',
+          worldId: params.currentWorldId,
+          x: tile.x,
+          y: tile.y,
+          resourceType,
+          quantity: tile.resourceQty,
+          gameTimeMinutes: params.gameTimeMinutes ?? 0,
+          turnCount: params.turnCount ?? 0,
+        });
       }
     }
   });
