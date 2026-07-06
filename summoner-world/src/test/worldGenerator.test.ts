@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { BIOME_TYPES } from '../data/constants';
+import { BIOME_TYPES, getFloorSeed } from '../data/constants';
 import { getBiomeForCoords, sampleBiomeGeneration } from '../core/dungeon/Biome';
-import { generateTile, generateWorld } from '../core/worldGenerator';
+import { generateTile, generateTileFromSeed, generateWorld } from '../core/worldGenerator';
 
 describe('T7.1 - Perlin/Voronoi biome generation', () => {
   it('generates deterministic biome samples for the same seed and coordinates', () => {
@@ -67,5 +67,102 @@ describe('T7.1 - Perlin/Voronoi biome generation', () => {
     expect(secondTile.biome).toBe(firstTile.biome);
     expect(startTile?.biome).toBe(firstTile.biome);
     expect(BIOME_TYPES).toContain(startTile?.biome);
+  });
+});
+
+describe('T7.12 - Deterministic tile generation for all players', () => {
+  it('generates identical full tile for same seed and coordinates', () => {
+    const first = generateTileFromSeed(100, 200, 1337);
+    const second = generateTileFromSeed(100, 200, 1337);
+    const third = generateTileFromSeed(100, 200, 1337);
+
+    expect(second).toEqual(first);
+    expect(third).toEqual(first);
+  });
+
+  it('generates identical tiles for same worldId across all tile properties', () => {
+    const firstTile = generateTile(750, 420, 5);
+    const secondTile = generateTile(750, 420, 5);
+
+    expect(secondTile).toEqual(firstTile);
+  });
+
+  it('generates identical tiles across many coordinate samples for the same seed', () => {
+    const seed = 5555;
+    const coords: Array<[number, number]> = [
+      [0, 0],
+      [10, 10],
+      [50, 200],
+      [100, 1000],
+      [500, 750],
+      [999, 888],
+      [1000, 1000],
+      [1500, 25],
+      [1999, 1999],
+    ];
+
+    for (const [x, y] of coords) {
+      const first = generateTileFromSeed(x, y, seed);
+      const second = generateTileFromSeed(x, y, seed);
+      expect(second).toEqual(first);
+    }
+  });
+
+  it('generates identical world tile collections for the same worldId', () => {
+    const firstWorld = generateWorld(7, null);
+    const secondWorld = generateWorld(7, null);
+
+    expect(firstWorld.tiles.size).toBe(secondWorld.tiles.size);
+
+    for (const [key, tile] of firstWorld.tiles) {
+      const other = secondWorld.tiles.get(key);
+      expect(other).toEqual(tile);
+    }
+  });
+
+  it('verifies worldId maps to a stable deterministic floor seed', () => {
+    const worldId = 3;
+    const firstSeed = getFloorSeed(worldId);
+    const secondSeed = getFloorSeed(worldId);
+    expect(secondSeed).toBe(firstSeed);
+  });
+
+  it('simulates two players generating identical tiles in the same world', () => {
+    const worldId = 15;
+    const coords: Array<[number, number]> = [
+      [120, 340],
+      [500, 750],
+      [1000, 1000],
+      [1770, 420],
+    ];
+
+    const player1Tiles = coords.map(([x, y]) => generateTile(x, y, worldId));
+    const player2Tiles = coords.map(([x, y]) => generateTile(x, y, worldId));
+
+    for (let i = 0; i < coords.length; i++) {
+      expect(player2Tiles[i]).toEqual(player1Tiles[i]);
+    }
+  });
+
+  it('produces different tiles for different seeds at the same coordinates', () => {
+    const seed1 = 1000;
+    const seed2 = 2000;
+    const [x, y] = [500, 500];
+
+    const tile1 = generateTileFromSeed(x, y, seed1);
+    const tile2 = generateTileFromSeed(x, y, seed2);
+
+    expect(tile2).not.toEqual(tile1);
+  });
+
+  it('generates deterministic encounter seeds for the same tile', () => {
+    const worldId = 25;
+    const coords: Array<[number, number]> = [[100, 200], [500, 500], [1000, 1000]];
+
+    for (const [x, y] of coords) {
+      const first = generateTile(x, y, worldId);
+      const second = generateTile(x, y, worldId);
+      expect(second.encounterSeed).toBe(first.encounterSeed);
+    }
   });
 });

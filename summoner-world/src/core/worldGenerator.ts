@@ -27,66 +27,69 @@ function generateNPC(rng: SeededRandom, role: NPC['role']): NPC {
 }
 
 export function generateTile(x: number, y: number, worldId: number): TileData {
-   const floorSeed = getFloorSeed(worldId);
-   const h = (s: string) => hash(x, y, floorSeed, s);
-   const biome = getBiomeForCoords(x, y, floorSeed);
+  return generateTileFromSeed(x, y, getFloorSeed(worldId));
+}
 
-   let resourceType: string | undefined;
-   let resourceQty: number | undefined;
+export function generateTileFromSeed(x: number, y: number, seed: number): TileData {
+  const h = (s: string) => hash(x, y, seed, s);
+  const biome = getBiomeForCoords(x, y, seed);
 
-   if (h('res') < 0.3) {
-     const resources = Object.keys(RESOURCES);
-     resourceType = resources[Math.floor(h('res_type') * resources.length)];
-     resourceQty = Math.floor(h('res_qty') * 5) + 1;
-   }
+  let resourceType: string | undefined;
+  let resourceQty: number | undefined;
 
-   const specialRoll = h('special');
-   let specialType: TileData['specialType'];
-   let npc: NPC | undefined;
+  if (h('res') < 0.3) {
+    const resources = Object.keys(RESOURCES);
+    resourceType = resources[Math.floor(h('res_type') * resources.length)];
+    resourceQty = Math.floor(h('res_qty') * 5) + 1;
+  }
 
-   // The Mega Dungeon (Center)
-   if (x === 1000 && y === 1000) {
-     specialType = 'dungeon';
-     npc = {
-       id: 'dungeon_gatekeeper',
-       name: 'The Warden',
-       role: 'elder',
-       dialogue: ['Only the worthy may challenge the Floor Boss. The Spire reaches for the stars.'],
-     };
-   } else if (x < 50 && y < 50) { // Starting Area
-     if (x === 10 && y === 10) {
-       specialType = 'city';
-       npc = {
-         id: 'nexus_elder',
-         name: 'Elder Thorne',
-         role: 'elder',
-         dialogue: ['Welcome to the Edge of the World. The Great Spire lies at the exact center (1000, 1000). Your journey begins here.'],
-         quests: ['starter_explore', 'starter_capture', 'dungeon_clear_1', 'capture_rare', 'explore_10']
-       };
-     }
-    } else if (specialRoll < 0.005) { // 0.5% chance for landmark
-      const specialTypes = ['city', 'dungeon', 'cave', 'monument', 'well', 'ruins', 'outpost', 'grove', 'shrine'];
-      const specialIdx = Math.floor(h('special_type') * specialTypes.length);
-      specialType = specialTypes[specialIdx] as TileData['specialType'];
-     if (specialType === 'city' || specialType === 'outpost') {
-       const rng = new SeededRandom(x * y + floorSeed);
-       npc = generateNPC(rng, 'quest_giver');
-     }
-   }
+  const specialRoll = h('special');
+  let specialType: TileData['specialType'];
+  let npc: NPC | undefined;
 
-   return {
-     x,
-     y,
-     biome: biome as TileData['biome'],
-     discovered: false,
-     explored: false,
-     specialType,
-     npc,
-     resourceType,
-     resourceQty,
-     encounterSeed: Math.floor(h('encounter') * 999999),
-   };
- }
+  // The Mega Dungeon (Center)
+  if (x === 1000 && y === 1000) {
+    specialType = 'dungeon';
+    npc = {
+      id: 'dungeon_gatekeeper',
+      name: 'The Warden',
+      role: 'elder',
+      dialogue: ['Only the worthy may challenge the Floor Boss. The Spire reaches for the stars.'],
+    };
+  } else if (x < 50 && y < 50) { // Starting Area
+    if (x === 10 && y === 10) {
+      specialType = 'city';
+      npc = {
+        id: 'nexus_elder',
+        name: 'Elder Thorne',
+        role: 'elder',
+        dialogue: ['Welcome to the Edge of the World. The Great Spire lies at the exact center (1000, 1000). Your journey begins here.'],
+        quests: ['starter_explore', 'starter_capture', 'dungeon_clear_1', 'capture_rare', 'explore_10']
+      };
+    }
+  } else if (specialRoll < 0.005) { // 0.5% chance for landmark
+    const specialTypes = ['city', 'dungeon', 'cave', 'monument', 'well', 'ruins', 'outpost', 'grove', 'shrine'];
+    const specialIdx = Math.floor(h('special_type') * specialTypes.length);
+    specialType = specialTypes[specialIdx] as TileData['specialType'];
+    if (specialType === 'city' || specialType === 'outpost') {
+      const rng = new SeededRandom(x * y + seed);
+      npc = generateNPC(rng, 'quest_giver');
+    }
+  }
+
+  return {
+    x,
+    y,
+    biome: biome as TileData['biome'],
+    discovered: false,
+    explored: false,
+    specialType,
+    npc,
+    resourceType,
+    resourceQty,
+    encounterSeed: Math.floor(h('encounter') * 999999),
+  };
+}
 
 export function generateWorld(worldId: number, _playerAffinity: ElementalAffinity | null): WorldData {
    const floorSeed = getFloorSeed(worldId);
@@ -99,7 +102,7 @@ export function generateWorld(worldId: number, _playerAffinity: ElementalAffinit
       for (let dx = -2; dx <= 2; dx++) {
         const tx = startX + dx;
         const ty = startY + dy;
-        const tile = generateTile(tx, ty, worldId);
+         const tile = generateTileFromSeed(tx, ty, floorSeed);
         tile.discovered = true;
         if (dx === 0 && dy === 0) tile.explored = true;
         tiles.set(getTileKey(tx, ty), tile);
