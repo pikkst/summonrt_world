@@ -105,12 +105,11 @@ export function initializeSettlementGoods(
 export function calculateGoodsPrice(basePrice: number, demand: number, supply: number, elasticity: number = 0.1): number {
   if (basePrice <= 0) return 1;
   const factor = 1 + elasticity * (demand - supply);
-  return Math.max(1, Math.floor(basePrice * Math.max(0.1, factor)));
+  return Math.max(1, Math.floor(basePrice * factor));
 }
 
 export function calculateSettlementSupply(
   settlement: Settlement,
-  goodKey: string,
   category: GoodCategory,
   turnCount: number
 ): number {
@@ -122,7 +121,6 @@ export function calculateSettlementSupply(
 
 export function calculateSettlementDemand(
   settlement: Settlement,
-  goodKey: string,
   category: GoodCategory,
   turnCount: number
 ): number {
@@ -146,11 +144,11 @@ export function tickSettlementEconomy(
 
   for (const good of goods) {
     const existing = ledger[good.key];
-    const basePrice = existing ? existing.basePrice : getBasePrice(good.key);
+    const basePrice = existing ? existing.basePrice : (good.basePrice ?? getBasePrice(good.key));
     const category = existing ? existing.category : getGoodCategory(good.key);
 
-    let supply = calculateSettlementSupply(settlement, good.key, category, targetTurn);
-    let demand = calculateSettlementDemand(settlement, good.key, category, targetTurn);
+    let supply = calculateSettlementSupply(settlement, category, targetTurn);
+    let demand = calculateSettlementDemand(settlement, category, targetTurn);
 
     if (rng) {
       supply = Math.max(1, supply + Math.round((rng() - 0.5) * 2));

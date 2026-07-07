@@ -450,10 +450,10 @@ Sprint goal: implement full economic, housing and crafting system with career-ba
 - [x] T8.3 – Implement intermediate crafting: ore/herbs/elemental catalysts, workshop required
 - [x] T8.4 – Implement advanced crafting: crystals/essence/legendary parts, city-level infrastructure
 - [x] T8.5 – Add artifact system: unique recipes, exploration/quest unlock, 1-per-world restriction
-- [ ] T8.6 – Create `Structure` model and placement system (house, farm, workshop, manor, castle, town)
-- [ ] T8.7 – Implement housing economic impact: passive income (NPC taxes, resource refinement)
-- [ ] T8.8 – Add town hall upgrade + regional policies (trade tariffs, creature protection, festival bonuses)
-- [ ] T8.9 – Implement town founding: ≥5 buildings + World 15
+- [x] T8.6 – Create `Structure` model and placement system (house, farm, workshop, manor, castle, town)
+- [x] T8.7 – Implement housing economic impact: passive income (NPC taxes, resource refinement)
+- [x] T8.8 – Add town hall upgrade + regional policies (trade tariffs, creature protection, festival bonuses)
+- [x] T8.9 – Implement town founding: ≥5 buildings + World 15
 - [x] T8.10 – Create settlement economic simulation: goods ledger, supply/demand curves
 - [ ] T8.11 – Implement price formula: `Price(i) = BasePrice × (1 + k × (Demand − Supply))`
 - [ ] T8.12 – Add NPC merchant logic: cash reserves, inventory limits, restock, player undercut reaction

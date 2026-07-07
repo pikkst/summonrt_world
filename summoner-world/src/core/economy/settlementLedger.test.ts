@@ -107,16 +107,16 @@ describe('T8.10 - Settlement Economic Simulation', () => {
     it('returns higher supply for cities than outposts', () => {
       const village = createMockSettlement({ type: 'village' });
       const city = createMockSettlement({ type: 'city', worldId: 1 });
-      const villageSupply = calculateSettlementSupply(village, 'wood', 'raw_material', 0);
-      const citySupply = calculateSettlementSupply(city, 'wood', 'raw_material', 0);
+      const villageSupply = calculateSettlementSupply(village, 'raw_material', 0);
+      const citySupply = calculateSettlementSupply(city, 'raw_material', 0);
       expect(citySupply).toBeGreaterThan(villageSupply);
     });
 
     it('scales with worldId', () => {
       const world1 = createMockSettlement({ type: 'village', worldId: 1 });
       const world50 = createMockSettlement({ type: 'village', worldId: 50 });
-      const supply1 = calculateSettlementSupply(world1, 'wood', 'raw_material', 0);
-      const supply50 = calculateSettlementSupply(world50, 'wood', 'raw_material', 0);
+      const supply1 = calculateSettlementSupply(world1, 'raw_material', 0);
+      const supply50 = calculateSettlementSupply(world50, 'raw_material', 0);
       expect(supply50).toBeGreaterThan(supply1);
     });
   });
@@ -125,15 +125,15 @@ describe('T8.10 - Settlement Economic Simulation', () => {
     it('returns higher demand for cities than outposts', () => {
       const village = createMockSettlement({ type: 'village' });
       const city = createMockSettlement({ type: 'city', worldId: 1 });
-      const villageDemand = calculateSettlementDemand(village, 'wood', 'raw_material', 0);
-      const cityDemand = calculateSettlementDemand(city, 'wood', 'raw_material', 0);
+      const villageDemand = calculateSettlementDemand(village, 'raw_material', 0);
+      const cityDemand = calculateSettlementDemand(city, 'raw_material', 0);
       expect(cityDemand).toBeGreaterThan(villageDemand);
     });
 
     it('applies category bonus to demand', () => {
       const settlement = createMockSettlement({ type: 'village', worldId: 1 });
-      const rawDemand = calculateSettlementDemand(settlement, 'wood', 'raw_material', 0);
-      const foodDemand = calculateSettlementDemand(settlement, 'basic_food', 'food', 0);
+      const rawDemand = calculateSettlementDemand(settlement, 'raw_material', 0);
+      const foodDemand = calculateSettlementDemand(settlement, 'food', 0);
       expect(foodDemand).toBeGreaterThan(rawDemand);
     });
   });
@@ -200,11 +200,22 @@ describe('T8.10 - Settlement Economic Simulation', () => {
       const fixedRng = () => 0.9;
       const result = tickSettlementEconomy(ledger, settlement, 1, goods, fixedRng);
 
-      const supply = calculateSettlementSupply(settlement, 'wood', 'raw_material', 1);
-      const demand = calculateSettlementDemand(settlement, 'wood', 'raw_material', 1);
+      const supply = calculateSettlementSupply(settlement, 'raw_material', 1);
+      const demand = calculateSettlementDemand(settlement, 'raw_material', 1);
       const wood = result.ledger.wood!;
       expect(wood.supply).toBe(Math.max(1, supply + 1));
       expect(wood.demand).toBe(Math.max(1, demand + 1));
+    });
+
+    it('uses supplied basePrice for new goods instead of template default', () => {
+      const ledger = createSettlementLedger('settlement-1');
+      const settlement = createMockSettlement();
+      const customPrice = 999;
+      const goods = [{ key: 'wood', basePrice: customPrice }];
+      const result = tickSettlementEconomy(ledger, settlement, 1, goods);
+      const wood = result.ledger.wood!;
+      expect(wood.basePrice).toBe(customPrice);
+      expect(wood.currentPrice).toBeGreaterThanOrEqual(1);
     });
   });
 });
