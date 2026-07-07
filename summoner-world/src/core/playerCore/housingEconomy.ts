@@ -2,6 +2,7 @@ import type { PlayerCoreState } from '../../types/playerCore.ts';
 import type { Structure, StructureType } from '../../types/structure.ts';
 import { STRUCTURE_DEFINITIONS, getActiveTownHallPolicies, getTownHallPassiveIncomeBonus, getTownHallPolicyMultiplier } from '../../types/structure.ts';
 import { addItemToInventory } from './inventoryCore.ts';
+import { applyFusionMaterialDecay, HOUSING_TAX_RATE_PCT } from '../economy/inflationSinks.ts';
 import type { InventoryStack, ItemTemplate } from '../../types/game.ts';
 import type { TownHallPolicy } from '../../types/structure.ts';
 
@@ -58,13 +59,14 @@ export function processHousingEconomyTick(
   rng: () => number = Math.random
 ): PlayerCoreState {
   const structures = playerCore.housing.structures;
-  if (structures.length === 0) return playerCore;
 
   const basePassiveIncome = calculateHousingPassiveIncome(structures);
   const townHallBonus = calculateTownHallIncomeBonus(playerCore);
   const policyMultiplier = calculateActivePolicyMultipliers(playerCore.housing.townHallPolicies);
 
-  const totalPassiveIncome = Math.floor((basePassiveIncome + townHallBonus) * policyMultiplier);
+  const grossPassiveIncome = Math.floor((basePassiveIncome + townHallBonus) * policyMultiplier);
+  const housingTax = Math.floor((grossPassiveIncome * HOUSING_TAX_RATE_PCT) / 100);
+  const totalPassiveIncome = Math.max(0, grossPassiveIncome - housingTax);
   const refinedResources = calculateResourceRefinement(structures, rng);
 
   let updatedInventory = playerCore.inventory;
@@ -88,9 +90,11 @@ export function processHousingEconomyTick(
     updatedInventory = result.inventory;
   }
 
+  const decayedInventory = applyFusionMaterialDecay(updatedInventory, rng);
+
   return {
     ...playerCore,
     money: playerCore.money + totalPassiveIncome,
-    inventory: updatedInventory,
+    inventory: decayedInventory,
   };
 }

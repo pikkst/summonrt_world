@@ -256,6 +256,7 @@ export interface EquipmentSlot {
   itemKey?: string;
   quantity: number;
   modifiers?: Record<string, number>;
+  durability?: number;
 }
 
 export interface CreatureContract {

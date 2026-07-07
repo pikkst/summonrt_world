@@ -224,7 +224,8 @@ describe('T8.7 - Housing Economic Impact', () => {
       const result = processHousingEconomyTick(player, () => 0);
       const baseTownIncome = STRUCTURE_DEFINITIONS.town.passiveIncomeRate;
       const townHallBonus = 20;
-      expect(result.money).toBe(1000 + baseTownIncome + townHallBonus);
+      const tax = Math.floor((baseTownIncome + townHallBonus) * 0.1);
+      expect(result.money).toBe(1000 + baseTownIncome + townHallBonus - tax);
     });
 
     it('applies festival bonus multiplier when active', () => {
@@ -236,8 +237,9 @@ describe('T8.7 - Housing Economic Impact', () => {
       const result = processHousingEconomyTick(player, () => 0);
       const baseTownIncome = STRUCTURE_DEFINITIONS.town.passiveIncomeRate;
       const townHallBonus = 50;
-      const expected = Math.floor((baseTownIncome + townHallBonus) * 1.15);
-      expect(result.money).toBe(1000 + expected);
+      const gross = Math.floor((baseTownIncome + townHallBonus) * 1.15);
+      const tax = Math.floor(gross * 0.1);
+      expect(result.money).toBe(1000 + gross - tax);
     });
 
     it('does not apply festival bonus when inactive', () => {
@@ -249,7 +251,8 @@ describe('T8.7 - Housing Economic Impact', () => {
       const result = processHousingEconomyTick(player, () => 0);
       const baseTownIncome = STRUCTURE_DEFINITIONS.town.passiveIncomeRate;
       const townHallBonus = 50;
-      expect(result.money).toBe(1000 + baseTownIncome + townHallBonus);
+      const tax = Math.floor((baseTownIncome + townHallBonus) * 0.1);
+      expect(result.money).toBe(1000 + baseTownIncome + townHallBonus - tax);
     });
 
     it('applies no multiplier when no policies are set', () => {
@@ -257,6 +260,38 @@ describe('T8.7 - Housing Economic Impact', () => {
       const player = createMockPlayerCore({ housing: { structures }, money: 1000 });
       const result = processHousingEconomyTick(player, () => 0);
       expect(result.money).toBe(1001);
+    });
+  });
+
+  describe('T8.13 - Inflation sinks inside housing tick', () => {
+    it('deducts housing tax from gross income', () => {
+      const structures = [createMockStructure({ type: 'town', level: 5 })];
+      const player = createMockPlayerCore({ housing: { structures }, money: 1000 });
+      const result = processHousingEconomyTick(player, () => 1);
+      const baseTownIncome = STRUCTURE_DEFINITIONS.town.passiveIncomeRate;
+      const townHallBonus = 50;
+      const tax = Math.floor((baseTownIncome + townHallBonus) * 0.1);
+      expect(result.money).toBe(1000 + baseTownIncome + townHallBonus - tax);
+    });
+
+    it('decays fusion materials each tick', () => {
+      const player = createMockPlayerCore({
+        housing: { structures: [] },
+        inventory: [{ templateKey: 'soul_crystal_common', quantity: 5, category: 'contract', rarity: 'common', binding: 'tradeable', addedAt: 0 }] as any,
+      });
+      const result = processHousingEconomyTick(player, () => 0.001);
+      const crystal = result.inventory.find((i) => i.templateKey === 'soul_crystal_common');
+      expect(crystal?.quantity).toBe(4);
+    });
+
+    it('does not decay fusion materials when rng fails', () => {
+      const player = createMockPlayerCore({
+        housing: { structures: [] },
+        inventory: [{ templateKey: 'soul_crystal_common', quantity: 5, category: 'contract', rarity: 'common', binding: 'tradeable', addedAt: 0 }] as any,
+      });
+      const result = processHousingEconomyTick(player, () => 0.99);
+      const crystal = result.inventory.find((i) => i.templateKey === 'soul_crystal_common');
+      expect(crystal?.quantity).toBe(5);
     });
   });
 });
