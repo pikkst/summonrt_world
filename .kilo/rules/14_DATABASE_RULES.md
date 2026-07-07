@@ -12,6 +12,8 @@ Local JSON / SQLite prototype
   -> Server-authoritative MMORPG persistence
 ```
 
+Online implementation tasks must also follow `.kilo/rules/24_ONLINE_IMPLEMENTATION_CONTRACT.md`.
+
 ## Data Ownership
 
 Every database model must have clear ownership and purpose.
@@ -82,6 +84,8 @@ Also store generated metadata when it is needed for persistence or party synchro
 Use service/repository abstraction where practical.
 
 Avoid scattering raw persistence logic across UI components.
+
+For new online work, route API access through a service boundary instead of adding direct calls in UI or store modules.
 
 ## Validation Rule
 

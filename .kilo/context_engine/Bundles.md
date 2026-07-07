@@ -79,6 +79,21 @@ Usually Lean Mode.
 
 Usually Deep Mode.
 
+## Online or MMO
+
+Use for online, account, cloud save, social, trade, party, guild, PvP, marketplace, dungeon party sync, or server-authoritative work:
+
+- `.kilo/rules/23_MMO_RULES.md`
+- `.kilo/rules/24_ONLINE_IMPLEMENTATION_CONTRACT.md`
+- `.kilo/rules/08_SECURITY_RULES.md`
+- `.kilo/rules/14_DATABASE_RULES.md`
+- `.kilo/checklists/OnlineImplementationChecklist.md`
+- `.kilo/agents/backend.md`
+- `SummonerWorld_TechnicalSpec.md` section found by targeted search
+- related server, service, store, and test files
+
+Always Deep Mode.
+
 ## Frontend
 
 - `.kilo/agents/frontend.md`

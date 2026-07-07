@@ -62,6 +62,7 @@ Deep Mode may read:
 - `ContextPlanner.md`
 - `TaskLifecycle.md`
 - `AgentSelection.md`
+- `.kilo/rules/24_ONLINE_IMPLEMENTATION_CONTRACT.md` for online/MMO tasks
 - relevant Council index and roles
 - relevant Guardian file
 

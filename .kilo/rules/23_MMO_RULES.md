@@ -6,6 +6,8 @@ SummonerWorld starts as an offline-first prototype but must remain compatible wi
 
 Do not make offline implementation choices that block future server-authoritative systems.
 
+For implementation tasks, also follow `.kilo/rules/24_ONLINE_IMPLEMENTATION_CONTRACT.md`.
+
 ## Progression Path
 
 The intended path is:
@@ -165,8 +167,10 @@ Future launch systems should support:
 
 MMO-related features should test:
 
+- Service boundary behavior
 - Server validation paths
 - Permission checks
+- Unauthorized requests
 - Event replay
 - Concurrent action safety where practical
 - Trade and marketplace edge cases
@@ -178,6 +182,8 @@ MMO-related features should test:
 - Do not make important online state client-authoritative.
 - Do not add online-only requirements to offline core systems.
 - Do not expose secrets to the client.
+- Do not store account passwords in plaintext.
+- Do not add new scattered direct API calls in UI or store modules when a service boundary is required.
 - Do not implement trading or marketplace without validation rules.
 - Do not make Demonlord challenge outcomes unaudited.
 - Do not ignore moderation and abuse prevention for social systems.

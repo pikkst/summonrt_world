@@ -35,6 +35,7 @@ Review-layer checklists:
 - `SaveSystemChecklist.md` - persistence and migration safety.
 - `PerformanceChecklist.md` - scaling and responsiveness.
 - `APIQualityChecklist.md` - public API type safety, helper signatures, data-module boundaries, and test assertion quality.
+- `OnlineImplementationChecklist.md` - online, account, cloud save, social, trade, party, guild, PvP, marketplace, dungeon party sync, and server-authoritative work.
 
 ## When To Use APIQualityChecklist
 
@@ -46,6 +47,16 @@ Use `APIQualityChecklist.md` when a task adds or changes:
 - store action signatures
 - re-exports or module indexes
 - tests for public API behavior
+
+## When To Use OnlineImplementationChecklist
+
+Use `OnlineImplementationChecklist.md` when a task touches:
+
+- account registration/login/session behavior
+- cloud saves or online persistence
+- service abstractions for offline/online implementations
+- chat, mail, friends, blocks, reports, party, guild, trade, marketplace, or PvP
+- dungeon party sync, Demonlord challenges, territory control, or other server-authoritative state
 
 ## Prime Rule
 

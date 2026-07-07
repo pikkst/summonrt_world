@@ -6,6 +6,8 @@ SummonerWorld starts offline-first, but every system should be designed with fut
 
 Client-side logic can support UX, but future authoritative systems must be validated server-side.
 
+Online implementation tasks must follow `.kilo/rules/24_ONLINE_IMPLEMENTATION_CONTRACT.md`.
+
 ## Secret Handling
 
 Never commit secrets.
@@ -49,6 +51,8 @@ Examples:
 - Trade data
 - Quest command input
 - Debug/admin tools
+
+For account work, never store plaintext passwords. Use password hashing and session/token handling.
 
 ## Save Import Safety
 
