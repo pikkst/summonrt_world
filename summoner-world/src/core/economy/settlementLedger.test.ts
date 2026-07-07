@@ -129,7 +129,7 @@ describe('T8.10 - Settlement Economic Simulation', () => {
       const basePrice = 10;
       const demand = 11;
       const supply = 10;
-      const k = 0.1;
+      const k = 0.15;
       const expected = Math.floor(basePrice * (1 + k * (demand - supply)));
       expect(calculateGoodsPrice(basePrice, demand, supply, k)).toBe(expected);
     });
