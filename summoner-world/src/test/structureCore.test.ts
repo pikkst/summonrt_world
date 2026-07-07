@@ -286,6 +286,33 @@ describe('T8.6 - Structure Model and Placement', () => {
       expect(playerCore.money).toBe(10);
       expect(playerCore.housing.structures).toHaveLength(0);
     });
+
+    it('blocks placement on invalid biome when tile is provided', () => {
+      const player = createMockPlayerCore({ level: 1, money: 1000 });
+      const tile = createMockTile({ biome: 'volcanic', discovered: true });
+      const { playerCore, result } = placeStructure(player, 1, 100, 100, 'farm', tile);
+      expect(result.success).toBe(false);
+      expect(result.reason).toContain('Invalid biome');
+      expect(playerCore.housing.structures).toHaveLength(0);
+    });
+
+    it('blocks placement on undiscovered tile when tile is provided', () => {
+      const player = createMockPlayerCore({ level: 1, money: 1000 });
+      const tile = createMockTile({ biome: 'plains', discovered: false });
+      const { playerCore, result } = placeStructure(player, 1, 100, 100, 'house', tile);
+      expect(result.success).toBe(false);
+      expect(result.reason).toContain('not discovered');
+      expect(playerCore.housing.structures).toHaveLength(0);
+    });
+
+    it('blocks placement on dungeon special tile when tile is provided', () => {
+      const player = createMockPlayerCore({ level: 1, money: 1000 });
+      const tile = createMockTile({ biome: 'plains', discovered: true, specialType: 'dungeon' });
+      const { playerCore, result } = placeStructure(player, 1, 100, 100, 'house', tile);
+      expect(result.success).toBe(false);
+      expect(result.reason).toContain('Cannot place');
+      expect(playerCore.housing.structures).toHaveLength(0);
+    });
   });
 
   describe('hasStructureType', () => {

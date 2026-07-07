@@ -2,14 +2,9 @@ import type { PlayerCoreState } from '../../types/playerCore';
 import type { TileData } from '../../types/game';
 import type { Structure, StructureType, StructureDefinition, StructurePlacementResult } from '../../types/structure';
 import { STRUCTURE_DEFINITIONS } from '../../types/structure';
+import { getStructureDefinition, isValidStructureType } from '../../types/structure';
 
-export function isValidStructureType(type: string): type is StructureType {
-  return type in STRUCTURE_DEFINITIONS;
-}
-
-export function getStructureDefinition(type: StructureType): StructureDefinition {
-  return STRUCTURE_DEFINITIONS[type];
-}
+export { getStructureDefinition, isValidStructureType };
 
 export function getAllStructureDefinitions(): Record<StructureType, StructureDefinition> {
   return STRUCTURE_DEFINITIONS;
@@ -93,9 +88,12 @@ export function placeStructure(
   worldId: number,
   x: number,
   y: number,
-  type: StructureType
+  type: StructureType,
+  tile?: TileData
 ): { playerCore: PlayerCoreState; result: StructurePlacementResult } {
-  const placement = canPlaceStructure(playerCore, worldId, x, y, type);
+  const placement = tile
+    ? canPlaceStructureOnTile(playerCore, worldId, x, y, type, tile)
+    : canPlaceStructure(playerCore, worldId, x, y, type);
 
   if (!placement.success) {
     return { playerCore, result: placement };

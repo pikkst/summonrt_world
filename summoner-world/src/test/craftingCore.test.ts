@@ -365,6 +365,8 @@ describe('Crafting Core - T8.2 / T8.3 / T8.4 / T8.5', () => {
       const inventory: InventoryStack[] = [
         { templateKey: 'wood', quantity: 5 },
       ];
+      const originalRandom = Math.random;
+      Math.random = () => 0.5;
       const result = resolveCraftingResult(inventory, recipe, makePlayerCore({
         housing: {
           structures: [
@@ -372,6 +374,7 @@ describe('Crafting Core - T8.2 / T8.3 / T8.4 / T8.5', () => {
           ],
         },
       }), 'fire');
+      Math.random = originalRandom;
       expect(result.success).toBe(true);
       expect(result.inputsConsumed).toBe(true);
       expect(result.timeSeconds).toBeGreaterThanOrEqual(5);
