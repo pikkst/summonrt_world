@@ -454,7 +454,7 @@ Sprint goal: implement full economic, housing and crafting system with career-ba
 - [ ] T8.7 – Implement housing economic impact: passive income (NPC taxes, resource refinement)
 - [ ] T8.8 – Add town hall upgrade + regional policies (trade tariffs, creature protection, festival bonuses)
 - [ ] T8.9 – Implement town founding: ≥5 buildings + World 15
-- [ ] T8.10 – Create settlement economic simulation: goods ledger, supply/demand curves
+- [x] T8.10 – Create settlement economic simulation: goods ledger, supply/demand curves
 - [ ] T8.11 – Implement price formula: `Price(i) = BasePrice × (1 + k × (Demand − Supply))`
 - [ ] T8.12 – Add NPC merchant logic: cash reserves, inventory limits, restock, player undercut reaction
 - [ ] T8.13 – Implement inflation sinks: housing taxes, repair costs, fusion material decay
