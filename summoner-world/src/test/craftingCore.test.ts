@@ -351,10 +351,16 @@ describe('Crafting Core - T8.2 / T8.3 / T8.4 / T8.5', () => {
       const inventory: InventoryStack[] = [
         { templateKey: 'wood', quantity: 5 },
       ];
-      const result = resolveCraftingResult(inventory, recipe, makePlayerCore(), 'fire');
-      expect(result.success).toBe(false);
-      expect(result.inputsConsumed).toBe(true);
-      expect(result.outputs).toHaveLength(0);
+      const originalRandom = Math.random;
+      Math.random = () => 1;
+      try {
+        const result = resolveCraftingResult(inventory, recipe, makePlayerCore(), 'fire');
+        expect(result.success).toBe(false);
+        expect(result.inputsConsumed).toBe(true);
+        expect(result.outputs).toHaveLength(0);
+      } finally {
+        Math.random = originalRandom;
+      }
     });
 
     it('returns outputs on success when requirements and materials are met', () => {
