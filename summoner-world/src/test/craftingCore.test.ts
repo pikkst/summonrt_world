@@ -78,7 +78,7 @@ const makePlayerCore = (overrides: Partial<PlayerCoreState> = {}): PlayerCoreSta
   questHistory: { active: [], completed: [] },
   creatureContracts: [],
   creatureSlots: { groups: [] },
-  housing: {},
+  housing: { structures: [] },
   worldUnlocks: { unlockedWorlds: [1], activeWorldId: 1 },
   fastTravel: { points: [], discoveredPointIds: new Set(), activeTravel: undefined },
   saveMetadata: { lastSavedAt: new Date().toISOString(), playtimeSeconds: 0, saveVersion: '1.0.0' },
@@ -132,13 +132,25 @@ describe('Crafting Core - T8.2 / T8.3 / T8.4 / T8.5', () => {
   });
 
   describe('hasWorkshop', () => {
-    it('returns true when structure level is at least 1', () => {
-      expect(hasWorkshop(makePlayerCore({ housing: { structureLevel: 1 } }))).toBe(true);
+    it('returns true when player has a workshop structure', () => {
+      expect(hasWorkshop(makePlayerCore({
+        housing: {
+          structures: [
+            { id: 's1', type: 'workshop', worldId: 1, tileX: 0, tileY: 0, level: 1, builtAt: 0, ownerId: 'player-1' },
+          ],
+        },
+      }))).toBe(true);
     });
 
-    it('returns false when no structure is built', () => {
-      expect(hasWorkshop(makePlayerCore({ housing: {} }))).toBe(false);
-      expect(hasWorkshop(makePlayerCore({ housing: { structureLevel: 0 } }))).toBe(false);
+    it('returns false when no workshop structure is built', () => {
+      expect(hasWorkshop(makePlayerCore({ housing: { structures: [] } }))).toBe(false);
+      expect(hasWorkshop(makePlayerCore({
+        housing: {
+          structures: [
+            { id: 's1', type: 'house', worldId: 1, tileX: 0, tileY: 0, level: 1, builtAt: 0, ownerId: 'player-1' },
+          ],
+        },
+      }))).toBe(false);
     });
   });
 
@@ -155,10 +167,16 @@ describe('Crafting Core - T8.2 / T8.3 / T8.4 / T8.5', () => {
   });
 
   describe('checkRecipeRequirements', () => {
-    it('allows workshop requirement only when player has a structure', () => {
+    it('allows workshop requirement only when player has a workshop structure', () => {
       const recipe = makeRecipe({ requirements: { workshop: true } });
-      expect(checkRecipeRequirements(recipe, makePlayerCore({ housing: {} })).allowed).toBe(false);
-      expect(checkRecipeRequirements(recipe, makePlayerCore({ housing: { structureLevel: 1 } })).allowed).toBe(true);
+      expect(checkRecipeRequirements(recipe, makePlayerCore({ housing: { structures: [] } })).allowed).toBe(false);
+      expect(checkRecipeRequirements(recipe, makePlayerCore({
+        housing: {
+          structures: [
+            { id: 's1', type: 'workshop', worldId: 1, tileX: 0, tileY: 0, level: 1, builtAt: 0, ownerId: 'player-1' },
+          ],
+        },
+      })).allowed).toBe(true);
     });
 
     it('allows city requirement only when worldId >= 15', () => {
@@ -308,7 +326,13 @@ describe('Crafting Core - T8.2 / T8.3 / T8.4 / T8.5', () => {
         requirements: { workshop: true },
         inputs: [{ templateKey: 'wood', quantity: 1 }],
       });
-      const result = resolveCraftingResult([], recipe, makePlayerCore({ housing: { structureLevel: 1 } }), 'fire');
+      const result = resolveCraftingResult([], recipe, makePlayerCore({
+        housing: {
+          structures: [
+            { id: 's1', type: 'workshop', worldId: 1, tileX: 0, tileY: 0, level: 1, builtAt: 0, ownerId: 'player-1' },
+          ],
+        },
+      }), 'fire');
       expect(result.success).toBe(false);
       expect(result.inputsConsumed).toBe(false);
       expect(result.log[0]).toContain('Insufficient materials');
@@ -341,7 +365,13 @@ describe('Crafting Core - T8.2 / T8.3 / T8.4 / T8.5', () => {
       const inventory: InventoryStack[] = [
         { templateKey: 'wood', quantity: 5 },
       ];
-      const result = resolveCraftingResult(inventory, recipe, makePlayerCore({ housing: { structureLevel: 1 } }), 'fire');
+      const result = resolveCraftingResult(inventory, recipe, makePlayerCore({
+        housing: {
+          structures: [
+            { id: 's1', type: 'workshop', worldId: 1, tileX: 0, tileY: 0, level: 1, builtAt: 0, ownerId: 'player-1' },
+          ],
+        },
+      }), 'fire');
       expect(result.success).toBe(true);
       expect(result.inputsConsumed).toBe(true);
       expect(result.timeSeconds).toBeGreaterThanOrEqual(5);

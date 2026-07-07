@@ -1,4 +1,4 @@
-import type { CreatureSlotType, CreatureSlotGroup, CreatureSlots } from '../../types/playerCore.ts';
+import type { CreatureSlotType, CreatureSlotGroup, CreatureSlots, PlayerCoreState } from '../../types/playerCore.ts';
 
 export const CREATURE_SLOT_TYPES: CreatureSlotType[] = [
   'active_combat',
@@ -239,18 +239,28 @@ export function calculateSlotExpansionFromEquipment(
 }
 
 export function calculateSlotExpansionFromHousing(
-  structureLevel: number | undefined
+  playerCore: PlayerCoreState
 ): Record<CreatureSlotType, number> {
-  const level = structureLevel ?? 0;
-
-  return {
-    active_combat: Math.floor(level / 3),
-    reserve: Math.floor(level / 2),
-    utility: Math.floor(level / 4),
-    housing: level,
-    marketplace: Math.floor(level / 2),
-    breeding: Math.floor(level / 3),
+  const result: Record<CreatureSlotType, number> = {
+    active_combat: 0,
+    reserve: 0,
+    utility: 0,
+    housing: 0,
+    marketplace: 0,
+    breeding: 0,
   };
+
+  for (const structure of playerCore.housing.structures) {
+    const level = structure.level;
+    result.active_combat += Math.floor(level / 3);
+    result.reserve += Math.floor(level / 2);
+    result.utility += Math.floor(level / 4);
+    result.housing += level;
+    result.marketplace += Math.floor(level / 2);
+    result.breeding += Math.floor(level / 3);
+  }
+
+  return result;
 }
 
 export function calculateSlotExpansionFromGuild(
@@ -269,7 +279,7 @@ export function calculateSlotExpansionFromGuild(
 export function getFullSlotExpansion(
   level: number,
   modifiers: Record<string, number> | undefined,
-  structureLevel: number | undefined,
+  playerCore: PlayerCoreState,
   _guildBonus: unknown
 ): Record<CreatureSlotType, number> {
   const levelExp = CREATURE_SLOT_TYPES.reduce(
@@ -281,7 +291,7 @@ export function getFullSlotExpansion(
   );
 
   const equipExp = calculateSlotExpansionFromEquipment(modifiers);
-  const housingExp = calculateSlotExpansionFromHousing(structureLevel);
+  const housingExp = calculateSlotExpansionFromHousing(playerCore);
   const guildExp = calculateSlotExpansionFromGuild(_guildBonus);
 
   return CREATURE_SLOT_TYPES.reduce(
