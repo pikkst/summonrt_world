@@ -1,6 +1,5 @@
 import type { EquipmentSlot, EquipmentSlotId, PlayerCoreState } from '../../types/playerCore.ts';
 import type { InventoryStack } from '../../types/game.ts';
-import type { Structure } from '../../types/structure.ts';
 
 export const MAX_EQUIPMENT_DURABILITY = 100;
 export const EQUIPMENT_WEAR_PER_COMBAT = 4;
