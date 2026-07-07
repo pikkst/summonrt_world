@@ -19,6 +19,7 @@ Use for `.md`, `.kilo`, prompt, checklist, or agent-rule updates:
 - `.kilo/SYSTEM_MAP.md`
 - `.kilo/context_engine/ContextBudget.md`
 - `.kilo/context_engine/ContextStopRules.md`
+- `.kilo/agents/workflow.md`
 - target `.kilo` files
 
 Usually Lean Mode.
@@ -114,5 +115,6 @@ Always Deep Mode.
 - relevant checklist
 - `.kilo/rules/99_FINAL_CHECKLIST.md`
 - `.kilo/guardian/GuardianGate.md`
+- `.kilo/agents/workflow.md`
 
 Use only before PR readiness or when explicitly reviewing work.
