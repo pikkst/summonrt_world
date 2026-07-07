@@ -26,9 +26,12 @@ Each agent role describes:
 - `qa.md` - tests, regression, validation.
 - `reviewer.md` - PR and code review.
 - `documentation.md` - docs, tasks, specs, memory.
+- `workflow.md` - `.kilo` workflow compliance, token routing, Kilo Evidence, PR gates.
 
 ## Prime Rule
 
 Use one primary agent role per task.
 
 If a task crosses many systems, start with the architect role and split work into smaller PRs.
+
+Use `workflow.md` as a supporting agent whenever a task goes through implementation and PR flow, or when Kilo Evidence, context routing, checklist use, or GuardianGate compliance is uncertain.

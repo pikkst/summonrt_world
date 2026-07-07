@@ -24,6 +24,7 @@ Docs task        -> documentation agent
 Architecture     -> architect agent
 Testing task     -> qa agent
 Review task      -> reviewer agent
+Kilo workflow    -> workflow agent
 ```
 
 ## Supporting Agent Triggers
@@ -49,8 +50,17 @@ Add backend when:
 
 - persistence, database, online play, trade, or MMO compatibility is involved
 
+Add workflow when:
+
+- a task will be committed, pushed, or opened as a PR
+- Kilo Workflow Evidence is missing or incomplete
+- context loading looks too broad for the task
+- `.kilo`, prompts, templates, rules, checklists, or agent files are changed
+- ReviewPipeline, checklists, or GuardianGate status is uncertain
+
 ## Avoid
 
 - Invoking every agent for small tasks.
 - Using council-style review for a typo.
 - Letting a support agent expand task scope.
+- Letting workflow review replace domain review for architecture, gameplay, UI, backend, or testing concerns.

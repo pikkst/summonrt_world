@@ -37,6 +37,17 @@ If not run, explain why:
 - [ ] `.kilo` docs updated
 - [ ] No docs required
 
+## Kilo Workflow
+
+- Mode:
+- Bundle:
+- Agents:
+- Kilo Evidence produced before coding: yes / no
+- ReviewPipeline:
+- Checklist:
+- Guardian:
+- Workflow Steward:
+
 ## Architecture Impact
 
 Describe any architecture impact.

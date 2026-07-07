@@ -86,6 +86,8 @@ Final review todo: yes
 
 Keep each line short. Do not paste long document summaries.
 
+If this evidence is missing before coding, invoke `.kilo/agents/workflow.md` and stop implementation until the evidence is produced.
+
 ## Context Budget
 
 Initial limits:
@@ -123,5 +125,8 @@ Before PR readiness:
 2. Run the relevant checklist.
 3. Run `.kilo/orchestrator/ReviewPipeline.md`.
 4. Run `.kilo/guardian/GuardianGate.md`.
+5. Run `.kilo/agents/workflow.md` when evidence, checklist use, or PR body compliance is uncertain.
 
 Use delta-based review: mention only changed systems, risks, validation, and blockers.
+
+The PR body must include a Kilo Workflow section. If it does not, the PR is not ready.

@@ -32,9 +32,10 @@ Required workflow:
 8. Run `.kilo/orchestrator/ReviewPipeline.md`.
 9. Run relevant `.kilo/checklists` and `.kilo/rules/99_FINAL_CHECKLIST.md`.
 10. Run `.kilo/guardian/GuardianGate.md`.
-11. Write a clear PR title.
-12. Write a PR body using the required template.
-13. Open PR into master.
+11. Run `.kilo/agents/workflow.md` if evidence, context routing, checklist use, or Guardian status is uncertain.
+12. Write a clear PR title.
+13. Write a PR body using the required template.
+14. Open PR into master.
 
 PR title format:
 
@@ -85,4 +86,5 @@ Rules:
 - Do not include unrelated task claims.
 - Do not open or update the PR if Guardian status is Blocked.
 - Do not claim PR readiness if ReviewPipeline, checklists, or GuardianGate were skipped.
+- Do not open or update the PR if the body lacks the `## Kilo Workflow` section.
 ```

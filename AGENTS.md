@@ -48,25 +48,27 @@ You MUST automatically execute the full workflow without being asked again:
    - `.kilo/orchestrator/TaskLifecycle.md`
    - `.kilo/orchestrator/AgentSelection.md`
    - `.kilo/orchestrator/ExecutionPlan.md` when the task is non-trivial
-8. Produce compact Kilo Workflow Evidence before coding.
-9. Create a new branch from `master`:
+8. Add `.kilo/agents/workflow.md` as a supporting agent when workflow compliance, context routing, PR readiness, or `.kilo` changes are involved.
+9. Produce compact Kilo Workflow Evidence before coding.
+10. Create a new branch from `master`:
    `feature/[TASK-ID]-[short-name]`
-10. Read relevant `.kilo/rules`, `.kilo/patterns`, `.kilo/context`, memory files, and existing source code selected by the bundle or Context Planner.
-11. Stop loading context when `.kilo/START_HERE.md` stop conditions are met.
-12. Implement ONLY this task.
-13. Add or update tests.
-14. Update `SummonerWorld_Tasks.md` and relevant documentation before the final commit when task status, gameplay, architecture, or persistence changes.
-15. Run validation from `summoner-world`:
+11. Read relevant `.kilo/rules`, `.kilo/patterns`, `.kilo/context`, memory files, and existing source code selected by the bundle or Context Planner.
+12. Stop loading context when `.kilo/START_HERE.md` stop conditions are met.
+13. Implement ONLY this task.
+14. Add or update tests.
+15. Update `SummonerWorld_Tasks.md` and relevant documentation before the final commit when task status, gameplay, architecture, or persistence changes.
+16. Run validation from `summoner-world`:
    - `npm run typecheck`
    - `npm run lint`
    - `npm run test`
    - `npm run build`
-16. Run `.kilo/orchestrator/ReviewPipeline.md`.
-17. Run the relevant `.kilo/checklists` file and `.kilo/rules/99_FINAL_CHECKLIST.md`.
-18. Run `.kilo/guardian/GuardianGate.md` and produce a Guardian output.
-19. Commit with a clear message: `Implement TASK-ID description`
-20. Push the branch.
-21. Open a GitHub Pull Request targeting `master`.
+17. Run `.kilo/orchestrator/ReviewPipeline.md`.
+18. Run the relevant `.kilo/checklists` file and `.kilo/rules/99_FINAL_CHECKLIST.md`.
+19. Run `.kilo/guardian/GuardianGate.md` and produce a Guardian output.
+20. Run `.kilo/agents/workflow.md` if evidence, checklist use, Guardian status, or PR body compliance is uncertain.
+21. Commit with a clear message: `Implement TASK-ID description`
+22. Push the branch.
+23. Open a GitHub Pull Request targeting `master`.
 
 Do not ask the user to repeat branch or PR instructions. Do not work directly on `master`.
 
@@ -93,8 +95,10 @@ Before opening or updating a PR, output:
 - Guardian status using the `GuardianGate.md` output shape.
 - Validation results.
 - Documentation and task-file update status.
+- Workflow Steward status when applicable.
 
 If this evidence is missing, the task is not ready for PR.
+If the PR body lacks `## Kilo Workflow`, the task is not ready for PR.
 
 ## Prime Directives
 
@@ -104,6 +108,7 @@ If this evidence is missing, the task is not ready for PR.
 - Select only relevant context.
 - Prove framework usage with compact Kilo Workflow Evidence.
 - Use `.kilo/START_HERE.md` and `.kilo/context_engine/Bundles.md` to reduce token load.
+- Use `.kilo/agents/workflow.md` to audit framework compliance when uncertain.
 - Run ReviewPipeline, checklists, and GuardianGate before PR readiness.
 - Do not duplicate systems.
 - Mark done only when typecheck, tests, build, and documentation are complete.

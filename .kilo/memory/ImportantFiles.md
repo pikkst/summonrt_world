@@ -20,6 +20,7 @@ Always verify paths with repository search before editing.
 - `.kilo/rules/23_MMO_RULES.md` - MMO direction and server-authority rules.
 - `.kilo/rules/24_ONLINE_IMPLEMENTATION_CONTRACT.md` - concrete online implementation contract.
 - `.kilo/rules/99_FINAL_CHECKLIST.md` - final validation checklist.
+- `.kilo/agents/workflow.md` - workflow compliance steward for Kilo Evidence, context routing, checklist, Guardian, and PR gates.
 - `.kilo/prompts/README.md` - reusable workflow prompts.
 - `.kilo/memory/README.md` - working memory guide.
 

@@ -17,8 +17,11 @@ Required steps:
 6. Run `.kilo/orchestrator/ReviewPipeline.md`.
 7. Run relevant `.kilo/checklists` and `.kilo/rules/99_FINAL_CHECKLIST.md`.
 8. Run `.kilo/guardian/GuardianGate.md`.
-9. Commit changes with a clear message.
-10. Push branch.
-11. Open PR targeting `master`.
+9. Run `.kilo/agents/workflow.md` if evidence, routing, checklist use, or Guardian status is uncertain.
+10. Confirm the PR body includes `## Kilo Workflow`.
+11. Commit changes with a clear message.
+12. Push branch.
+13. Open PR targeting `master`.
 
 Do not open or update a PR without a Guardian status and honest validation results.
+Do not open or update a PR without a Kilo Workflow section in the PR body.

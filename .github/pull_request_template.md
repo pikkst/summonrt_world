@@ -40,6 +40,17 @@ If a command was not run, explain why:
 - [ ] `.kilo` docs updated
 - [ ] No documentation update needed
 
+## Kilo Workflow
+
+- Mode:
+- Bundle:
+- Agents:
+- Kilo Evidence produced before coding: yes / no
+- ReviewPipeline:
+- Checklist:
+- Guardian:
+- Workflow Steward:
+
 ## Architecture Impact
 
 Describe architecture, save/load, event, or MMO compatibility impact.
