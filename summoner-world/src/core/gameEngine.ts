@@ -153,6 +153,7 @@ export class GameEngine {
         stackable: true,
         maxStack: 50,
         description: `A small ${resourceType} shard.`,
+        craftingTier: 'basic',
       });
     }
 
@@ -168,6 +169,7 @@ export class GameEngine {
           maxStack: 99,
           description: 'Restores 20 HP.',
           stats: { heal: 20 },
+          craftingTier: 'basic',
         });
       } else {
         loot.push({
@@ -179,6 +181,7 @@ export class GameEngine {
           maxStack: 99,
           description: 'Restores 15 Mana.',
           stats: { mana: 15 },
+          craftingTier: 'basic',
         });
       }
     }
@@ -193,6 +196,7 @@ export class GameEngine {
        stackable: true,
        maxStack: 10,
        description: 'Rare essence that can be used to craft powerful items.',
+       craftingTier: 'intermediate',
      });
    }
 

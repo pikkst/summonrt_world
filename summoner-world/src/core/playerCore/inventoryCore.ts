@@ -9,7 +9,7 @@ import type {
   InventorySortKey,
   InventorySortOrder,
 } from '../../types/playerCore.ts';
-import type { InventoryStack, ItemTemplate, PlayerState } from '../../types/game.ts';
+import type { CraftingTier, InventoryStack, ItemTemplate, PlayerState } from '../../types/game.ts';
 
 export const ITEM_CATEGORY_TEMPLATES: Record<string, ItemCategory> = {
   weapon: 'equipment',
@@ -39,6 +39,17 @@ export const RARITY_ORDER: Record<ItemRarity, number> = {
   legendary: 4,
   mythical: 5,
 };
+
+export const CRAFTING_TIER_ORDER: Record<CraftingTier, number> = {
+  basic: 0,
+  intermediate: 1,
+  advanced: 2,
+  artifact: 3,
+};
+
+export function getCraftingTierOrder(tier: CraftingTier | string): number {
+  return CRAFTING_TIER_ORDER[tier as CraftingTier] ?? -1;
+}
 
 export function getItemCategory(template: ItemTemplate): ItemCategory {
   if (template.subtype && ITEM_CATEGORY_TEMPLATES[template.subtype]) {

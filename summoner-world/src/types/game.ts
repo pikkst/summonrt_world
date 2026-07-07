@@ -134,6 +134,8 @@ export interface CreatureInstance {
   instanceId?: string;
 }
 
+export type CraftingTier = 'basic' | 'intermediate' | 'advanced' | 'artifact';
+
 export type ItemType = 'material' | 'equipment' | 'consumable' | 'special' | 'egg';
 export type ItemSubType = 'weapon' | 'armor' | 'accessory' | 'herb' | 'crystal' | 'essence' | 'fragment';
 export type CraftingTier = 'basic' | 'intermediate' | 'advanced' | 'artifact';
@@ -147,6 +149,7 @@ export interface ItemTemplate {
   stackable: boolean;
   maxStack: number;
   description: string;
+  craftingTier?: CraftingTier;
   stats?: Record<string, number>;
   requirements?: Record<string, number | string>;
   craftingTier?: CraftingTier;
