@@ -437,7 +437,7 @@ Sprint goal: expand world generation with weather, fast travel, biomes and settl
   - [x] T7.14.4 – WeatherChanged
   - [x] T7.14.5 – ResourceSpawned
   - [x] T7.14.6 – DungeonDiscovered
-- [ ] T7.15 – Add World 100 progression map
+- [x] T7.15 – Add World 100 progression map
   - [x] T7.15.1 – Define unlock rules per world tier
   - [x] T7.15.2 – Define world completion criteria
   - [x] T7.15.3 – Connect completion to PlayerCoreState world unlocks
