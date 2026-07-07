@@ -25,6 +25,7 @@ import { generateTrapInteraction, generatePuzzleInteraction, generateEliteIntera
 import type { RoomInteractionState } from '../../../types/game.ts';
 import { applyPlayerStatisticEvent, type PlayerStatisticEvent } from '../../../core/playerCore/playerStatisticsTracking';
 import { applyWorldBossCompletion } from '../../../core/worldProgression';
+import { processHousingEconomyTick } from '../../../core/playerCore/housingEconomy';
 import { getWeatherEffect, getWeatherResourceYieldModifier, getWeatherEncounterModifier, getPlayerElementalAffinityBonus, getEncounterTableForWeather, updateWeather } from '../../../core/Weather';
 import { worldEventBus } from '../../../core/worldEventBus.ts';
 import axios from 'axios';
@@ -1866,6 +1867,13 @@ const modifiers: MissionModifiers = {
         world.weather = newWeatherState;
       };
 
+      const applyHousingEconomy = (): void => {
+        const state = get();
+        if (!state.playerCore) return;
+        const updated = processHousingEconomyTick(state.playerCore);
+        set({ playerCore: updated });
+      };
+
   const instance = createHeartbeat({
         getCurrentTime: Date.now,
         getMissions: () => get().missions,
@@ -1887,6 +1895,7 @@ const modifiers: MissionModifiers = {
             applyWorldTickCareerBonuses();
             applyResourceRespawn();
             applyWeatherUpdate();
+            applyHousingEconomy();
           },
          onMissionsProgress: () => {},
        resolveMissionCallbacks: {

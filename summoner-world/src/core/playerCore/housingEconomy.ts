@@ -1,0 +1,71 @@
+import type { PlayerCoreState } from '../../types/playerCore.ts';
+import type { Structure, StructureType } from '../../types/structure.ts';
+import { STRUCTURE_DEFINITIONS } from '../../types/structure.ts';
+import { addItemToInventory } from './inventoryCore.ts';
+import type { InventoryStack, ItemTemplate } from '../../types/game.ts';
+
+export function calculateHousingPassiveIncome(structures: Structure[]): number {
+  return structures.reduce((total, structure) => {
+    const definition = STRUCTURE_DEFINITIONS[structure.type];
+    return total + definition.passiveIncomeRate;
+  }, 0);
+}
+
+export function calculateResourceRefinement(
+  structures: Structure[],
+  rng: () => number = Math.random
+): Array<{ templateKey: string; quantity: number }> {
+  const results: Array<{ templateKey: string; quantity: number }> = [];
+
+  for (const structure of structures) {
+    const definition = STRUCTURE_DEFINITIONS[structure.type];
+    for (const refinement of definition.refinementTable) {
+      if (rng() < refinement.chance) {
+        results.push({
+          templateKey: refinement.templateKey,
+          quantity: refinement.quantity,
+        });
+      }
+    }
+  }
+
+  return results;
+}
+
+export function processHousingEconomyTick(
+  playerCore: PlayerCoreState,
+  rng: () => number = Math.random
+): PlayerCoreState {
+  const structures = playerCore.housing.structures;
+  if (structures.length === 0) return playerCore;
+
+  const passiveIncome = calculateHousingPassiveIncome(structures);
+  const refinedResources = calculateResourceRefinement(structures, rng);
+
+  let updatedInventory = playerCore.inventory;
+  for (const resource of refinedResources) {
+    const template: ItemTemplate = {
+      key: resource.templateKey,
+      name: resource.templateKey,
+      type: 'material',
+      rarity: 0,
+      stackable: true,
+      maxStack: 99,
+      description: '',
+    };
+    const result = addItemToInventory(
+      updatedInventory as any,
+      { templateKey: resource.templateKey, quantity: resource.quantity } as InventoryStack,
+      template,
+      'tradeable',
+      playerCore.identity.id
+    );
+    updatedInventory = result.inventory;
+  }
+
+  return {
+    ...playerCore,
+    money: playerCore.money + passiveIncome,
+    inventory: updatedInventory,
+  };
+}

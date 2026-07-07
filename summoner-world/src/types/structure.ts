@@ -23,6 +23,8 @@ export interface StructureDefinition {
   minDistanceFromOtherStructures: number;
   validBiomes: BiomeType[];
   disallowedSpecialTypes: string[];
+  passiveIncomeRate: number;
+  refinementTable: Array<{ templateKey: string; chance: number; quantity: number }>;
 }
 
 export interface StructurePlacementResult {
@@ -42,6 +44,8 @@ export const STRUCTURE_DEFINITIONS: Record<StructureType, StructureDefinition> =
     minDistanceFromOtherStructures: 50,
     validBiomes: ['forest', 'plains', 'coast', 'swamp', 'desert', 'tundra'],
     disallowedSpecialTypes: ['city', 'dungeon', 'cave', 'monument', 'well', 'ruins', 'outpost', 'grove', 'shrine'],
+    passiveIncomeRate: 1,
+    refinementTable: [],
   },
   farm: {
     type: 'farm',
@@ -53,6 +57,10 @@ export const STRUCTURE_DEFINITIONS: Record<StructureType, StructureDefinition> =
     minDistanceFromOtherStructures: 50,
     validBiomes: ['plains', 'forest', 'coast', 'swamp'],
     disallowedSpecialTypes: ['city', 'dungeon', 'cave', 'monument', 'well', 'ruins', 'outpost', 'grove', 'shrine'],
+    passiveIncomeRate: 2,
+    refinementTable: [
+      { templateKey: 'basic_food', chance: 0.1, quantity: 1 },
+    ],
   },
   workshop: {
     type: 'workshop',
@@ -64,6 +72,12 @@ export const STRUCTURE_DEFINITIONS: Record<StructureType, StructureDefinition> =
     minDistanceFromOtherStructures: 50,
     validBiomes: ['forest', 'plains', 'mountains', 'coast'],
     disallowedSpecialTypes: ['city', 'dungeon', 'cave', 'monument', 'well', 'ruins', 'outpost', 'grove', 'shrine'],
+    passiveIncomeRate: 3,
+    refinementTable: [
+      { templateKey: 'wooden_plank', chance: 0.08, quantity: 1 },
+      { templateKey: 'stone_brick', chance: 0.05, quantity: 1 },
+      { templateKey: 'iron_ingot', chance: 0.03, quantity: 1 },
+    ],
   },
   manor: {
     type: 'manor',
@@ -75,6 +89,10 @@ export const STRUCTURE_DEFINITIONS: Record<StructureType, StructureDefinition> =
     minDistanceFromOtherStructures: 100,
     validBiomes: ['forest', 'plains', 'coast'],
     disallowedSpecialTypes: ['city', 'dungeon', 'cave', 'monument', 'well', 'ruins', 'outpost', 'grove', 'shrine'],
+    passiveIncomeRate: 8,
+    refinementTable: [
+      { templateKey: 'healing_salve', chance: 0.05, quantity: 1 },
+    ],
   },
   castle: {
     type: 'castle',
@@ -86,6 +104,10 @@ export const STRUCTURE_DEFINITIONS: Record<StructureType, StructureDefinition> =
     minDistanceFromOtherStructures: 150,
     validBiomes: ['mountains', 'plains', 'coast', 'volcanic'],
     disallowedSpecialTypes: ['city', 'dungeon', 'cave', 'monument', 'well', 'ruins', 'outpost', 'grove', 'shrine'],
+    passiveIncomeRate: 15,
+    refinementTable: [
+      { templateKey: 'mana_vial', chance: 0.04, quantity: 1 },
+    ],
   },
   town: {
     type: 'town',
@@ -97,6 +119,10 @@ export const STRUCTURE_DEFINITIONS: Record<StructureType, StructureDefinition> =
     minDistanceFromOtherStructures: 200,
     validBiomes: ['plains', 'coast', 'forest'],
     disallowedSpecialTypes: ['city', 'dungeon', 'cave', 'monument', 'well', 'ruins', 'outpost', 'grove', 'shrine'],
+    passiveIncomeRate: 30,
+    refinementTable: [
+      { templateKey: 'elemental_catalyst', chance: 0.03, quantity: 1 },
+    ],
   },
 };
 

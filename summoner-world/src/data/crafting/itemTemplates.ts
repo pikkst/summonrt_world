@@ -7,6 +7,7 @@ export const ITEM_TEMPLATES: Record<string, ItemTemplate> = {
   herbs: { key: 'herbs', name: 'Herbs', type: 'material', subtype: 'herb', rarity: 0, stackable: true, maxStack: 99, description: 'Basic crafting material.' },
   crystal: { key: 'crystal', name: 'Crystal', type: 'material', subtype: 'crystal', rarity: 1, stackable: true, maxStack: 99, description: 'Intermediate crafting material.' },
   essence: { key: 'essence', name: 'Essence', type: 'material', subtype: 'essence', rarity: 1, stackable: true, maxStack: 99, description: 'Intermediate crafting material.' },
+  basic_food: { key: 'basic_food', name: 'Travel Rations', type: 'consumable', rarity: 0, stackable: true, maxStack: 99, description: 'Basic food for journeys.' },
   wooden_plank: { key: 'wooden_plank', name: 'Wooden Plank', type: 'material', rarity: 0, stackable: true, maxStack: 99, description: 'Crafted from wood.' },
   stone_brick: { key: 'stone_brick', name: 'Stone Brick', type: 'material', rarity: 0, stackable: true, maxStack: 99, description: 'Crafted from stone.' },
   coin: { key: 'coin', name: 'Simple Coin', type: 'material', rarity: 0, stackable: true, maxStack: 99, description: 'Basic currency.' },
