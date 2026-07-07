@@ -9,6 +9,7 @@ import type {
   FastTravelPoint,
   FastTravelDestination,
 } from './game.ts';
+import type { Structure, TownHallPolicy } from './structure.ts';
 import type { FastTravelState } from '../core/fastTravel.ts';
 
 export type { FastTravelState };
@@ -294,11 +295,9 @@ export interface CreatureSlots {
 }
 
 export interface HousingReference {
-  housingId?: string;
-  worldId?: number;
-  tileX?: number;
-  tileY?: number;
+  structures: Structure[];
   structureLevel?: number;
+  townHallPolicies?: TownHallPolicy[];
 }
 
 export interface WorldUnlocks {

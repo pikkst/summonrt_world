@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import type { PlayerCoreState } from '../types/playerCore';
 import {
   CREATURE_SLOT_TYPES,
   BASE_SLOT_COUNTS,
@@ -20,6 +21,81 @@ import {
   calculateSlotExpansionFromHousing,
   getFullSlotExpansion,
 } from '../core/playerCore/creatureSlotCore';
+
+function createMockPlayerCore(housing: PlayerCoreState['housing']): PlayerCoreState {
+  return {
+    identity: { id: 'player-1', name: 'Test', gender: 'unknown', appearance: {} },
+    summonerProfile: { class: 'elementalist', archetype: 'summoner', startingWorldId: 1 },
+    level: 1,
+    experience: 0n,
+    elements: { primary: 'fire' },
+    class: 'elementalist',
+    primaryStats: {
+      strength: 10,
+      vitality: 10,
+      intelligence: 10,
+      dexterity: 10,
+      wisdom: 10,
+      luck: 10,
+    },
+    secondaryStats: {
+      maxHealth: 100,
+      maxMana: 100,
+      maxStamina: 100,
+      movement: 100,
+      criticalChance: 5,
+      elementalMastery: 0,
+      contractCapacity: 3,
+      commandSpeed: 100,
+      creatureBondPower: 100,
+      inventoryCapacity: 50,
+      craftingEfficiency: 100,
+      tradeInfluence: 100,
+      reputationGain: 100,
+      summoningCost: 100,
+      travelUtility: 100,
+    },
+    inventory: [],
+    equipment: [],
+    skills: [],
+    talents: [],
+    titles: [],
+    achievements: [],
+    statistics: {
+      worldsUnlocked: 1,
+      creaturesContracted: 0,
+      dungeonsCleared: 0,
+      itemsCrafted: 0,
+      tradesCompleted: 0,
+      goldEarned: 0,
+      bossesDefeated: 0,
+      pvpWins: 0,
+      housingValue: 0,
+      guildContributions: 0,
+      questsCompleted: 0,
+    },
+    reputation: { world_rep: {}, faction_rep: {}, settlement_rep: {}, creature_rep: {} },
+    questHistory: { active: [], completed: [] },
+    creatureContracts: [],
+    creatureSlots: createDefaultCreatureSlots(),
+    housing,
+    worldUnlocks: { unlockedWorlds: [1], activeWorldId: 1 },
+    fastTravel: { points: [], discoveredPointIds: new Set(), activeTravel: undefined },
+    saveMetadata: { lastSavedAt: '', playtimeSeconds: 0, saveVersion: '2.0.0' },
+    resources: {
+      energy: { current: 100, max: 100, lastUpdate: '' },
+      nerve: { current: 15, max: 15, lastUpdate: '' },
+      happy: { current: 100, max: 100, lastUpdate: '' },
+      life: { current: 100, max: 100, lastUpdate: '' },
+    },
+    position: { worldId: 1, x: 10, y: 10 },
+    settings: { musicVolume: 0.5, sfxVolume: 0.5, showLogTimestamps: true },
+    money: 1000,
+    skillPoints: 0,
+    dayCount: 1,
+    gameTimeMinutes: 420,
+  };
+}
 
 describe('creatureSlotCore', () => {
   describe('createDefaultCreatureSlots', () => {
@@ -339,28 +415,40 @@ describe('creatureSlotCore', () => {
   });
 
   describe('calculateSlotExpansionFromHousing', () => {
-    it('returns zeroed record for undefined level', () => {
-      const result = calculateSlotExpansionFromHousing(undefined);
+    it('returns zeroed record for empty structures', () => {
+      const player = createMockPlayerCore({ structures: [] });
+      const result = calculateSlotExpansionFromHousing(player);
       for (const type of CREATURE_SLOT_TYPES) {
         expect(result[type]).toBe(0);
       }
     });
 
-    it('scales housing slots with level', () => {
-      expect(calculateSlotExpansionFromHousing(1).housing).toBe(1);
-      expect(calculateSlotExpansionFromHousing(3).housing).toBe(3);
-      expect(calculateSlotExpansionFromHousing(3).active_combat).toBe(1);
+    it('scales housing slots with structure level', () => {
+      const playerWithHouse = createMockPlayerCore({
+        structures: [{ id: 's1', type: 'house', worldId: 1, tileX: 10, tileY: 10, level: 1, builtAt: 0, ownerId: 'player-1' }],
+      });
+      expect(calculateSlotExpansionFromHousing(playerWithHouse).housing).toBe(1);
+
+      const playerWithBigHouse = createMockPlayerCore({
+        structures: [{ id: 's1', type: 'house', worldId: 1, tileX: 10, tileY: 10, level: 3, builtAt: 0, ownerId: 'player-1' }],
+      });
+      expect(calculateSlotExpansionFromHousing(playerWithBigHouse).housing).toBe(3);
+      expect(calculateSlotExpansionFromHousing(playerWithBigHouse).active_combat).toBe(1);
     });
   });
 
   describe('getFullSlotExpansion', () => {
     it('combines level, equipment, housing, and guild bonuses', () => {
-      const result = getFullSlotExpansion(20, { creature_slot_active_combat: 2 }, 2, null);
+      const player = createMockPlayerCore({
+        structures: [{ id: 's1', type: 'house', worldId: 1, tileX: 10, tileY: 10, level: 2, builtAt: 0, ownerId: 'player-1' }],
+      });
+      const result = getFullSlotExpansion(20, { creature_slot_active_combat: 2 }, player, null);
       expect(result.active_combat).toBeGreaterThan(0);
     });
 
     it('returns zero expansion at level 1 with no bonuses', () => {
-      const result = getFullSlotExpansion(1, undefined, undefined, null);
+      const player = createMockPlayerCore({ structures: [] });
+      const result = getFullSlotExpansion(1, undefined, player, null);
       for (const type of CREATURE_SLOT_TYPES) {
         expect(result[type]).toBe(0);
       }

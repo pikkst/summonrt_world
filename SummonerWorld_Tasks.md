@@ -15,7 +15,9 @@ Current alignment state:
 - The next implementation task is T6.4.8.
 - T6.5, T6.6, and T6.7 overlap earlier completed tasks and should be read as extension tasks, not fresh duplicates.
 - New missing backlog added from the design-source volumes in `docs/Sumoner_World_dec/`: Player Core alignment, event-driven architecture, documentation volume completion, reputation, titles, achievements, statistics, contracts, commands, and end-game structure.
-- T6P.1, T6P.2, T6P.3, T6P.4, T6P.5, T6P.6, T6P.7, and T6P.8 are complete (PlayerCoreState, Character Creation, Summoner Classes, Element Identity, Player Statistics, Inventory Core, Equipment Core, Creature Slot System).
+ - T6P.1, T6P.2, T6P.3, T6P.4, T6P.5, T6P.6, T6P.7, and T6P.8 are complete (PlayerCoreState, Character Creation, Summoner Classes, Element Identity, Player Statistics, Inventory Core, Equipment Core, Creature Slot System).
+  - Sprint 8 basic/intermediate/advanced/artifact crafting (T8.1-T8.5) is complete.
+  - Sprint 8 housing (T8.6 Structure model, T8.7 housing economy, T8.8 town hall + policies, T8.9 town founding) is complete.
 
 ## Sprint 0 – Foundation & Tech Debt (Month 0)
 Sprint goal: stabilize prototype, find and fix all technical issues, set up testing and linting foundation.
