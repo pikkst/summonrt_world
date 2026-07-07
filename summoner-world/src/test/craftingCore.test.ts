@@ -306,17 +306,20 @@ describe('Crafting Core - T8.2 / T8.3 / T8.4 / T8.5', () => {
     it('grants outputs according to chance rolls', () => {
       const originalRandom = Math.random;
       Math.random = () => 0.1;
-      const recipe = makeRecipe({
-        outputs: [
-          { templateKey: 'plank', quantity: 1, chance: 1 },
-          { templateKey: 'dust', quantity: 1, chance: 0.5 },
-        ],
-      });
-      const outputs = rollCraftingOutputs(recipe, true);
-      expect(outputs).toHaveLength(2);
-      expect(outputs[0]!.templateKey).toBe('plank');
-      expect(outputs[1]!.templateKey).toBe('dust');
-      Math.random = originalRandom;
+      try {
+        const recipe = makeRecipe({
+          outputs: [
+            { templateKey: 'plank', quantity: 1, chance: 1 },
+            { templateKey: 'dust', quantity: 1, chance: 0.5 },
+          ],
+        });
+        const outputs = rollCraftingOutputs(recipe, true);
+        expect(outputs).toHaveLength(2);
+        expect(outputs[0]!.templateKey).toBe('plank');
+        expect(outputs[1]!.templateKey).toBe('dust');
+      } finally {
+        Math.random = originalRandom;
+      }
     });
   });
 
@@ -367,19 +370,22 @@ describe('Crafting Core - T8.2 / T8.3 / T8.4 / T8.5', () => {
       ];
       const originalRandom = Math.random;
       Math.random = () => 0.5;
-      const result = resolveCraftingResult(inventory, recipe, makePlayerCore({
-        housing: {
-          structures: [
-            { id: 's1', type: 'workshop', worldId: 1, tileX: 0, tileY: 0, level: 1, builtAt: 0, ownerId: 'player-1' },
-          ],
-        },
-      }), 'fire');
-      Math.random = originalRandom;
-      expect(result.success).toBe(true);
-      expect(result.inputsConsumed).toBe(true);
-      expect(result.timeSeconds).toBeGreaterThanOrEqual(5);
-      expect(result.outputs).toHaveLength(1);
-      expect(result.outputs[0]!.templateKey).toBe('plank');
+      try {
+        const result = resolveCraftingResult(inventory, recipe, makePlayerCore({
+          housing: {
+            structures: [
+              { id: 's1', type: 'workshop', worldId: 1, tileX: 0, tileY: 0, level: 1, builtAt: 0, ownerId: 'player-1' },
+            ],
+          },
+        }), 'fire');
+        expect(result.success).toBe(true);
+        expect(result.inputsConsumed).toBe(true);
+        expect(result.timeSeconds).toBeGreaterThanOrEqual(5);
+        expect(result.outputs).toHaveLength(1);
+        expect(result.outputs[0]!.templateKey).toBe('plank');
+      } finally {
+        Math.random = originalRandom;
+      }
     });
   });
 });
