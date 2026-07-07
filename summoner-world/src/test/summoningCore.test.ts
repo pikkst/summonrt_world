@@ -114,7 +114,7 @@ const createMockState = (overrides: Partial<PlayerCoreState> = {}): PlayerCoreSt
   questHistory: { active: [], completed: [] },
   creatureContracts: [],
   creatureSlots: { groups: [] },
-  housing: {},
+  housing: { structures: [] },
   worldUnlocks: { unlockedWorlds: [1], activeWorldId: 1 },
   fastTravel: {
     points: [],

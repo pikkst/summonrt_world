@@ -40,7 +40,7 @@ export function hasWorkshopFree(): boolean {
 }
 
 export function hasWorkshop(playerCore: PlayerCoreState): boolean {
-  return (playerCore.housing.structureLevel ?? 0) >= 1;
+  return playerCore.housing.structures.some((s) => s.type === 'workshop');
 }
 
 export function isInCity(playerCore: PlayerCoreState): boolean {
