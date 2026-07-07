@@ -1,4 +1,4 @@
-import type { GameStore, GameStoreState, PlayerState, WorldData, LogEntry, QuestInstance, Element, CreatureInstance, SetState, CreatureTemplate } from '../types.ts';
+import type { GameStore, GameStoreState, PlayerState, WorldData, LogEntry, QuestInstance, Element, CreatureInstance, SetState, CreatureTemplate, InventoryStack } from '../types.ts';
 import { createLog, calculateMovementModifiers, processTileDiscovery, getPlayerElements, addPlayerXP, getWorldModifier, applyMinViableLevelScaling, calculateMinViableLevel } from '../helpers.ts';
 import { generateTile } from '../../../core/worldGenerator.ts';
 import { getTileKey, getAffinityWeight, calculateBaseCaptureProbability, DUNGEON_ASCEND_SCROLL, WORLD_SIZE } from '../../../data/constants.ts';
@@ -27,6 +27,15 @@ import { applyPlayerStatisticEvent, type PlayerStatisticEvent } from '../../../c
 import { applyWorldBossCompletion } from '../../../core/worldProgression';
 import { getWeatherEffect, getWeatherResourceYieldModifier, getWeatherEncounterModifier, getPlayerElementalAffinityBonus, getEncounterTableForWeather, updateWeather } from '../../../core/Weather';
 import { worldEventBus } from '../../../core/worldEventBus.ts';
+import {
+  createTradeCaravan,
+  resolveCaravanTrade,
+  validateCaravanGoods,
+  getGoodsPriceForWorld,
+  ARBITRAGE_MIN_DISTANCE,
+  ARBITRAGE_MIN_PROFIT_PCT,
+  CARAVAN_MIN_DURATION_SECONDS,
+} from '../../../core/economy/tradeCaravan.ts';
 import axios from 'axios';
 
 function recordPlayerCoreStatistic(set: SetState<GameStore>, event: PlayerStatisticEvent): void {
@@ -1465,6 +1474,97 @@ fleeDungeon: () => {
     }
   },
 
+  startCaravanMission: (originWorldId?: number, destinationWorldId?: number) => {
+    const { player, worlds, currentWorldId, appendLog } = get();
+    if (!player) return;
+
+    const origin = originWorldId ?? currentWorldId;
+    let destination = destinationWorldId;
+
+    if (destination === undefined) {
+      if (origin <= 20) {
+        destination = Math.min(100, origin + 30 + Math.floor(Math.random() * 20));
+      } else if (origin >= 80) {
+        destination = Math.max(1, origin - 30 - Math.floor(Math.random() * 20));
+      } else {
+        destination = Math.random() < 0.5 ? Math.min(100, origin + 30) : Math.max(1, origin - 30);
+      }
+    }
+
+    destination = Math.max(1, Math.min(100, destination));
+    const distance = Math.abs(destination - origin);
+    if (distance < ARBITRAGE_MIN_DISTANCE) {
+      appendLog(`Trade route too short. Minimum ${ARBITRAGE_MIN_DISTANCE} worlds apart required.`, 'warning');
+      return;
+    }
+
+    const originWorld = worlds.get(origin);
+    const destinationWorld = worlds.get(destination);
+    if (!originWorld || !destinationWorld) {
+      appendLog('Both origin and destination worlds must be discovered.', 'warning');
+      return;
+    }
+
+    const tradeGoods: InventoryStack[] = [];
+    let totalBuyCost = 0;
+    let totalSellRevenue = 0;
+
+    const rawMaterials = ['wood', 'stone', 'ore', 'herbs'];
+    const refinedMaterials = ['crystal', 'essence', 'iron_ingot', 'wooden_plank', 'stone_brick'];
+    const goods = origin < destination ? rawMaterials : refinedMaterials;
+
+    const shuffled = goods.sort(() => Math.random() - 0.5);
+    const selected = shuffled.slice(0, 3);
+
+    for (const templateKey of selected) {
+      const originPrice = getGoodsPriceForWorld(templateKey, origin);
+      const destPrice = getGoodsPriceForWorld(templateKey, destination);
+      const quantity = 1 + Math.floor(Math.random() * 3);
+
+      totalBuyCost += originPrice * quantity;
+      totalSellRevenue += destPrice * quantity;
+
+      tradeGoods.push({ templateKey, quantity });
+    }
+
+    if (tradeGoods.length === 0) {
+      appendLog('No profitable trade goods available for this route.', 'warning');
+      return;
+    }
+
+    const profitValue = totalSellRevenue - totalBuyCost;
+    const profitPct = totalBuyCost > 0 ? (profitValue / totalBuyCost) * 100 : 0;
+
+    if (profitPct < ARBITRAGE_MIN_PROFIT_PCT) {
+      appendLog(`Trade route not profitable enough (${profitPct.toFixed(1)}% profit). Minimum ${ARBITRAGE_MIN_PROFIT_PCT}% required.`, 'warning');
+      return;
+    }
+
+    const seed = origin * 1000 + destination + player.dayCount;
+    const duration = Math.max(CARAVAN_MIN_DURATION_SECONDS, 4 * 60 * 60 + distance * 60);
+
+    const modifiers: MissionModifiers = {
+      origin_world_id: origin,
+      destination_world_id: destination,
+      trade_goods: JSON.stringify(tradeGoods),
+      total_buy_cost: totalBuyCost,
+      total_sell_revenue: totalSellRevenue,
+      profit_pct: profitPct,
+    };
+
+    const mission = get().addMissionWithModifiers({
+      type: 'CARAVAN_ROUTE',
+      assigned_creatures: [],
+      world_layer: origin,
+      duration_seconds: duration,
+      extraModifiers: modifiers,
+    });
+
+    if (mission) {
+      appendLog(`Caravan dispatched to World ${destination}. Expected profit: ${profitPct.toFixed(1)}%`, 'info');
+    }
+  },
+
   startActivity: (type: 'creature_training' | 'physical_training' | 'rest' | 'search_tracks' | 'search_animals', duration: number, message: string, creatureId?: string) => {
     const { player, appendLog, activity } = get();
     if (!player) return;
@@ -1698,9 +1798,53 @@ const modifiers: MissionModifiers = {
          TAX_EDICT: (mission) => {
            get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
          },
-         CARAVAN_ROUTE: (mission) => {
-           get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
-         },
+           CARAVAN_ROUTE: (mission) => {
+             const state = get();
+             if (!state.player) return;
+
+             const goodsJson = mission.modifiers?.trade_goods as string | undefined;
+             const totalBuyCost = (mission.modifiers?.total_buy_cost as number | undefined) ?? 0;
+             const totalSellRevenue = (mission.modifiers?.total_sell_revenue as number | undefined) ?? 0;
+
+             if (goodsJson) {
+               try {
+                 const goods: InventoryStack[] = JSON.parse(goodsJson);
+                 const validation = validateCaravanGoods(goods);
+                  if (validation.valid) {
+                    const updatedInventory = [...(state.player.inventory || [])];
+                    for (const item of goods) {
+                      const idx = updatedInventory.findIndex(i => i.templateKey === item.templateKey);
+                      if (idx >= 0 && updatedInventory[idx]) {
+                        updatedInventory[idx] = {
+                          ...updatedInventory[idx],
+                          quantity: updatedInventory[idx].quantity - item.quantity,
+                        };
+                        if (updatedInventory[idx].quantity <= 0) {
+                          updatedInventory.splice(idx, 1);
+                        }
+                      }
+                    }
+                    const profit = Math.max(0, totalSellRevenue - totalBuyCost);
+                    const taxPaid = Math.floor((profit * 10) / 100);
+                    const netProfit = Math.max(0, Math.floor(((profit - taxPaid) * 70) / 100));
+
+                     set((s) => ({
+                       player: s.player ? {
+                         ...s.player,
+                         inventory: updatedInventory,
+                         money: s.player.money + netProfit,
+                       } : s.player,
+                     }));
+                     recordPlayerCoreStatistic(set, { type: 'TradeCompleted' });
+                     get().appendLog(`Caravan arrived! Trade completed. Net profit: ${netProfit} gold (after ${taxPaid} tax).`, 'success');
+                  }
+               } catch (e) {
+                 get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+               }
+             } else {
+               get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+             }
+           },
          SEARCH_AREA: (mission) => {
            const state = get();
            if (state.searching) {
@@ -1914,7 +2058,51 @@ const modifiers: MissionModifiers = {
             get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
           },
           CARAVAN_ROUTE: (mission) => {
-            get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+            const state = get();
+            if (!state.player) return;
+
+            const goodsJson = mission.modifiers?.trade_goods as string | undefined;
+            const totalBuyCost = (mission.modifiers?.total_buy_cost as number | undefined) ?? 0;
+            const totalSellRevenue = (mission.modifiers?.total_sell_revenue as number | undefined) ?? 0;
+
+            if (goodsJson) {
+              try {
+                const goods: InventoryStack[] = JSON.parse(goodsJson);
+                const validation = validateCaravanGoods(goods);
+                 if (validation.valid) {
+                   const updatedInventory = [...(state.player.inventory || [])];
+                   for (const item of goods) {
+                     const idx = updatedInventory.findIndex(i => i.templateKey === item.templateKey);
+                     if (idx >= 0 && updatedInventory[idx]) {
+                       updatedInventory[idx] = {
+                         ...updatedInventory[idx],
+                         quantity: updatedInventory[idx].quantity - item.quantity,
+                       };
+                       if (updatedInventory[idx].quantity <= 0) {
+                         updatedInventory.splice(idx, 1);
+                       }
+                     }
+                   }
+                   const profit = Math.max(0, totalSellRevenue - totalBuyCost);
+                   const taxPaid = Math.floor((profit * 10) / 100);
+                   const netProfit = Math.max(0, Math.floor(((profit - taxPaid) * 70) / 100));
+
+                   set((s) => ({
+                     player: s.player ? {
+                       ...s.player,
+                       inventory: updatedInventory,
+                       money: s.player.money + netProfit,
+                     } : s.player,
+                   }));
+                   recordPlayerCoreStatistic(set, { type: 'TradeCompleted' });
+                   get().appendLog(`Caravan arrived! Trade completed. Net profit: ${netProfit} gold (after ${taxPaid} tax).`, 'success');
+                 }
+              } catch (e) {
+                get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+              }
+            } else {
+              get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+            }
           },
           SEARCH_AREA: (mission) => {
             const state = get();
