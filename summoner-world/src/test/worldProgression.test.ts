@@ -102,7 +102,7 @@ describe('World 100 progression map – unlock rules per tier (T7.15.1)', () => 
 describe('World completion criteria (T7.15.2)', () => {
   it('completion criterion is defeating the World Boss', () => {
     const criteria = getWorldCompletionCriteria(42);
-    expect(criteria[0]!.type).toBe('previous_world_boss');
+    expect(criteria[0]!.type).toBe('world_boss');
   });
 
   it('a world is complete only when its boss is defeated', () => {
@@ -122,6 +122,13 @@ describe('Completion connected to PlayerCoreState world unlocks (T7.15.3)', () =
     expect(updated.worldUnlocks.unlockedWorlds).toEqual([1, 2]);
     expect(core.worldUnlocks.unlockedWorlds).toEqual([1]);
     expect(updated.statistics.worldsUnlocked).toBe(2);
+  });
+
+  it('records a truthful worldsUnlocked count even when unlocked non-sequentially', () => {
+    const core = makeCore([1, 2]);
+    const updated = unlockWorld(core, 50);
+    expect(updated.worldUnlocks.unlockedWorlds).toEqual([1, 2, 50]);
+    expect(updated.statistics.worldsUnlocked).toBe(3);
   });
 
   it('unlockWorld is idempotent for already-unlocked worlds', () => {

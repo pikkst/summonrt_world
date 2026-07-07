@@ -972,7 +972,7 @@ finishCapture: () => {
     const globalSeed = currentWorldId * 1000 + player.level;
     const tower = generateDungeonTower(currentWorldId, globalSeed);
     const dungeonRun = exportDungeonRun(tower);
-    set({ screen: 'dungeon', dungeon: { active: true, worldId: currentWorldId, currentFloor: 0, totalFloors: tower.totalFloors, clearedFloors: [], bossDefeated: false, inEncounter: false, tower } });
+    set({ screen: 'dungeon', dungeon: { active: true, worldId: currentWorldId, currentFloor: 0, totalFloors: tower.totalFloors, clearedFloors: [], bossDefeated: false, inEncounter: false, tower, isWorldBoss: true } });
     worldEventBus.publish({
       type: 'DungeonDiscovered',
       playerId: player.id,
@@ -1250,9 +1250,10 @@ resolveDungeonEncounter: (victory: boolean) => {
      if (!dungeon.active) return;
 
      if (victory) {
-       const newCleared = [...dungeon.clearedFloors, dungeon.currentFloor];
-       const isBoss = dungeon.currentFloor === dungeon.totalFloors;
-       const isTreasure = dungeon.encounterType === 'treasure';
+        const newCleared = [...dungeon.clearedFloors, dungeon.currentFloor];
+        const isBoss = dungeon.currentFloor === dungeon.totalFloors;
+        const isWorldBoss = isBoss && dungeon.isWorldBoss === true;
+        const isTreasure = dungeon.encounterType === 'treasure';
 
        const player = get().player;
        if (!player) return;
@@ -1267,9 +1268,9 @@ resolveDungeonEncounter: (victory: boolean) => {
            if (template.type === 'combat' && template.target === 'dungeon_floor') {
              return { ...q, progress: Math.min(q.targetProgress, newCleared.length) };
            }
-           if (template.type === 'combat' && template.target === 'world_boss' && isBoss) {
-             return { ...q, progress: Math.min(q.targetProgress, q.progress + 1) };
-           }
+            if (template.type === 'combat' && template.target === 'world_boss' && isWorldBoss) {
+              return { ...q, progress: Math.min(q.targetProgress, q.progress + 1) };
+            }
            return q;
          });
 
@@ -1279,7 +1280,7 @@ resolveDungeonEncounter: (victory: boolean) => {
              creatures: scaledCreatures,
              activeQuests: updatedQuests,
            },
-            playerCore: state.playerCore && isBoss ? applyWorldBossCompletion(
+             playerCore: state.playerCore && isWorldBoss ? applyWorldBossCompletion(
               {
                 ...state.playerCore,
                 statistics: [
@@ -1322,7 +1323,7 @@ resolveDungeonEncounter: (victory: boolean) => {
            }));
            appendLog(`Found ${goldFound} gold!`, 'success');
          }
-       } else if (isBoss) {
+        } else if (isWorldBoss) {
          const minLevel = calculateMinViableLevel(currentWorldId);
          if (player.level < minLevel && scaledPlayer.level >= minLevel) {
            appendLog(`Dungeon exit scaled you to minimum viable level ${minLevel} for this world tier.`, 'success');

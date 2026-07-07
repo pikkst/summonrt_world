@@ -475,6 +475,7 @@ export interface DungeonState {
   encounterName?: string;
   tower?: DungeonTower;
   safeFloor?: boolean;
+  isWorldBoss?: boolean;
 }
 
 export interface DemonlordSkill {

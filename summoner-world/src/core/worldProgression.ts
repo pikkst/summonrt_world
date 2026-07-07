@@ -7,6 +7,7 @@ export const DEMONLORD_WORLD_ID = WORLD_COUNT;
 
 export type WorldUnlockRequirementType =
   | 'previous_world_boss'
+  | 'world_boss'
   | 'min_player_level'
   | 'demonlord_title';
 
@@ -135,10 +136,14 @@ export function buildWorldProgressionMap(): WorldProgressionEntry[] {
 }
 
 export function getWorldCompletionCriteria(_worldId: number): WorldUnlockRequirement[] {
+  // Completion is uniform across all worlds: a world is complete when its own
+  // World Boss (final floor of the central dungeon tower) is defeated. The
+  // unused parameter is kept intentionally so per-world criteria can vary later
+  // (for example stricter end-game tiers) without changing this signature.
   return [
     {
-      type: 'previous_world_boss',
-      description: 'Defeat the World Boss of the central dungeon tower.',
+      type: 'world_boss',
+      description: 'Defeat the World Boss of this world’s central dungeon tower.',
     },
   ];
 }
@@ -155,6 +160,9 @@ export function unlockWorld(playerCore: PlayerCoreState, worldId: number): Playe
   if (worldId < 1 || worldId > WORLD_COUNT) return playerCore;
   if (playerCore.worldUnlocks.unlockedWorlds.includes(worldId)) return playerCore;
 
+  // Unlocking a world makes it accessible but does not activate it. Activation
+  // is a separate travel action handled by the world-travel system (which sets
+  // the runtime currentWorldId), so worldUnlocks.activeWorldId is left unchanged.
   return {
     ...playerCore,
     worldUnlocks: {
@@ -164,6 +172,7 @@ export function unlockWorld(playerCore: PlayerCoreState, worldId: number): Playe
     statistics: applyPlayerStatisticEvent(playerCore.statistics, {
       type: 'WorldUnlocked',
       worldId,
+      unlockedWorldCount: playerCore.worldUnlocks.unlockedWorlds.length + 1,
     }),
   };
 }
@@ -189,6 +198,9 @@ function isRequirementMet(
   switch (requirement.type) {
     case 'previous_world_boss':
       return context.previousWorldBossDefeated;
+    case 'world_boss':
+      // Completion marker for "this world's boss defeated"; not an unlock gate.
+      return true;
     case 'min_player_level':
       return context.playerLevel >= (requirement.value ?? 0);
     case 'demonlord_title':
