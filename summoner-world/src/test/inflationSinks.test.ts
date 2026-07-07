@@ -1,12 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { PlayerCoreState } from '../types/playerCore';
-import type { Structure } from '../types/structure';
 import {
   MAX_EQUIPMENT_DURABILITY,
   REPAIR_COST_PER_DURABILITY,
   applyEquipmentWear,
   applyFusionMaterialDecay,
-  calculateHousingTax,
   getEquipmentRepairCost,
   isFusionMaterial,
   repairEquipmentSlot,
@@ -70,37 +68,7 @@ function createMockPlayerCore(overrides: Partial<PlayerCoreState> = {}): PlayerC
   };
 }
 
-function createStructure(type: Structure['type'], passiveIncomeRate: number): Structure {
-  return {
-    id: `structure-${type}`,
-    type,
-    worldId: 1,
-    tileX: 100,
-    tileY: 100,
-    level: 1,
-    builtAt: 0,
-    ownerId: 'player-1',
-    ...({ passiveIncomeRate } as object),
-  } as Structure;
-}
-
 describe('T8.13 - Inflation Sinks', () => {
-  describe('Housing taxes', () => {
-    it('returns 0 tax for no structures', () => {
-      expect(calculateHousingTax([])).toBe(0);
-    });
-
-    it('applies HOUSING_TAX_RATE_PCT to base passive income', () => {
-      const structures = [createStructure('town', 30), createStructure('castle', 15)];
-      expect(calculateHousingTax(structures)).toBe(Math.floor(45 * 0.1));
-    });
-
-    it('never produces negative tax', () => {
-      const structures = [createStructure('house', 1)];
-      expect(calculateHousingTax(structures)).toBe(0);
-    });
-  });
-
   describe('Equipment repair costs', () => {
     it('reduces durability on combat wear', () => {
       const equipment = [

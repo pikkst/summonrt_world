@@ -1,7 +1,6 @@
 import type { EquipmentSlot, EquipmentSlotId, PlayerCoreState } from '../../types/playerCore.ts';
-import type { InventoryItem } from '../../types/playerCore.ts';
+import type { InventoryStack } from '../../types/game.ts';
 import type { Structure } from '../../types/structure.ts';
-import { STRUCTURE_DEFINITIONS } from '../../types/structure.ts';
 
 export const MAX_EQUIPMENT_DURABILITY = 100;
 export const EQUIPMENT_WEAR_PER_COMBAT = 4;
@@ -14,14 +13,6 @@ export const FUSION_MATERIAL_KEY_PREFIX = 'soul_crystal_';
 
 export function isFusionMaterial(templateKey: string): boolean {
   return templateKey.startsWith(FUSION_MATERIAL_KEY_PREFIX);
-}
-
-export function calculateHousingTax(structures: Structure[]): number {
-  const baseIncome = structures.reduce((total, structure) => {
-    const definition = STRUCTURE_DEFINITIONS[structure.type];
-    return total + (definition?.passiveIncomeRate ?? 0);
-  }, 0);
-  return Math.floor((baseIncome * HOUSING_TAX_RATE_PCT) / 100);
 }
 
 export function applyEquipmentWear(equipment: EquipmentSlot[], amount: number = EQUIPMENT_WEAR_PER_COMBAT): EquipmentSlot[] {
@@ -85,10 +76,10 @@ export function repairEquipmentSlot(
 }
 
 export function applyFusionMaterialDecay(
-  inventory: InventoryItem[],
-  rng: () => number = Math.random,
+  inventory: InventoryStack[],
+  rng: () => number,
   chance: number = FUSION_MATERIAL_DECAY_CHANCE_PER_TICK
-): InventoryItem[] {
+): InventoryStack[] {
   let changed = false;
   const next = inventory.map((item) => {
     if (!isFusionMaterial(item.templateKey) || item.quantity <= 0) return item;

@@ -90,7 +90,7 @@ export function processHousingEconomyTick(
     updatedInventory = result.inventory;
   }
 
-  const decayedInventory = applyFusionMaterialDecay(updatedInventory as any, rng);
+  const decayedInventory = applyFusionMaterialDecay(updatedInventory, rng);
 
   return {
     ...playerCore,
