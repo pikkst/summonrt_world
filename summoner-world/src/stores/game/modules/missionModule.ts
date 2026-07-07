@@ -24,6 +24,7 @@ import { generateDungeonTower, exportDungeonRun } from '../../../core/dungeon/Du
 import { generateTrapInteraction, generatePuzzleInteraction, generateEliteInteraction, generateVendorInteraction, generateTreasureInteraction, TrapRoomInteraction, PuzzleRoomInteraction, EliteRoomInteraction, VendorRoomInteraction, TreasureRoomInteraction } from '../../../core/dungeon/DungeonInteractions';
 import type { RoomInteractionState } from '../../../types/game.ts';
 import { applyPlayerStatisticEvent, type PlayerStatisticEvent } from '../../../core/playerCore/playerStatisticsTracking';
+import { applyWorldBossCompletion } from '../../../core/worldProgression';
 import { getWeatherEffect, getWeatherResourceYieldModifier, getWeatherEncounterModifier, getPlayerElementalAffinityBonus, getEncounterTableForWeather, updateWeather } from '../../../core/Weather';
 import { worldEventBus } from '../../../core/worldEventBus.ts';
 import axios from 'axios';
@@ -971,7 +972,7 @@ finishCapture: () => {
     const globalSeed = currentWorldId * 1000 + player.level;
     const tower = generateDungeonTower(currentWorldId, globalSeed);
     const dungeonRun = exportDungeonRun(tower);
-    set({ screen: 'dungeon', dungeon: { active: true, worldId: currentWorldId, currentFloor: 0, totalFloors: tower.totalFloors, clearedFloors: [], bossDefeated: false, inEncounter: false, tower } });
+    set({ screen: 'dungeon', dungeon: { active: true, worldId: currentWorldId, currentFloor: 0, totalFloors: tower.totalFloors, clearedFloors: [], bossDefeated: false, inEncounter: false, tower, isWorldBoss: true } });
     worldEventBus.publish({
       type: 'DungeonDiscovered',
       playerId: player.id,
@@ -1249,9 +1250,10 @@ resolveDungeonEncounter: (victory: boolean) => {
      if (!dungeon.active) return;
 
      if (victory) {
-       const newCleared = [...dungeon.clearedFloors, dungeon.currentFloor];
-       const isBoss = dungeon.currentFloor === dungeon.totalFloors;
-       const isTreasure = dungeon.encounterType === 'treasure';
+        const newCleared = [...dungeon.clearedFloors, dungeon.currentFloor];
+        const isBoss = dungeon.currentFloor === dungeon.totalFloors;
+        const isWorldBoss = isBoss && dungeon.isWorldBoss === true;
+        const isTreasure = dungeon.encounterType === 'treasure';
 
        const player = get().player;
        if (!player) return;
@@ -1266,9 +1268,9 @@ resolveDungeonEncounter: (victory: boolean) => {
            if (template.type === 'combat' && template.target === 'dungeon_floor') {
              return { ...q, progress: Math.min(q.targetProgress, newCleared.length) };
            }
-           if (template.type === 'combat' && template.target === 'world_boss' && isBoss) {
-             return { ...q, progress: Math.min(q.targetProgress, q.progress + 1) };
-           }
+            if (template.type === 'combat' && template.target === 'world_boss' && isWorldBoss) {
+              return { ...q, progress: Math.min(q.targetProgress, q.progress + 1) };
+            }
            return q;
          });
 
@@ -1278,16 +1280,19 @@ resolveDungeonEncounter: (victory: boolean) => {
              creatures: scaledCreatures,
              activeQuests: updatedQuests,
            },
-           playerCore: state.playerCore && isBoss ? {
-             ...state.playerCore,
-             statistics: [
-               { type: 'BossDefeated', worldId: currentWorldId } as const,
-               { type: 'DungeonCleared', worldId: currentWorldId, floorCount: dungeon.totalFloors } as const,
-             ].reduce(
-               (statistics, event) => applyPlayerStatisticEvent(statistics, event),
-               state.playerCore.statistics
-             ),
-           } : state.playerCore,
+             playerCore: state.playerCore && isWorldBoss ? applyWorldBossCompletion(
+              {
+                ...state.playerCore,
+                statistics: [
+                  { type: 'BossDefeated', worldId: currentWorldId } as const,
+                  { type: 'DungeonCleared', worldId: currentWorldId, floorCount: dungeon.totalFloors } as const,
+                ].reduce(
+                  (statistics, event) => applyPlayerStatisticEvent(statistics, event),
+                  state.playerCore.statistics
+                ),
+              },
+              currentWorldId
+            ) : state.playerCore,
            dungeon: {
              ...state.dungeon,
              clearedFloors: newCleared,
@@ -1318,7 +1323,7 @@ resolveDungeonEncounter: (victory: boolean) => {
            }));
            appendLog(`Found ${goldFound} gold!`, 'success');
          }
-       } else if (isBoss) {
+        } else if (isWorldBoss) {
          const minLevel = calculateMinViableLevel(currentWorldId);
          if (player.level < minLevel && scaledPlayer.level >= minLevel) {
            appendLog(`Dungeon exit scaled you to minimum viable level ${minLevel} for this world tier.`, 'success');
