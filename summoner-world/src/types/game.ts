@@ -136,6 +136,7 @@ export interface CreatureInstance {
 
 export type ItemType = 'material' | 'equipment' | 'consumable' | 'special' | 'egg';
 export type ItemSubType = 'weapon' | 'armor' | 'accessory' | 'herb' | 'crystal' | 'essence' | 'fragment';
+export type CraftingTier = 'basic' | 'intermediate' | 'advanced' | 'artifact';
 
 export interface ItemTemplate {
   key: string;
@@ -148,6 +149,33 @@ export interface ItemTemplate {
   description: string;
   stats?: Record<string, number>;
   requirements?: Record<string, number | string>;
+  craftingTier?: CraftingTier;
+}
+
+export interface CraftingRecipe {
+  key: string;
+  name: string;
+  tier: CraftingTier;
+  inputs: Array<{ templateKey: string; quantity: number }>;
+  outputs: Array<{ templateKey: string; quantity: number; chance?: number }>;
+  requirements?: {
+    workshop?: boolean;
+    city?: boolean;
+    worldId?: number;
+    level?: number;
+    careerCategory?: string;
+  };
+  baseDurationSeconds: number;
+  baseSuccessChance: number;
+  skillCategory?: 'crafting';
+}
+
+export interface CraftingResult {
+  success: boolean;
+  outputs: InventoryStack[];
+  bonusOutputs: InventoryStack[];
+  timeSeconds: number;
+  log: string[];
 }
 
 export interface InventoryStack {
