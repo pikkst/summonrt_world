@@ -1,6 +1,8 @@
 import type { Settlement, SettlementType } from '../../types/game.ts';
 import { ITEM_TEMPLATES } from '../../data/crafting/itemTemplates.ts';
 
+export const PRICE_ELASTICITY_K = 0.1;
+
 export type GoodCategory = 'raw_material' | 'refined_material' | 'consumable' | 'food' | 'reagent' | 'trade_good';
 
 export interface GoodsLedgerEntry {
@@ -102,9 +104,9 @@ export function initializeSettlementGoods(
   };
 }
 
-export function calculateGoodsPrice(basePrice: number, demand: number, supply: number, elasticity: number = 0.1): number {
+export function calculateGoodsPrice(basePrice: number, demand: number, supply: number, k: number = PRICE_ELASTICITY_K): number {
   if (basePrice <= 0) return 1;
-  const factor = 1 + elasticity * (demand - supply);
+  const factor = 1 + k * (demand - supply);
   return Math.max(1, Math.floor(basePrice * factor));
 }
 

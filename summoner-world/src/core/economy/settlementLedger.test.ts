@@ -9,6 +9,7 @@ import {
   tickSettlementEconomy,
   getBasePrice,
   getGoodCategory,
+  PRICE_ELASTICITY_K,
 } from './settlementLedger';
 
 function createMockSettlement(overrides: Partial<Settlement> = {}): Settlement {
@@ -100,6 +101,37 @@ describe('T8.10 - Settlement Economic Simulation', () => {
     it('returns 1 for non-positive basePrice', () => {
       expect(calculateGoodsPrice(0, 10, 10)).toBe(1);
       expect(calculateGoodsPrice(-5, 10, 10)).toBe(1);
+    });
+
+    it('uses default elasticity k = PRICE_ELASTICITY_K', () => {
+      expect(PRICE_ELASTICITY_K).toBe(0.1);
+    });
+
+    it('computes exact formula Price(i) = BasePrice * (1 + k * (Demand - Supply))', () => {
+      const basePrice = 100;
+      const demand = 20;
+      const supply = 10;
+      const k = 0.1;
+      const expected = Math.floor(basePrice * (1 + k * (demand - supply)));
+      expect(calculateGoodsPrice(basePrice, demand, supply, k)).toBe(expected);
+    });
+
+    it('computes exact formula with custom k', () => {
+      const basePrice = 50;
+      const demand = 15;
+      const supply = 5;
+      const k = 0.2;
+      const expected = Math.floor(basePrice * (1 + k * (demand - supply)));
+      expect(calculateGoodsPrice(basePrice, demand, supply, k)).toBe(expected);
+    });
+
+    it('floors the result of the formula', () => {
+      const basePrice = 10;
+      const demand = 11;
+      const supply = 10;
+      const k = 0.1;
+      const expected = Math.floor(basePrice * (1 + k * (demand - supply)));
+      expect(calculateGoodsPrice(basePrice, demand, supply, k)).toBe(expected);
     });
   });
 
