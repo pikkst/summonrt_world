@@ -16,15 +16,25 @@ Required workflow:
 1. Confirm work is not on master.
 2. Confirm branch name matches the task or purpose.
 3. Confirm the PR contains only related changes.
-4. Run validation when code changed:
+4. Confirm Kilo Workflow Evidence was produced before coding:
+   - TaskAnalyzer result
+   - AgentSelection result
+   - ContextPlanner selected files
+   - execution plan
+   - final review todo item
+5. Run validation when code changed:
    npm run typecheck
    npm run lint
    npm run test
    npm run build
-5. Check documentation impact.
-6. Write a clear PR title.
-7. Write a PR body using the required template.
-8. Open PR into master.
+6. Check documentation impact.
+7. Confirm `SummonerWorld_Tasks.md` was updated when task status changed.
+8. Run `.kilo/orchestrator/ReviewPipeline.md`.
+9. Run relevant `.kilo/checklists` and `.kilo/rules/99_FINAL_CHECKLIST.md`.
+10. Run `.kilo/guardian/GuardianGate.md`.
+11. Write a clear PR title.
+12. Write a PR body using the required template.
+13. Open PR into master.
 
 PR title format:
 
@@ -53,6 +63,14 @@ PR body template:
 - Docs updated:
 - Docs not needed because:
 
+## Kilo Workflow
+- TaskAnalyzer:
+- AgentSelection:
+- ContextPlanner:
+- ReviewPipeline:
+- Checklist:
+- Guardian:
+
 ## Notes
 - Known limitations
 - Follow-up tasks
@@ -65,4 +83,6 @@ Rules:
 - Mention documentation-only changes clearly.
 - Mention known limitations.
 - Do not include unrelated task claims.
+- Do not open or update the PR if Guardian status is Blocked.
+- Do not claim PR readiness if ReviewPipeline, checklists, or GuardianGate were skipped.
 ```

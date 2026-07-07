@@ -7,12 +7,8 @@
   },
   "instructions": [
     "AGENTS.md",
-    ".kilo/SYSTEM_MAP.md",
-    ".kilo/brain/README.md",
+    ".kilo/START_HERE.md",
     ".kilo/rules/00_AI_CONSTITUTION.md",
-    ".kilo/rules/99_FINAL_CHECKLIST.md",
-    ".kilo/prompts/00_startup.md",
-    ".kilo/prompts/01_implement_task.md",
     ".kilo/command/implement_task.md",
     ".kilo/command/create_pr.md"
   ]

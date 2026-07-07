@@ -10,11 +10,12 @@ Read these first:
 
 1. `DESIGN_CONSTITUTION.md`
 2. `AGENTS.md` (auto-loaded at session start)
-3. `.kilo/SYSTEM_MAP.md`
-4. `.kilo/context_engine/TaskAnalyzer.md`
-5. `.kilo/orchestrator/TaskLifecycle.md`
+3. `.kilo/START_HERE.md`
+4. `.kilo/SYSTEM_MAP.md` once per session
+5. `.kilo/context_engine/Bundles.md`
 
 Do not load the full `.kilo` folder by default.
+Use `.kilo/START_HERE.md` to choose Lean, Standard, or Deep Mode.
 
 ## Main Layers
 
@@ -33,6 +34,7 @@ memory/           architecture and project memory
 prompts/          reusable AI prompts
 context/          system maps and flow documents
 command/          slash commands for /implement_task, /create_pr, /startup, /validate, /self_review
+START_HERE.md     compact token-efficient workflow router
 ```
 
 ## Standard Flow
@@ -53,6 +55,8 @@ Task
 - One task equals one branch and one Pull Request.
 - Do not commit task work directly to `master`.
 - Use the smallest useful context.
+- Use context bundles before opening individual framework files.
+- Stop loading context once task, owner, files, rules, tests, and docs are clear.
 - Do not duplicate systems.
 - Do not create new `.kilo` layers when an existing layer already owns the responsibility.
 - Preserve `DESIGN_CONSTITUTION.md`.
