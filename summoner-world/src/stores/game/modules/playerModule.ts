@@ -1,4 +1,5 @@
 import type { GameStore, GameStoreState, LogEntry, ElementalAffinity, Element, InventoryStack, PlayerState, WorldData, QuestInstance, CreatureInstance, CommunityState, SetState, CreatureTemplate } from '../types.ts';
+import type { TileData } from '../../../types/game.ts';
 import { createLog, rollAffinity, getPlayerElements, addPlayerXP, calculateMovementModifiers, processTileDiscovery, getWorldModifier, applyResourceRegeneration } from '../helpers.ts';
 import { generateWorld, generateTile } from '../../../core/worldGenerator.ts';
 import { getTileKey, getNeighbors } from '../../../data/constants.ts';
@@ -47,6 +48,7 @@ import {
   type TravelMode,
 } from '../../../core/fastTravel.ts';
 import { worldEventBus } from '../../../core/worldEventBus.ts';
+import { foundTown, getTownFoundingRequirements, TOWN_FOUNDING_MIN_BUILDINGS, TOWN_FOUNDING_MIN_WORLD_ID } from '../../../core/playerCore/townFounding.ts';
 
 function buildValidatedUrl(baseUrl: string, playerId: string): string {
   try {
@@ -1255,5 +1257,30 @@ const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(cu
         log: [...state.log.slice(-499), createLog(`Settlement discovered! Fast travel unlocked.`, 'success', state.turnCount)]
       };
     });
+  },
+
+  foundTown: (worldId: number, x: number, y: number, tile?: TileData) => {
+    const { playerCore, appendLog } = get();
+    if (!playerCore) return;
+
+    const requirements = getTownFoundingRequirements(playerCore, worldId);
+    if (!requirements.eligible) {
+      const reason = requirements.worldUnlocked
+        ? `Founding a town requires at least ${TOWN_FOUNDING_MIN_BUILDINGS} buildings in this world (have ${requirements.buildingCount})`
+        : `Founding a town requires world ${TOWN_FOUNDING_MIN_WORLD_ID}`;
+      appendLog(reason, 'warning');
+      return;
+    }
+
+    const { playerCore: updatedCore, result } = foundTown(playerCore, worldId, x, y, tile);
+    if (!result.success) {
+      appendLog(result.reason ?? 'Failed to found town.', 'warning');
+      return;
+    }
+
+    set((state) => ({
+      playerCore: updatedCore,
+      log: [...state.log.slice(-499), createLog(`Town founded in World ${worldId} at (${x}, ${y}). Regional influence begins.`, 'success', state.turnCount)]
+    }));
   },
 });
