@@ -2,6 +2,91 @@ import type { BiomeType } from './game';
 
 export type StructureType = 'house' | 'farm' | 'workshop' | 'manor' | 'castle' | 'town';
 
+export type TownHallPolicyType = 'trade_tariff' | 'creature_protection' | 'festival_bonus';
+
+export interface TownHallPolicy {
+  type: TownHallPolicyType;
+  active: boolean;
+}
+
+export interface TownHallUpgradeLevel {
+  level: number;
+  cost: number;
+  passiveIncomeBonus: number;
+  unlockedPolicies: TownHallPolicyType[];
+}
+
+export interface TownHallPolicyDefinition {
+  name: string;
+  description: string;
+}
+
+export interface TownHallPolicyEffect {
+  bonusPct: number;
+  category: string;
+}
+
+export const TOWN_HALL_POLICY_INFO: Record<TownHallPolicyType, TownHallPolicyDefinition> = {
+  trade_tariff: { name: 'Trade Tariff', description: 'Reduces merchant trade costs by 10%' },
+  creature_protection: { name: 'Creature Protection', description: 'Reduces territorial hostility duration and increases capture chance' },
+  festival_bonus: { name: 'Festival Bonus', description: 'Increases housing income by 15%' },
+};
+
+export const TOWN_HALL_POLICY_EFFECTS: Record<TownHallPolicyType, TownHallPolicyEffect> = {
+  trade_tariff: { bonusPct: -10, category: 'trade_cost' },
+  creature_protection: { bonusPct: 5, category: 'creature_capture' },
+  festival_bonus: { bonusPct: 15, category: 'passive_income' },
+};
+
+export const TOWN_HALL_UPGRADE_TABLE: TownHallUpgradeLevel[] = [
+  { level: 1, cost: 0, passiveIncomeBonus: 0, unlockedPolicies: [] },
+  { level: 2, cost: 20000, passiveIncomeBonus: 10, unlockedPolicies: [] },
+  { level: 3, cost: 50000, passiveIncomeBonus: 20, unlockedPolicies: ['trade_tariff'] },
+  { level: 4, cost: 100000, passiveIncomeBonus: 35, unlockedPolicies: ['creature_protection'] },
+  { level: 5, cost: 200000, passiveIncomeBonus: 50, unlockedPolicies: ['festival_bonus'] },
+];
+
+export function getTownHallUpgradeLevel(level: number): TownHallUpgradeLevel | undefined {
+  return TOWN_HALL_UPGRADE_TABLE.find((u) => u.level === level);
+}
+
+export function getTownHallUpgradeCost(currentLevel: number): number {
+  const next = getTownHallUpgradeLevel(currentLevel + 1);
+  return next ? next.cost : 0;
+}
+
+export function getUnlockedPolicyTypes(level: number): TownHallPolicyType[] {
+  const unlocked: TownHallPolicyType[] = [];
+  for (const entry of TOWN_HALL_UPGRADE_TABLE) {
+    if (entry.level <= level) {
+      for (const policy of entry.unlockedPolicies) {
+        if (!unlocked.includes(policy)) {
+          unlocked.push(policy);
+        }
+      }
+    }
+  }
+  return unlocked;
+}
+
+export function getTownHallPassiveIncomeBonus(level: number): number {
+  const entry = getTownHallUpgradeLevel(level);
+  return entry ? entry.passiveIncomeBonus : 0;
+}
+
+export function getTownHallPolicyMultiplier(policyType: TownHallPolicyType): number {
+  return TOWN_HALL_POLICY_EFFECTS[policyType]?.bonusPct ?? 0;
+}
+
+export function getActiveTownHallPolicies(policies: TownHallPolicy[] | undefined): TownHallPolicy[] {
+  if (!policies || policies.length === 0) return [];
+  return policies.filter((p) => p.active);
+}
+
+export function getTownHallPolicyEffect(policyType: TownHallPolicyType): TownHallPolicyEffect {
+  return TOWN_HALL_POLICY_EFFECTS[policyType] ?? { bonusPct: 0, category: '' };
+}
+
 export interface Structure {
   id: string;
   type: StructureType;

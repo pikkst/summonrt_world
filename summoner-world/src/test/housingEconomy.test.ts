@@ -216,4 +216,47 @@ describe('T8.7 - Housing Economic Impact', () => {
       expect(result.money).toBe(1003);
     });
   });
+
+  describe('T8.8 - Town Hall Policy Bonuses', () => {
+    it('adds town hall level bonus to passive income', () => {
+      const structures = [createMockStructure({ type: 'town', level: 3 })];
+      const player = createMockPlayerCore({ housing: { structures }, money: 1000 });
+      const result = processHousingEconomyTick(player, () => 0);
+      const baseTownIncome = STRUCTURE_DEFINITIONS.town.passiveIncomeRate;
+      const townHallBonus = 20;
+      expect(result.money).toBe(1000 + baseTownIncome + townHallBonus);
+    });
+
+    it('applies festival bonus multiplier when active', () => {
+      const structures = [createMockStructure({ type: 'town', level: 5 })];
+      const player = createMockPlayerCore({
+        housing: { structures, townHallPolicies: [{ type: 'festival_bonus', active: true }] },
+        money: 1000,
+      });
+      const result = processHousingEconomyTick(player, () => 0);
+      const baseTownIncome = STRUCTURE_DEFINITIONS.town.passiveIncomeRate;
+      const townHallBonus = 50;
+      const expected = Math.floor((baseTownIncome + townHallBonus) * 1.15);
+      expect(result.money).toBe(1000 + expected);
+    });
+
+    it('does not apply festival bonus when inactive', () => {
+      const structures = [createMockStructure({ type: 'town', level: 5 })];
+      const player = createMockPlayerCore({
+        housing: { structures, townHallPolicies: [{ type: 'festival_bonus', active: false }] },
+        money: 1000,
+      });
+      const result = processHousingEconomyTick(player, () => 0);
+      const baseTownIncome = STRUCTURE_DEFINITIONS.town.passiveIncomeRate;
+      const townHallBonus = 50;
+      expect(result.money).toBe(1000 + baseTownIncome + townHallBonus);
+    });
+
+    it('applies no multiplier when no policies are set', () => {
+      const structures = [createMockStructure({ type: 'house' })];
+      const player = createMockPlayerCore({ housing: { structures }, money: 1000 });
+      const result = processHousingEconomyTick(player, () => 0);
+      expect(result.money).toBe(1001);
+    });
+  });
 });
