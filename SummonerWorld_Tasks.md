@@ -15,7 +15,8 @@ Current alignment state:
 - The next implementation task is T6.4.8.
 - T6.5, T6.6, and T6.7 overlap earlier completed tasks and should be read as extension tasks, not fresh duplicates.
 - New missing backlog added from the design-source volumes in `docs/Sumoner_World_dec/`: Player Core alignment, event-driven architecture, documentation volume completion, reputation, titles, achievements, statistics, contracts, commands, and end-game structure.
-- T6P.1, T6P.2, T6P.3, T6P.4, T6P.5, T6P.6, T6P.7, and T6P.8 are complete (PlayerCoreState, Character Creation, Summoner Classes, Element Identity, Player Statistics, Inventory Core, Equipment Core, Creature Slot System).
+ - T6P.1, T6P.2, T6P.3, T6P.4, T6P.5, T6P.6, T6P.7, and T6P.8 are complete (PlayerCoreState, Character Creation, Summoner Classes, Element Identity, Player Statistics, Inventory Core, Equipment Core, Creature Slot System).
+ - Sprint 8 basic/intermediate/advanced/artifact crafting (T8.1-T8.5) is complete.
 
 ## Sprint 0 – Foundation & Tech Debt (Month 0)
 Sprint goal: stabilize prototype, find and fix all technical issues, set up testing and linting foundation.
@@ -445,23 +446,13 @@ Sprint goal: expand world generation with weather, fast travel, biomes and settl
 ## Sprint 8 – Economy, Housing & Crafting (Month 8)
 Sprint goal: implement full economic, housing and crafting system with career-based timers.
 
-<<<<<<< Updated upstream
 - [x] T8.1 – Extend `ItemTemplate`: crafting tiers (basic, intermediate, advanced, artifact)
 - [x] T8.2 – Implement basic crafting: wood/stone/simple tools, workshop free
 - [x] T8.3 – Implement intermediate crafting: ore/herbs/elemental catalysts, workshop required
 - [x] T8.4 – Implement advanced crafting: crystals/essence/legendary parts, city-level infrastructure
 - [x] T8.5 – Add artifact system: unique recipes, exploration/quest unlock, 1-per-world restriction
-- [ ] T8.6 – Create `Structure` model and placement system (house, farm, workshop, manor, castle, town)
-- [ ] T8.7 – Implement housing economic impact: passive income (NPC taxes, resource refinement)
-=======
- - [x] T8.1 – Extend `ItemTemplate`: crafting tiers (basic, intermediate, advanced, artifact)
- - [x] T8.2 – Implement basic crafting: wood/stone/simple tools, workshop free
- - [x] T8.3 – Implement intermediate crafting: ore/herbs/elemental catalysts, workshop required
- - [x] T8.4 – Implement advanced crafting: crystals/essence/legendary parts, city-level infrastructure
- - [x] T8.5 – Add artifact system: unique recipes, exploration/quest unlock, 1-per-world restriction
- - [x] T8.6 – Create `Structure` model and placement system (house, farm, workshop, manor, castle, town)
-  - [x] T8.7 – Implement housing economic impact: passive income (NPC taxes, resource refinement)
->>>>>>> Stashed changes
+- [x] T8.6 – Create `Structure` model and placement system (house, farm, workshop, manor, castle, town)
+- [x] T8.7 – Implement housing economic impact: passive income (NPC taxes, resource refinement)
 - [ ] T8.8 – Add town hall upgrade + regional policies (trade tariffs, creature protection, festival bonuses)
 - [ ] T8.9 – Implement town founding: ≥5 buildings + World 15
 - [ ] T8.10 – Create settlement economic simulation: goods ledger, supply/demand curves

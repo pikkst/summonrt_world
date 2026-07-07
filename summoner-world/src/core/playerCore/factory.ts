@@ -72,7 +72,7 @@ export function createDefaultPlayerCoreState(
       completed: [],
     },
     creatureContracts: [],
-    housing: {},
+    housing: { structures: [] },
     worldUnlocks: {
       unlockedWorlds: [startingWorldId],
       activeWorldId: startingWorldId,
@@ -196,7 +196,7 @@ export function migratePlayerStateToCore(player: PlayerState): PlayerCoreState {
         contractedAt: Date.now(),
       })
     ),
-    housing: {},
+    housing: { structures: [] },
     worldUnlocks: {
       unlockedWorlds,
       activeWorldId: currentWorldId,
