@@ -1,46 +1,27 @@
 # Current Task
 
-## Recommended Active Task
+## Task Selection Rule
 
 ```text
-T6.12 - Test full clear World 10 dungeon simulation
+No task is pinned here.
 ```
 
 ## Purpose
 
-Prove that the current dungeon tower generation supports a complete traversal simulation for World 10.
+This file must not override the user's requested task or `SummonerWorld_Tasks.md`.
 
-This task should protect the existing dungeon generator before larger Player Core and World Core work begins.
+Agents must identify the exact task from the current user request and `SummonerWorld_Tasks.md`.
+If there is no explicit task reference, use `SummonerWorld_Tasks.md` to find the next unchecked task and report the choice before implementation.
 
-## Expected Validation Ideas
+## Required Cross-Check
 
-A T6.12 implementation should likely verify:
+Before coding, verify:
 
-- `generateDungeonTower(10)` returns a valid tower.
-- Every floor exists and has valid metadata.
-- Every floor has a reachable entrance-to-boss path.
-- Vertical links connect each floor to the next floor.
-- The final boss floor is reachable.
-- The simulation can mark floors as cleared in order.
-- Deterministic generation remains stable for the same seed.
+- User-requested task ID, if provided.
+- Matching task entry in `SummonerWorld_Tasks.md`.
+- Branch name derived from that exact task.
+- Relevant `.kilo` context selected by the Context Engine.
 
-## Suggested Branch
+## Stale Memory Rule
 
-```text
-feature/T6-12-world-10-dungeon-simulation
-```
-
-## Files Likely Involved
-
-Likely source files:
-
-- `summoner-world/src/core/dungeonGenerator.ts`
-- Existing dungeon test files
-- `SummonerWorld_Tasks.md`
-- Relevant docs only if task status changes
-
-## Important Constraint
-
-Do not refactor `dungeonGenerator.ts` during this task unless the implementation absolutely requires a very small extraction.
-
-A larger dungeon generator split should be a dedicated refactor PR.
+If this memory file conflicts with `SummonerWorld_Tasks.md` or the user's request, the user request and task file win.
