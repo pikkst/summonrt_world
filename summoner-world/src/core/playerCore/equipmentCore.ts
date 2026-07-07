@@ -4,6 +4,7 @@ import type {
   InventoryItem,
   PlayerSecondaryStats,
 } from '../../types/playerCore.ts';
+import { MAX_EQUIPMENT_DURABILITY } from '../economy/inflationSinks.ts';
 
 export const EQUIPMENT_SLOT_IDS: EquipmentSlotId[] = [
   'weapon',
@@ -57,6 +58,7 @@ export function equipItem(
     itemKey: item.templateKey,
     quantity: 1,
     modifiers: item.modifiers,
+    durability: MAX_EQUIPMENT_DURABILITY,
   };
 
   return { equipment: updatedEquipment, swapped };

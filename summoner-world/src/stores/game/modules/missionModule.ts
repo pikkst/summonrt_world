@@ -26,6 +26,7 @@ import type { RoomInteractionState } from '../../../types/game.ts';
 import { applyPlayerStatisticEvent, type PlayerStatisticEvent } from '../../../core/playerCore/playerStatisticsTracking';
 import { applyWorldBossCompletion } from '../../../core/worldProgression';
 import { processHousingEconomyTick } from '../../../core/playerCore/housingEconomy';
+import { applyEquipmentWear } from '../../../core/economy/inflationSinks';
 import { getWeatherEffect, getWeatherResourceYieldModifier, getWeatherEncounterModifier, getPlayerElementalAffinityBonus, getEncounterTableForWeather, updateWeather } from '../../../core/Weather';
 import { worldEventBus } from '../../../core/worldEventBus.ts';
 import axios from 'axios';
@@ -1741,6 +1742,11 @@ const modifiers: MissionModifiers = {
                     if (outcome.result.battle_log.length > 0) {
                       state.appendLog(`[Wild Encounter] ${outcome.result.battle_log[outcome.result.battle_log.length - 1]}`, 'combat');
                     }
+                    const wearState = get();
+                    if (wearState.playerCore) {
+                      const wornEquipment = applyEquipmentWear(wearState.playerCore.equipment);
+                      set({ playerCore: { ...wearState.playerCore, equipment: wornEquipment } });
+                    }
                   }
                 } catch (e) {
                   get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
@@ -1963,6 +1969,11 @@ const modifiers: MissionModifiers = {
                     }
                     if (outcome.result.battle_log.length > 0) {
                       state.appendLog(`[Wild Encounter] ${outcome.result.battle_log[outcome.result.battle_log.length - 1]}`, 'combat');
+                    }
+                    const wearState = get();
+                    if (wearState.playerCore) {
+                      const wornEquipment = applyEquipmentWear(wearState.playerCore.equipment);
+                      set({ playerCore: { ...wearState.playerCore, equipment: wornEquipment } });
                     }
                   }
                 } catch (e) {

@@ -117,6 +117,7 @@ describe('T6P.17 Player Core contract tests', () => {
       itemKey: 'apprentice_focus',
       quantity: 1,
       modifiers: focus.modifiers,
+      durability: 100,
     });
     expect(restored.saveMetadata.saveVersion).toBe('2.0.0');
   });
