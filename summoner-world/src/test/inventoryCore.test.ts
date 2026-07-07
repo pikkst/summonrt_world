@@ -25,6 +25,8 @@ import {
   splitStack,
   pruneInvalidItems,
   RARITY_ORDER,
+  CRAFTING_TIER_ORDER,
+  getCraftingTierOrder,
 } from '../core/playerCore/inventoryCore';
 import type { InventoryItem, PlayerSecondaryStats } from '../types/playerCore';
 import type { InventoryStack, ItemTemplate } from '../types/game';
@@ -489,6 +491,38 @@ describe('Inventory Core', () => {
     it('removes items with empty template key', () => {
       const inventory = [makeItem({ templateKey: '', quantity: 1 })];
       expect(pruneInvalidItems(inventory)).toHaveLength(0);
+    });
+  });
+
+  describe('craftingTier on ItemTemplate', () => {
+    it('allows optional craftingTier on templates', () => {
+      const template = makeTemplate({ craftingTier: 'intermediate' });
+      expect(template.craftingTier).toBe('intermediate');
+    });
+
+    it('allows templates without craftingTier for backward compatibility', () => {
+      const template = makeTemplate();
+      expect(template.craftingTier).toBeUndefined();
+    });
+
+    it('getCraftingTierOrder returns correct numeric order', () => {
+      expect(getCraftingTierOrder('basic')).toBe(0);
+      expect(getCraftingTierOrder('intermediate')).toBe(1);
+      expect(getCraftingTierOrder('advanced')).toBe(2);
+      expect(getCraftingTierOrder('artifact')).toBe(3);
+    });
+
+    it('getCraftingTierOrder returns -1 for unknown tiers', () => {
+      expect(getCraftingTierOrder('unknown')).toBe(-1);
+    });
+
+    it('CRAFTING_TIER_ORDER contains all four tiers', () => {
+      expect(CRAFTING_TIER_ORDER).toEqual({
+        basic: 0,
+        intermediate: 1,
+        advanced: 2,
+        artifact: 3,
+      });
     });
   });
 });
