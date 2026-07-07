@@ -35,25 +35,16 @@ export function getBaseSuccessChanceForTier(tier: CraftingTier): number {
   return CRAFTING_BASE_SUCCESS_BY_TIER[tier];
 }
 
-export function canCraftRecipeTier(recipe: CraftingRecipe): boolean {
-  const tier = recipe.tier;
-  if (tier === 'basic') return true;
-  if (tier === 'intermediate') return true;
-  if (tier === 'advanced') return true;
-  if (tier === 'artifact') return true;
-  return false;
-}
-
 export function hasWorkshopFree(): boolean {
   return true;
 }
 
-export function hasWorkshop(): boolean {
-  return true;
+export function hasWorkshop(playerCore: PlayerCoreState): boolean {
+  return (playerCore.housing.structureLevel ?? 0) >= 1;
 }
 
 export function isInCity(playerCore: PlayerCoreState): boolean {
-  return playerCore.position.worldId >= 1;
+  return playerCore.position.worldId >= 15;
 }
 
 export function checkRecipeRequirements(
@@ -61,7 +52,7 @@ export function checkRecipeRequirements(
   playerCore: PlayerCoreState,
   element?: Element
 ): { allowed: boolean; reason?: string } {
-  if (recipe.requirements?.workshop && !hasWorkshop()) {
+  if (recipe.requirements?.workshop && !hasWorkshop(playerCore)) {
     return { allowed: false, reason: 'Workshop required' };
   }
   if (recipe.requirements?.city && !isInCity(playerCore)) {
@@ -104,7 +95,7 @@ export function calculateCraftingDurationSeconds(
 ): number {
   const base = recipe.baseDurationSeconds;
   const efficiency = playerCore.secondaryStats.craftingEfficiency;
-  const reduction = efficiency / 100;
+  const reduction = Math.max(0, (efficiency - 100) / 100);
   return Math.max(5, Math.floor(base * (1 - reduction)));
 }
 
@@ -166,9 +157,8 @@ export function consumeMaterials(
 export function rollCraftingOutputs(
   recipe: CraftingRecipe,
   success: boolean
-): { outputs: InventoryStack[]; bonusOutputs: InventoryStack[] } {
+): InventoryStack[] {
   const outputs: InventoryStack[] = [];
-  const bonusOutputs: InventoryStack[] = [];
 
   for (const output of recipe.outputs) {
     const chance = output.chance ?? 1;
@@ -181,7 +171,7 @@ export function rollCraftingOutputs(
     }
   }
 
-  return { outputs, bonusOutputs };
+  return outputs;
 }
 
 export function resolveCraftingResult(
@@ -189,16 +179,21 @@ export function resolveCraftingResult(
   recipe: CraftingRecipe,
   playerCore: PlayerCoreState,
   element?: Element
-): CraftingResult {
+): { success: boolean; inputsConsumed: boolean; outputs: InventoryStack[]; timeSeconds: number; log: string[] } {
   const logs: string[] = [];
 
   const requirements = checkRecipeRequirements(recipe, playerCore, element);
   if (!requirements.allowed) {
-    return { success: false, outputs: [], bonusOutputs: [], timeSeconds: 0, log: [`Crafting blocked: ${requirements.reason}`] };
+    return { success: false, inputsConsumed: false, outputs: [], timeSeconds: 0, log: [`Crafting blocked: ${requirements.reason}`] };
   }
 
   if (!hasMaterials(inventory, recipe.inputs)) {
-    return { success: false, outputs: [], bonusOutputs: [], timeSeconds: 0, log: ['Insufficient materials'] };
+    return { success: false, inputsConsumed: false, outputs: [], timeSeconds: 0, log: ['Insufficient materials'] };
+  }
+
+  const consumed = consumeMaterials(inventory, recipe.inputs);
+  if (!consumed.consumed) {
+    return { success: false, inputsConsumed: false, outputs: [], timeSeconds: 0, log: ['Failed to consume materials'] };
   }
 
   const chance = calculateCraftingSuccessChance(recipe, playerCore, element);
@@ -211,13 +206,14 @@ export function resolveCraftingResult(
     logs.push(`Failed to craft ${recipe.name}.`);
   }
 
-  const { outputs, bonusOutputs } = rollCraftingOutputs(recipe, success);
+  const outputs = rollCraftingOutputs(recipe, success);
 
   return {
     success,
+    inputsConsumed: true,
     outputs,
-    bonusOutputs,
     timeSeconds,
     log: logs,
   };
 }
+

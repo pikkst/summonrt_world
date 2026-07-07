@@ -170,13 +170,12 @@ export interface CraftingRecipe {
   };
   baseDurationSeconds: number;
   baseSuccessChance: number;
-  skillCategory?: 'crafting';
 }
 
 export interface CraftingResult {
   success: boolean;
+  inputsConsumed: boolean;
   outputs: InventoryStack[];
-  bonusOutputs: InventoryStack[];
   timeSeconds: number;
   log: string[];
 }

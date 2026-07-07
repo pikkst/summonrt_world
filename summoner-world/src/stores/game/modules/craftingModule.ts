@@ -1,8 +1,9 @@
 import type { GameStore, SetState } from '../types.ts';
-import type { ItemTemplate, Element, CraftingRecipe } from '../../../types/game.ts';
+import type { CraftingRecipe, Element } from '../../../types/game.ts';
 import { addItemToInventory } from '../../../core/playerCore/inventoryCore';
 import { ALL_CRAFTING_RECIPES } from '../../../data/crafting/recipes';
-import { checkRecipeRequirements, calculateCraftingSuccessChance, calculateCraftingDurationSeconds, resolveCraftingResult, consumeMaterials, hasMaterials, getMissingMaterials } from '../../../core/playerCore/craftingCore';
+import { checkRecipeRequirements, calculateCraftingSuccessChance, calculateCraftingDurationSeconds, resolveCraftingResult, hasMaterials, getMissingMaterials } from '../../../core/playerCore/craftingCore';
+import { getItemTemplate } from '../../../data/crafting/itemTemplates';
 import { applyPlayerStatisticEvent } from '../../../core/playerCore/playerStatisticsTracking';
 import { refreshTitleAchievementState } from '../../../core/playerCore/titleAchievementCore';
 
@@ -84,15 +85,10 @@ export const craftingActions = (set: SetState<GameStore>, get: () => GameStore) 
       return;
     }
 
-    if (!hasMaterials(playerCore.inventory, recipe.inputs)) {
-      appendLog('Insufficient materials.', 'warning');
-      return;
-    }
-
     const element = (playerCore.elements as any)?.primary as Element | undefined;
     const result = resolveCraftingResult(playerCore.inventory, recipe, playerCore, element);
 
-    if (!result.success || result.outputs.length === 0) {
+    if (!result.inputsConsumed) {
       for (const line of result.log) {
         appendLog(line, 'warning');
       }
@@ -100,26 +96,18 @@ export const craftingActions = (set: SetState<GameStore>, get: () => GameStore) 
     }
 
     let updatedInventory = playerCore.inventory;
-    const consumed = consumeMaterials(updatedInventory, recipe.inputs);
-    if (!consumed.consumed) {
-      return;
-    }
-    updatedInventory = consumed.inventory;
-
-    const fallbackTemplate: ItemTemplate = {
-      key: '',
-      name: '',
-      type: 'material',
-      rarity: 0,
-      stackable: true,
-      maxStack: 99,
-      description: '',
-    };
-
     for (const output of result.outputs) {
       const templateKey = output.templateKey;
-      const template = (get() as any).itemTemplates?.[templateKey] ?? { ...fallbackTemplate, key: templateKey };
-      const addResult = addItemToInventory(updatedInventory as any, output, template, 'tradeable', playerCore.identity.id);
+      const template = getItemTemplate(templateKey);
+      const addResult = addItemToInventory(updatedInventory as any, output, template ?? {
+        key: templateKey,
+        name: templateKey,
+        type: 'material',
+        rarity: 0,
+        stackable: true,
+        maxStack: 99,
+        description: '',
+      }, 'tradeable', playerCore.identity.id);
       if (!addResult.added) {
         appendLog('Inventory full. Could not add crafted item.', 'warning');
         continue;
@@ -144,7 +132,7 @@ export const craftingActions = (set: SetState<GameStore>, get: () => GameStore) 
     }));
 
     for (const line of result.log) {
-      appendLog(line, 'success');
+      appendLog(line, result.success ? 'success' : 'warning');
     }
   },
 });

@@ -3,7 +3,6 @@ import {
   getCraftingTierOrder,
   getBaseDurationForTier,
   getBaseSuccessChanceForTier,
-  canCraftRecipeTier,
   hasWorkshopFree,
   hasWorkshop,
   isInCity,
@@ -126,15 +125,6 @@ describe('Crafting Core - T8.2 / T8.3 / T8.4 / T8.5', () => {
     });
   });
 
-  describe('canCraftRecipeTier', () => {
-    it('returns true for all known tiers', () => {
-      expect(canCraftRecipeTier(makeRecipe({ tier: 'basic' }))).toBe(true);
-      expect(canCraftRecipeTier(makeRecipe({ tier: 'intermediate' }))).toBe(true);
-      expect(canCraftRecipeTier(makeRecipe({ tier: 'advanced' }))).toBe(true);
-      expect(canCraftRecipeTier(makeRecipe({ tier: 'artifact' }))).toBe(true);
-    });
-  });
-
   describe('hasWorkshopFree', () => {
     it('returns true in prototype mode', () => {
       expect(hasWorkshopFree()).toBe(true);
@@ -142,29 +132,39 @@ describe('Crafting Core - T8.2 / T8.3 / T8.4 / T8.5', () => {
   });
 
   describe('hasWorkshop', () => {
-    it('returns true in prototype mode', () => {
-      expect(hasWorkshop()).toBe(true);
+    it('returns true when structure level is at least 1', () => {
+      expect(hasWorkshop(makePlayerCore({ housing: { structureLevel: 1 } }))).toBe(true);
+    });
+
+    it('returns false when no structure is built', () => {
+      expect(hasWorkshop(makePlayerCore({ housing: {} }))).toBe(false);
+      expect(hasWorkshop(makePlayerCore({ housing: { structureLevel: 0 } }))).toBe(false);
     });
   });
 
   describe('isInCity', () => {
-    it('returns true when worldId >= 1', () => {
-      expect(isInCity(makePlayerCore({ position: { worldId: 1, x: 0, y: 0 } }))).toBe(true);
-      expect(isInCity(makePlayerCore({ position: { worldId: 10, x: 0, y: 0 } }))).toBe(true);
+    it('returns true when worldId >= 15', () => {
+      expect(isInCity(makePlayerCore({ position: { worldId: 15, x: 0, y: 0 } }))).toBe(true);
+      expect(isInCity(makePlayerCore({ position: { worldId: 50, x: 0, y: 0 } }))).toBe(true);
+    });
+
+    it('returns false for early worlds', () => {
+      expect(isInCity(makePlayerCore({ position: { worldId: 1, x: 0, y: 0 } }))).toBe(false);
+      expect(isInCity(makePlayerCore({ position: { worldId: 14, x: 0, y: 0 } }))).toBe(false);
     });
   });
 
   describe('checkRecipeRequirements', () => {
-    it('allows workshop requirement in prototype mode', () => {
+    it('allows workshop requirement only when player has a structure', () => {
       const recipe = makeRecipe({ requirements: { workshop: true } });
-      const result = checkRecipeRequirements(recipe, makePlayerCore());
-      expect(result.allowed).toBe(true);
+      expect(checkRecipeRequirements(recipe, makePlayerCore({ housing: {} })).allowed).toBe(false);
+      expect(checkRecipeRequirements(recipe, makePlayerCore({ housing: { structureLevel: 1 } })).allowed).toBe(true);
     });
 
-    it('blocks when city is required and not in city', () => {
+    it('allows city requirement only when worldId >= 15', () => {
       const recipe = makeRecipe({ requirements: { city: true } });
-      const result = checkRecipeRequirements(recipe, makePlayerCore());
-      expect(result.allowed).toBe(true);
+      expect(checkRecipeRequirements(recipe, makePlayerCore({ position: { worldId: 1, x: 0, y: 0 } })).allowed).toBe(false);
+      expect(checkRecipeRequirements(recipe, makePlayerCore({ position: { worldId: 15, x: 0, y: 0 } })).allowed).toBe(true);
     });
 
     it('blocks when worldId requirement is not met', () => {
@@ -200,9 +200,16 @@ describe('Crafting Core - T8.2 / T8.3 / T8.4 / T8.5', () => {
   });
 
   describe('calculateCraftingDurationSeconds', () => {
-    it('reduces duration with higher efficiency', () => {
+    it('keeps base duration at 100 efficiency', () => {
       const recipe = makeRecipe({ baseDurationSeconds: 100 });
       const player = makePlayerCore({ secondaryStats: { ...makePlayerCore().secondaryStats, craftingEfficiency: 100 } });
+      const duration = calculateCraftingDurationSeconds(recipe, player);
+      expect(duration).toBe(100);
+    });
+
+    it('reduces duration with higher efficiency', () => {
+      const recipe = makeRecipe({ baseDurationSeconds: 100 });
+      const player = makePlayerCore({ secondaryStats: { ...makePlayerCore().secondaryStats, craftingEfficiency: 200 } });
       const duration = calculateCraftingDurationSeconds(recipe, player);
       expect(duration).toBeLessThan(100);
       expect(duration).toBeGreaterThanOrEqual(5);
@@ -287,38 +294,45 @@ describe('Crafting Core - T8.2 / T8.3 / T8.4 / T8.5', () => {
           { templateKey: 'dust', quantity: 1, chance: 0.5 },
         ],
       });
-      const { outputs, bonusOutputs } = rollCraftingOutputs(recipe, true);
+      const outputs = rollCraftingOutputs(recipe, true);
       expect(outputs).toHaveLength(2);
       expect(outputs[0]!.templateKey).toBe('plank');
       expect(outputs[1]!.templateKey).toBe('dust');
-      expect(bonusOutputs).toHaveLength(0);
       Math.random = originalRandom;
     });
   });
 
   describe('resolveCraftingResult', () => {
-    it('fails when materials are insufficient despite workshop', () => {
+    it('blocks when materials are insufficient', () => {
       const recipe = makeRecipe({
         requirements: { workshop: true },
         inputs: [{ templateKey: 'wood', quantity: 1 }],
       });
-      const result = resolveCraftingResult([], recipe, makePlayerCore(), 'fire');
+      const result = resolveCraftingResult([], recipe, makePlayerCore({ housing: { structureLevel: 1 } }), 'fire');
       expect(result.success).toBe(false);
+      expect(result.inputsConsumed).toBe(false);
       expect(result.log[0]).toContain('Insufficient materials');
     });
 
-    it('blocks when materials are missing', () => {
+    it('consumes inputs on failure when materials are present', () => {
       const recipe = makeRecipe({
-        inputs: [{ templateKey: 'wood', quantity: 1 }],
+        inputs: [{ templateKey: 'wood', quantity: 2 }],
         outputs: [],
+        baseSuccessChance: 0,
+        baseDurationSeconds: 10,
       });
-      const result = resolveCraftingResult([], recipe, makePlayerCore(), 'fire');
+      const inventory: InventoryStack[] = [
+        { templateKey: 'wood', quantity: 5 },
+      ];
+      const result = resolveCraftingResult(inventory, recipe, makePlayerCore(), 'fire');
       expect(result.success).toBe(false);
-      expect(result.log[0]).toBe('Insufficient materials');
+      expect(result.inputsConsumed).toBe(true);
+      expect(result.outputs).toHaveLength(0);
     });
 
-    it('crafts basic item when requirements and materials are met', () => {
+    it('returns outputs on success when requirements and materials are met', () => {
       const recipe = makeRecipe({
+        requirements: { workshop: true },
         inputs: [{ templateKey: 'wood', quantity: 2 }],
         outputs: [{ templateKey: 'plank', quantity: 1, chance: 1 }],
         baseSuccessChance: 1,
@@ -327,9 +341,12 @@ describe('Crafting Core - T8.2 / T8.3 / T8.4 / T8.5', () => {
       const inventory: InventoryStack[] = [
         { templateKey: 'wood', quantity: 5 },
       ];
-      const result = resolveCraftingResult(inventory, recipe, makePlayerCore(), 'fire');
+      const result = resolveCraftingResult(inventory, recipe, makePlayerCore({ housing: { structureLevel: 1 } }), 'fire');
+      expect(result.success).toBe(true);
+      expect(result.inputsConsumed).toBe(true);
       expect(result.timeSeconds).toBeGreaterThanOrEqual(5);
-      expect(result.log.length).toBeGreaterThan(0);
+      expect(result.outputs).toHaveLength(1);
+      expect(result.outputs[0]!.templateKey).toBe('plank');
     });
   });
 });
