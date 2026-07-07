@@ -1,6 +1,6 @@
 import type { PlayerCoreState } from '../../types/playerCore.ts';
 import type { Structure, StructureType } from '../../types/structure.ts';
-import { STRUCTURE_DEFINITIONS, getActiveTownHallPolicies, getTownHallPassiveIncomeBonus, getUnlockedPolicyTypes, getTownHallPolicyMultiplier } from '../../types/structure.ts';
+import { STRUCTURE_DEFINITIONS, getActiveTownHallPolicies, getTownHallPassiveIncomeBonus, getTownHallPolicyMultiplier } from '../../types/structure.ts';
 import { addItemToInventory } from './inventoryCore.ts';
 import type { InventoryStack, ItemTemplate } from '../../types/game.ts';
 import type { TownHallPolicy } from '../../types/structure.ts';

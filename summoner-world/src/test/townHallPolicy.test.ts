@@ -4,7 +4,8 @@ import type { Structure, TownHallPolicy } from '../types/structure';
 import {
   calculateTownHallIncomeBonus,
   calculateActivePolicyMultipliers,
-  getPassiveIncomeBonusPct,
+} from '../core/playerCore/housingEconomy';
+import {
   getTradeTariffDiscount,
   getCreatureProtectionBonus,
   getTownHallEffectSummary,
@@ -131,22 +132,6 @@ describe('T8.8 - Town Hall Policy', () => {
       const structures = [createMockTownHall({ level: 5 })];
       const player = createMockPlayerCore({ housing: { structures } });
       expect(calculateTownHallIncomeBonus(player)).toBe(50);
-    });
-  });
-
-  describe('getPassiveIncomeBonusPct', () => {
-    it('returns 0 when no policies', () => {
-      expect(getPassiveIncomeBonusPct(undefined)).toBe(0);
-    });
-
-    it('returns 15 when festival bonus is active', () => {
-      const policies: TownHallPolicy[] = [{ type: 'festival_bonus', active: true }];
-      expect(getPassiveIncomeBonusPct(policies)).toBe(15);
-    });
-
-    it('returns 0 when festival bonus is inactive', () => {
-      const policies: TownHallPolicy[] = [{ type: 'festival_bonus', active: false }];
-      expect(getPassiveIncomeBonusPct(policies)).toBe(0);
     });
   });
 

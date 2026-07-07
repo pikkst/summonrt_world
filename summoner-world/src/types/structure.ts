@@ -21,10 +21,21 @@ export interface TownHallPolicyDefinition {
   description: string;
 }
 
+export interface TownHallPolicyEffect {
+  bonusPct: number;
+  category: string;
+}
+
 export const TOWN_HALL_POLICY_INFO: Record<TownHallPolicyType, TownHallPolicyDefinition> = {
   trade_tariff: { name: 'Trade Tariff', description: 'Reduces merchant trade costs by 10%' },
   creature_protection: { name: 'Creature Protection', description: 'Reduces territorial hostility duration and increases capture chance' },
   festival_bonus: { name: 'Festival Bonus', description: 'Increases housing income by 15%' },
+};
+
+export const TOWN_HALL_POLICY_EFFECTS: Record<TownHallPolicyType, TownHallPolicyEffect> = {
+  trade_tariff: { bonusPct: -10, category: 'trade_cost' },
+  creature_protection: { bonusPct: 5, category: 'creature_capture' },
+  festival_bonus: { bonusPct: 15, category: 'passive_income' },
 };
 
 export const TOWN_HALL_UPGRADE_TABLE: TownHallUpgradeLevel[] = [
@@ -64,16 +75,7 @@ export function getTownHallPassiveIncomeBonus(level: number): number {
 }
 
 export function getTownHallPolicyMultiplier(policyType: TownHallPolicyType): number {
-  switch (policyType) {
-    case 'trade_tariff':
-      return -10;
-    case 'creature_protection':
-      return 5;
-    case 'festival_bonus':
-      return 15;
-    default:
-      return 0;
-  }
+  return TOWN_HALL_POLICY_EFFECTS[policyType]?.bonusPct ?? 0;
 }
 
 export function getActiveTownHallPolicies(policies: TownHallPolicy[] | undefined): TownHallPolicy[] {
@@ -81,17 +83,8 @@ export function getActiveTownHallPolicies(policies: TownHallPolicy[] | undefined
   return policies.filter((p) => p.active);
 }
 
-export function getTownHallPolicyEffect(policyType: TownHallPolicyType): { bonusPct: number; category: string } {
-  switch (policyType) {
-    case 'trade_tariff':
-      return { bonusPct: -10, category: 'trade_cost' };
-    case 'creature_protection':
-      return { bonusPct: 5, category: 'creature_capture' };
-    case 'festival_bonus':
-      return { bonusPct: 15, category: 'passive_income' };
-    default:
-      return { bonusPct: 0, category: '' };
-  }
+export function getTownHallPolicyEffect(policyType: TownHallPolicyType): TownHallPolicyEffect {
+  return TOWN_HALL_POLICY_EFFECTS[policyType] ?? { bonusPct: 0, category: '' };
 }
 
 export interface Structure {
