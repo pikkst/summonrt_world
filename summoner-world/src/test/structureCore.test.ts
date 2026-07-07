@@ -14,6 +14,12 @@ import {
   getStructureById,
   getAllStructures,
   getStructuresInWorld,
+  upgradeTownHall,
+  canUpgradeTownHall,
+  getTownHallUpgradeInfo,
+  setTownHallPolicy,
+  getActiveTownHallPolicyTypes,
+  getActiveTownHallPolicyCount,
 } from '../core/playerCore/structureCore';
 
 function createMockPlayerCore(overrides: Partial<PlayerCoreState> = {}): PlayerCoreState {
@@ -379,6 +385,187 @@ describe('T8.6 - Structure Model and Placement', () => {
       expect(getStructuresInWorld(player, 1)).toHaveLength(1);
       expect(getStructuresInWorld(player, 5)).toHaveLength(1);
       expect(getStructuresInWorld(player, 99)).toHaveLength(0);
+    });
+  });
+
+  describe('T8.8 - Town Hall Upgrade and Regional Policies', () => {
+    describe('getTownHallUpgradeInfo', () => {
+      it('returns null for non-town structures', () => {
+        const structures: Structure[] = [
+          { id: 's1', type: 'house', worldId: 1, tileX: 10, tileY: 10, level: 1, builtAt: 0, ownerId: 'player-1' },
+        ];
+        const player = createMockPlayerCore({ housing: { structures } });
+        expect(getTownHallUpgradeInfo(player, 's1')).toBeNull();
+      });
+
+      it('returns null at max level', () => {
+        const structures: Structure[] = [
+          { id: 's1', type: 'town', worldId: 1, tileX: 10, tileY: 10, level: 5, builtAt: 0, ownerId: 'player-1' },
+        ];
+        const player = createMockPlayerCore({ housing: { structures } });
+        expect(getTownHallUpgradeInfo(player, 's1')).toBeNull();
+      });
+
+      it('returns upgrade info for level 1 town', () => {
+        const structures: Structure[] = [
+          { id: 's1', type: 'town', worldId: 1, tileX: 10, tileY: 10, level: 1, builtAt: 0, ownerId: 'player-1' },
+        ];
+        const player = createMockPlayerCore({ housing: { structures } });
+        const info = getTownHallUpgradeInfo(player, 's1');
+        expect(info).not.toBeNull();
+        expect(info!.cost).toBe(20000);
+        expect(info!.nextLevel).toBe(2);
+        expect(info!.maxLevel).toBe(5);
+      });
+    });
+
+    describe('upgradeTownHall', () => {
+      it('fails for non-town structure', () => {
+        const structures: Structure[] = [
+          { id: 's1', type: 'house', worldId: 1, tileX: 10, tileY: 10, level: 1, builtAt: 0, ownerId: 'player-1' },
+        ];
+        const player = createMockPlayerCore({ housing: { structures }, money: 50000 });
+        const result = upgradeTownHall(player, 's1');
+        expect(result.success).toBe(false);
+        expect(result.reason).toBe('Not a town hall');
+      });
+
+      it('fails at max level', () => {
+        const structures: Structure[] = [
+          { id: 's1', type: 'town', worldId: 1, tileX: 10, tileY: 10, level: 5, builtAt: 0, ownerId: 'player-1' },
+        ];
+        const player = createMockPlayerCore({ housing: { structures } });
+        const result = upgradeTownHall(player, 's1');
+        expect(result.success).toBe(false);
+        expect(result.reason).toBe('Max level reached');
+      });
+
+      it('fails without enough money', () => {
+        const structures: Structure[] = [
+          { id: 's1', type: 'town', worldId: 1, tileX: 10, tileY: 10, level: 1, builtAt: 0, ownerId: 'player-1' },
+        ];
+        const player = createMockPlayerCore({ housing: { structures }, money: 100 });
+        const result = upgradeTownHall(player, 's1');
+        expect(result.success).toBe(false);
+        expect(result.reason).toContain('Not enough money');
+      });
+
+      it('upgrades town hall level and deducts money', () => {
+        const structures: Structure[] = [
+          { id: 's1', type: 'town', worldId: 1, tileX: 10, tileY: 10, level: 1, builtAt: 0, ownerId: 'player-1' },
+        ];
+        const player = createMockPlayerCore({ housing: { structures }, money: 50000 });
+        const result = upgradeTownHall(player, 's1');
+        expect(result.success).toBe(true);
+        expect(result.playerCore.housing.structures[0]!.level).toBe(2);
+        expect(result.playerCore.money).toBe(30000);
+      });
+
+      it('does not modify original player state on failure', () => {
+        const structures: Structure[] = [
+          { id: 's1', type: 'town', worldId: 1, tileX: 10, tileY: 10, level: 1, builtAt: 0, ownerId: 'player-1' },
+        ];
+        const player = createMockPlayerCore({ housing: { structures }, money: 100 });
+        const result = upgradeTownHall(player, 's1');
+        expect(result.success).toBe(false);
+        expect(result.playerCore.money).toBe(100);
+        expect(result.playerCore.housing.structures[0]!.level).toBe(1);
+      });
+    });
+
+    describe('setTownHallPolicy', () => {
+      it('blocks policies for non-town structures', () => {
+        const structures: Structure[] = [
+          { id: 's1', type: 'house', worldId: 1, tileX: 10, tileY: 10, level: 1, builtAt: 0, ownerId: 'player-1' },
+        ];
+        const player = createMockPlayerCore({ housing: { structures } });
+        const updated = setTownHallPolicy(player, 'trade_tariff', true);
+        expect(updated.housing.townHallPolicies).toBeUndefined();
+      });
+
+      it('blocks policies below required level', () => {
+        const structures: Structure[] = [
+          { id: 's1', type: 'town', worldId: 1, tileX: 10, tileY: 10, level: 2, builtAt: 0, ownerId: 'player-1' },
+        ];
+        const player = createMockPlayerCore({ housing: { structures } });
+        const updated = setTownHallPolicy(player, 'trade_tariff', true);
+        expect(updated.housing.townHallPolicies).toBeUndefined();
+      });
+
+      it('unlocks trade_tariff at level 3', () => {
+        const structures: Structure[] = [
+          { id: 's1', type: 'town', worldId: 1, tileX: 10, tileY: 10, level: 3, builtAt: 0, ownerId: 'player-1' },
+        ];
+        const player = createMockPlayerCore({ housing: { structures } });
+        const updated = setTownHallPolicy(player, 'trade_tariff', true);
+        expect(updated.housing.townHallPolicies).toHaveLength(1);
+        expect(updated.housing.townHallPolicies![0]!.type).toBe('trade_tariff');
+        expect(updated.housing.townHallPolicies![0]!.active).toBe(true);
+      });
+
+      it('unlocks creature_protection at level 4', () => {
+        const structures: Structure[] = [
+          { id: 's1', type: 'town', worldId: 1, tileX: 10, tileY: 10, level: 4, builtAt: 0, ownerId: 'player-1' },
+        ];
+        const player = createMockPlayerCore({ housing: { structures } });
+        const updated = setTownHallPolicy(player, 'creature_protection', true);
+        expect(updated.housing.townHallPolicies).toHaveLength(1);
+        expect(updated.housing.townHallPolicies![0]!.type).toBe('creature_protection');
+      });
+
+      it('unlocks festival_bonus at level 5', () => {
+        const structures: Structure[] = [
+          { id: 's1', type: 'town', worldId: 1, tileX: 10, tileY: 10, level: 5, builtAt: 0, ownerId: 'player-1' },
+        ];
+        const player = createMockPlayerCore({ housing: { structures } });
+        const updated = setTownHallPolicy(player, 'festival_bonus', true);
+        expect(updated.housing.townHallPolicies).toHaveLength(1);
+        expect(updated.housing.townHallPolicies![0]!.type).toBe('festival_bonus');
+      });
+
+      it('deactivates policy when set to false', () => {
+        const structures: Structure[] = [
+          { id: 's1', type: 'town', worldId: 1, tileX: 10, tileY: 10, level: 3, builtAt: 0, ownerId: 'player-1' },
+        ];
+        let player = createMockPlayerCore({ housing: { structures } });
+        player = setTownHallPolicy(player, 'trade_tariff', true);
+        expect(player.housing.townHallPolicies![0]!.active).toBe(true);
+        const updated = setTownHallPolicy(player, 'trade_tariff', false);
+        expect(updated.housing.townHallPolicies![0]!.active).toBe(false);
+      });
+    });
+
+    describe('getActiveTownHallPolicyTypes', () => {
+      it('returns active policies', () => {
+        const structures: Structure[] = [
+          { id: 's1', type: 'town', worldId: 1, tileX: 10, tileY: 10, level: 3, builtAt: 0, ownerId: 'player-1' },
+        ];
+        let player = createMockPlayerCore({ housing: { structures } });
+        player = setTownHallPolicy(player, 'trade_tariff', true);
+        expect(getActiveTownHallPolicyTypes(player)).toEqual(['trade_tariff']);
+      });
+
+      it('returns empty array when no policies', () => {
+        const player = createMockPlayerCore();
+        expect(getActiveTownHallPolicyTypes(player)).toEqual([]);
+      });
+    });
+
+    describe('getActiveTownHallPolicyCount', () => {
+      it('counts active policies', () => {
+        const structures: Structure[] = [
+          { id: 's1', type: 'town', worldId: 1, tileX: 10, tileY: 10, level: 4, builtAt: 0, ownerId: 'player-1' },
+        ];
+        let player = createMockPlayerCore({ housing: { structures } });
+        player = setTownHallPolicy(player, 'trade_tariff', true);
+        player = setTownHallPolicy(player, 'creature_protection', true);
+        expect(getActiveTownHallPolicyCount(player)).toBe(2);
+      });
+
+      it('returns 0 for no policies', () => {
+        const player = createMockPlayerCore();
+        expect(getActiveTownHallPolicyCount(player)).toBe(0);
+      });
     });
   });
 });
