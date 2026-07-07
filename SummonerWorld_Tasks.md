@@ -446,10 +446,10 @@ Sprint goal: expand world generation with weather, fast travel, biomes and settl
 Sprint goal: implement full economic, housing and crafting system with career-based timers.
 
 - [x] T8.1 – Extend `ItemTemplate`: crafting tiers (basic, intermediate, advanced, artifact)
-- [ ] T8.2 – Implement basic crafting: wood/stone/simple tools, workshop free
-- [ ] T8.3 – Implement intermediate crafting: ore/herbs/elemental catalysts, workshop required
-- [ ] T8.4 – Implement advanced crafting: crystals/essence/legendary parts, city-level infrastructure
-- [ ] T8.5 – Add artifact system: unique recipes, exploration/quest unlock, 1-per-world restriction
+- [x] T8.2 – Implement basic crafting: wood/stone/simple tools, workshop free
+- [x] T8.3 – Implement intermediate crafting: ore/herbs/elemental catalysts, workshop required
+- [x] T8.4 – Implement advanced crafting: crystals/essence/legendary parts, city-level infrastructure
+- [x] T8.5 – Add artifact system: unique recipes, exploration/quest unlock, 1-per-world restriction
 - [ ] T8.6 – Create `Structure` model and placement system (house, farm, workshop, manor, castle, town)
 - [ ] T8.7 – Implement housing economic impact: passive income (NPC taxes, resource refinement)
 - [ ] T8.8 – Add town hall upgrade + regional policies (trade tariffs, creature protection, festival bonuses)

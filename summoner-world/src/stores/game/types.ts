@@ -43,6 +43,7 @@ import type {
   import type { SummonerClassId } from '../../data/summonerClasses';
   import type { ContractPath } from '../../core/playerCore/characterCreation.ts';
   import type { PlayerCoreState } from '../../types/playerCore.ts';
+  import type { CraftingUIState } from './modules/craftingModule.ts';
 
 export type {
   PlayerState,
@@ -153,6 +154,7 @@ missions: ActiveMission[];
     levelUpNotifications: Array<{ creatureName: string; newLevel: number }>;
     demonlordState?: DemonlordState;
     demonlordFloorActivity?: FloorActivity;
+    crafting?: CraftingUIState;
     }
 
 export interface GameActions {
@@ -274,6 +276,9 @@ showLevelUpNotification: (notifications: Array<{ creatureName: string; newLevel:
       startingWorldId?: number;
       contractPathKey?: ContractPath;
     }) => void;
+    selectRecipe: (recipeKey: string | null) => void;
+    previewRecipe: (recipeKey: string) => void;
+    craftItem: (recipeKey: string) => void;
   }
 
 export type GameStore = GameStoreState & GameActions;

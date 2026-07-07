@@ -153,6 +153,31 @@ export interface ItemTemplate {
   requirements?: Record<string, number | string>;
 }
 
+export interface CraftingRecipe {
+  key: string;
+  name: string;
+  tier: CraftingTier;
+  inputs: Array<{ templateKey: string; quantity: number }>;
+  outputs: Array<{ templateKey: string; quantity: number; chance?: number }>;
+  requirements?: {
+    workshop?: boolean;
+    city?: boolean;
+    worldId?: number;
+    level?: number;
+    careerCategory?: string;
+  };
+  baseDurationSeconds: number;
+  baseSuccessChance: number;
+}
+
+export interface CraftingResult {
+  success: boolean;
+  inputsConsumed: boolean;
+  outputs: InventoryStack[];
+  timeSeconds: number;
+  log: string[];
+}
+
 export interface InventoryStack {
   templateKey: string;
   quantity: number;
