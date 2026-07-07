@@ -445,7 +445,7 @@ Sprint goal: expand world generation with weather, fast travel, biomes and settl
 ## Sprint 8 – Economy, Housing & Crafting (Month 8)
 Sprint goal: implement full economic, housing and crafting system with career-based timers.
 
-- [ ] T8.1 – Extend `ItemTemplate`: crafting tiers (basic, intermediate, advanced, artifact)
+- [x] T8.1 – Extend `ItemTemplate`: crafting tiers (basic, intermediate, advanced, artifact)
 - [ ] T8.2 – Implement basic crafting: wood/stone/simple tools, workshop free
 - [ ] T8.3 – Implement intermediate crafting: ore/herbs/elemental catalysts, workshop required
 - [ ] T8.4 – Implement advanced crafting: crystals/essence/legendary parts, city-level infrastructure

@@ -40,6 +40,17 @@ export const RARITY_ORDER: Record<ItemRarity, number> = {
   mythical: 5,
 };
 
+export const CRAFTING_TIER_ORDER: Record<string, number> = {
+  basic: 0,
+  intermediate: 1,
+  advanced: 2,
+  artifact: 3,
+};
+
+export function getCraftingTierOrder(tier: string): number {
+  return CRAFTING_TIER_ORDER[tier] ?? -1;
+}
+
 export function getItemCategory(template: ItemTemplate): ItemCategory {
   if (template.subtype && ITEM_CATEGORY_TEMPLATES[template.subtype]) {
     return ITEM_CATEGORY_TEMPLATES[template.subtype]!;
