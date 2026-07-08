@@ -3,6 +3,8 @@ import type { Structure, StructureType } from '../../types/structure.ts';
 import { STRUCTURE_DEFINITIONS, getActiveTownHallPolicies, getTownHallPassiveIncomeBonus, getTownHallPolicyMultiplier } from '../../types/structure.ts';
 import { addItemToInventory } from './inventoryCore.ts';
 import { applyFusionMaterialDecay, HOUSING_TAX_RATE_PCT } from '../economy/inflationSinks.ts';
+import { adjustHousingTaxRate } from '../economy/careerEconomy.ts';
+import type { CareerSystemBonuses } from '../../data/careerTreeIntegration.ts';
 import type { InventoryStack, ItemTemplate } from '../../types/game.ts';
 import type { TownHallPolicy } from '../../types/structure.ts';
 
@@ -56,7 +58,8 @@ export function calculateResourceRefinement(
 
 export function processHousingEconomyTick(
   playerCore: PlayerCoreState,
-  rng: () => number = Math.random
+  rng: () => number = Math.random,
+  careerBonuses?: CareerSystemBonuses
 ): PlayerCoreState {
   const structures = playerCore.housing.structures;
 
@@ -65,7 +68,8 @@ export function processHousingEconomyTick(
   const policyMultiplier = calculateActivePolicyMultipliers(playerCore.housing.townHallPolicies);
 
   const grossPassiveIncome = Math.floor((basePassiveIncome + townHallBonus) * policyMultiplier);
-  const housingTax = Math.floor((grossPassiveIncome * HOUSING_TAX_RATE_PCT) / 100);
+  const effectiveTaxRatePct = adjustHousingTaxRate(HOUSING_TAX_RATE_PCT, careerBonuses);
+  const housingTax = Math.floor((grossPassiveIncome * effectiveTaxRatePct) / 100);
   const totalPassiveIncome = Math.max(0, grossPassiveIncome - housingTax);
   const refinedResources = calculateResourceRefinement(structures, rng);
 

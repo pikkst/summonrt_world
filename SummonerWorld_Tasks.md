@@ -461,7 +461,7 @@ Sprint goal: implement full economic, housing and crafting system with career-ba
 - [x] T8.12 – Add NPC merchant logic: cash reserves, inventory limits, restock, player undercut reaction
 - [x] T8.13 – Implement inflation sinks: housing taxes, repair costs, fusion material decay
 - [x] T8.14 – Add trade caravan system (inter-world, World 1 raw → World 50 refined arbitrage)
-- [ ] T8.15 – Integrate career passives into economy: Shopkeeper `selling_price_pct`/`store_traffic_pct`, Broker `caravan_speed_pct`/`tariff_discount_pct`, Official `settlement_tax_revenue_pct`
+- [x] T8.15 – Integrate career passives into economy: Shopkeeper `selling_price_pct`/`store_traffic_pct`, Broker `caravan_speed_pct`/`tariff_discount_pct`, Official `settlement_tax_revenue_pct`
 - [ ] T8.16 – Implement non-combat career timers:
   - [ ] T8.16.1 – Shopkeeper: storefront customer arrival timer (base 5min reduced by tree modifier), bulk purchase chance
   - [ ] T8.16.2 – Blacksmith: smelting queue (30s per bar, background process), "Blast Furnace Mastery" speed boost

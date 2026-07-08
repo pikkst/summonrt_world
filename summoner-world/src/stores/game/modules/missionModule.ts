@@ -27,6 +27,7 @@ import { applyPlayerStatisticEvent, type PlayerStatisticEvent } from '../../../c
 import { applyWorldBossCompletion } from '../../../core/worldProgression';
 import { processHousingEconomyTick } from '../../../core/playerCore/housingEconomy';
 import { applyEquipmentWear } from '../../../core/economy/inflationSinks';
+import { applyMissionSpeedBonuses } from '../../../core/economy/careerEconomy';
 import { getWeatherEffect, getWeatherResourceYieldModifier, getWeatherEncounterModifier, getPlayerElementalAffinityBonus, getEncounterTableForWeather, updateWeather } from '../../../core/Weather';
 import { worldEventBus } from '../../../core/worldEventBus.ts';
 import {
@@ -120,7 +121,10 @@ function resolveCaravanMission(
       profitPct: totalBuyCost > 0 ? ((totalSellRevenue - totalBuyCost) / totalBuyCost) * 100 : 0,
     };
 
-    const result = resolveCaravanTrade(caravan, true);
+    const treeData = getAllNodes();
+    const aggregatedStats = getAggregateStats(state.player, treeData);
+    const careerBonuses = getCareerSystemBonuses(aggregatedStats);
+    const result = resolveCaravanTrade(caravan, true, careerBonuses);
 
     set((s) => ({
       player: s.player ? {
@@ -129,7 +133,10 @@ function resolveCaravanMission(
       } : s.player,
     }));
     recordPlayerCoreStatistic(set, { type: 'TradeCompleted' });
-    get().appendLog(`Caravan arrived! Trade completed. Net profit: ${result.netProfit} gold (after ${result.taxPaid} tax).`, 'success');
+    const tariffNote = result.taxRatePct < 10
+      ? ` (tariff reduced from 10% to ${result.taxRatePct}% by Broker passives)`
+      : '';
+    get().appendLog(`Caravan arrived! Trade completed. Net profit: ${result.netProfit} gold (after ${result.taxPaid} tax)${tariffNote}.`, 'success');
   } catch (e) {
     get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
   }
@@ -1647,7 +1654,11 @@ fleeDungeon: () => {
     appendLog(`Caravan dispatched to World ${destination}. Goods purchased for ${totalBuyCost} gold.`, 'info');
 
     const seed = origin * 1000 + destination + (player.dayCount ?? 1);
-    const duration = Math.max(CARAVAN_MIN_DURATION_SECONDS, 4 * 60 * 60 + distance * 60);
+    const baseDuration = Math.max(CARAVAN_MIN_DURATION_SECONDS, 4 * 60 * 60 + distance * 60);
+    const treeData = getAllNodes();
+    const aggregatedStats = getAggregateStats(player, treeData);
+    const careerBonuses = getCareerSystemBonuses(aggregatedStats);
+    const duration = applyMissionSpeedBonuses(baseDuration, careerBonuses);
 
     const modifiers: MissionModifiers = {
       origin_world_id: origin,
@@ -2040,11 +2051,16 @@ const modifiers: MissionModifiers = {
      };
 
      const applyHousingEconomy = (): void => {
-       const state = get();
-       if (!state.playerCore) return;
-       const updated = processHousingEconomyTick(state.playerCore);
-       set({ playerCore: updated });
-     };
+        const state = get();
+        if (!state.playerCore) return;
+        const treeData = getAllNodes();
+        const aggregatedStats = state.player
+          ? getAggregateStats(state.player, treeData)
+          : {};
+        const careerBonuses = getCareerSystemBonuses(aggregatedStats);
+        const updated = processHousingEconomyTick(state.playerCore, Math.random, careerBonuses);
+        set({ playerCore: updated });
+      };
 
       const instance = createHeartbeat({
         getCurrentTime: Date.now,
