@@ -141,11 +141,15 @@ export const economyActions = (set: SetState<GameStore>, get: () => GameStore) =
         return;
       }
       const { player } = get();
+      if (!player) {
+        appendLog('Trade accepted but local player state was unavailable.', 'warning');
+        return;
+      }
       economyEventBus.publish({
         type: 'ItemTraded',
         tradeId,
         initiatorId: res.data?.trade?.initiatorId || '',
-        targetId: player?.id || '',
+        targetId: player.id,
         offeredItems: res.data?.trade?.offeredItems || [],
         requestedItems: res.data?.trade?.requestedItems || [],
         timestamp: Date.now(),
