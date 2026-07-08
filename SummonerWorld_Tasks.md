@@ -491,7 +491,7 @@ Sprint goal: implement full economic, housing and crafting system with career-ba
 ## Sprint 9 – NPCs, Quests & Ecosystem (Month 9)
 Sprint goal: NPC AI, quest generation, ecosystem simulation, ecological balance and career-based event timers.
 
-- [ ] T9.1 – Create `NamePool` system: culture-themed dictionary, seeded by world biome
+- [x] T9.1 – Create `NamePool` system: culture-themed dictionary, seeded by world biome
 - [ ] T9.2 – Implement NPC schedule: hourly routines (sleep, work, travel, market, tavern)
 - [ ] T9.3 – Add NPC relationships: affinity values (friendship, rivalry, romance)
 - [ ] T9.4 – Implement NPC travel: walk between settlements, carry goods, robbery/monster interrupts
