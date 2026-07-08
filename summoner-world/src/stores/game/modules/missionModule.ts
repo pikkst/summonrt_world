@@ -30,6 +30,7 @@ import { applyEquipmentWear } from '../../../core/economy/inflationSinks';
 import { applyMissionSpeedBonuses } from '../../../core/economy/careerEconomy';
 import { getWeatherEffect, getWeatherResourceYieldModifier, getWeatherEncounterModifier, getPlayerElementalAffinityBonus, getEncounterTableForWeather, updateWeather } from '../../../core/Weather';
 import { worldEventBus } from '../../../core/worldEventBus.ts';
+import { economyEventBus } from '../../../core/economy/economyEventBus';
 import {
   createTradeCaravan,
   resolveCaravanTrade,
@@ -126,6 +127,7 @@ function resolveCaravanMission(
     const careerBonuses = getCareerSystemBonuses(aggregatedStats);
     const result = resolveCaravanTrade(caravan, true, careerBonuses);
 
+    const previousMoney = state.player.money;
     set((s) => ({
       player: s.player ? {
         ...s.player,
@@ -137,6 +139,17 @@ function resolveCaravanMission(
       ? ` (tariff reduced from 10% to ${result.taxRatePct}% by Broker passives)`
       : '';
     get().appendLog(`Caravan arrived! Trade completed. Net profit: ${result.netProfit} gold (after ${result.taxPaid} tax)${tariffNote}.`, 'success');
+
+    economyEventBus.publish({
+      type: 'CurrencyChanged',
+      playerId: state.player.id,
+      previousAmount: previousMoney,
+      newAmount: previousMoney + result.netProfit,
+      changeDirection: 'gain',
+      source: 'caravan_trade',
+      gameTimeMinutes: state.player.gameTimeMinutes,
+      turnCount: state.turnCount,
+    });
   } catch (e) {
     get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
   }
@@ -850,10 +863,21 @@ finishCapture: () => {
 
     const updatedPlayer = addPlayerXP(basePlayer, template.rewards?.exp || 0, appendLog, getWorldModifier(currentWorldId));
 
+    const moneyGain = template.rewards?.money || 0;
     set({ player: updatedPlayer });
     recordPlayerCoreStatistic(set, { type: 'QuestCompleted', questKey: quest.templateKey });
-    if ((template.rewards?.money || 0) > 0) {
-      recordPlayerCoreStatistic(set, { type: 'GoldEarned', amount: template.rewards!.money! });
+    if (moneyGain > 0) {
+      recordPlayerCoreStatistic(set, { type: 'GoldEarned', amount: moneyGain });
+      economyEventBus.publish({
+        type: 'CurrencyChanged',
+        playerId: player.id,
+        previousAmount: player.money,
+        newAmount: player.money + moneyGain,
+        changeDirection: 'gain',
+        source: 'quest_reward',
+        gameTimeMinutes: player.gameTimeMinutes,
+        turnCount: get().turnCount,
+      });
     }
     appendLog(`Quest Completed: ${template.title}!`, 'success');
   },
@@ -1407,23 +1431,34 @@ resolveDungeonEncounter: (victory: boolean) => {
          };
        });
 
-       if (isTreasure) {
-         appendLog('The mimic dissolved into gold and items!', 'success');
-         const goldFound = 50 + currentWorldId * 20;
-         const p = get().player;
-         if (p) {
-           set((state) => ({
-             player: {
-               ...state.player!,
-               money: state.player!.money + goldFound,
-             },
-             playerCore: state.playerCore ? {
-               ...state.playerCore,
-               statistics: applyPlayerStatisticEvent(state.playerCore.statistics, { type: 'GoldEarned', amount: goldFound }),
-             } : state.playerCore,
-           }));
-           appendLog(`Found ${goldFound} gold!`, 'success');
-         }
+        if (isTreasure) {
+          appendLog('The mimic dissolved into gold and items!', 'success');
+          const goldFound = 50 + currentWorldId * 20;
+          const p = get().player;
+          if (p) {
+            const previousMoney = p.money;
+            set((state) => ({
+              player: {
+                ...state.player!,
+                money: state.player!.money + goldFound,
+              },
+              playerCore: state.playerCore ? {
+                ...state.playerCore,
+                statistics: applyPlayerStatisticEvent(state.playerCore.statistics, { type: 'GoldEarned', amount: goldFound }),
+              } : state.playerCore,
+            }));
+            economyEventBus.publish({
+              type: 'CurrencyChanged',
+              playerId: p.id,
+              previousAmount: previousMoney,
+              newAmount: previousMoney + goldFound,
+              changeDirection: 'gain',
+              source: 'mimic_treasure',
+              gameTimeMinutes: p.gameTimeMinutes,
+              turnCount: get().turnCount,
+            });
+            appendLog(`Found ${goldFound} gold!`, 'success');
+          }
         } else if (isWorldBoss) {
          const minLevel = calculateMinViableLevel(currentWorldId);
          if (player.level < minLevel && scaledPlayer.level >= minLevel) {
@@ -1644,6 +1679,7 @@ fleeDungeon: () => {
       }
     }
 
+    const previousMoney = player.money;
     set((s) => ({
       player: s.player ? {
         ...s.player,
@@ -1651,6 +1687,16 @@ fleeDungeon: () => {
         money: s.player.money - totalBuyCost,
       } : s.player,
     }));
+    economyEventBus.publish({
+      type: 'CurrencyChanged',
+      playerId: player.id,
+      previousAmount: previousMoney,
+      newAmount: previousMoney - totalBuyCost,
+      changeDirection: 'loss',
+      source: 'caravan_goods_purchase',
+      gameTimeMinutes: player.gameTimeMinutes,
+      turnCount: get().turnCount,
+    });
     appendLog(`Caravan dispatched to World ${destination}. Goods purchased for ${totalBuyCost} gold.`, 'info');
 
     const seed = origin * 1000 + destination + (player.dayCount ?? 1);

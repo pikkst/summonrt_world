@@ -1,5 +1,6 @@
 import type { Settlement, SettlementType } from '../../types/game.ts';
 import { ITEM_TEMPLATES } from '../../data/crafting/itemTemplates.ts';
+import { economyEventBus } from './economyEventBus';
 
 export const PRICE_ELASTICITY_K = 0.1;
 
@@ -167,6 +168,18 @@ export function tickSettlementEconomy(
       demand,
       currentPrice,
     };
+
+    const previousDemand = existing?.demand ?? demand;
+    if (previousDemand !== demand) {
+      economyEventBus.publish({
+        type: 'SettlementDemandChanged',
+        settlementId: state.settlementId,
+        goodKey: good.key,
+        previousDemand,
+        newDemand: demand,
+        turnCount: targetTurn,
+      });
+    }
   }
 
   return {

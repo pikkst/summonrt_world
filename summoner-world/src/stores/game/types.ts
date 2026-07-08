@@ -156,6 +156,7 @@ missions: ActiveMission[];
     demonlordState?: DemonlordState;
     demonlordFloorActivity?: FloorActivity;
     crafting?: CraftingUIState;
+    marketplace?: { listings: Array<{ listingId: string; playerId: string; itemKey: string; quantity: number; price: number; purchased: boolean }> };
     }
 
 export interface GameActions {
@@ -279,8 +280,10 @@ showLevelUpNotification: (notifications: Array<{ creatureName: string; newLevel:
     }) => void;
    selectRecipe: (recipeKey: string | null) => void;
    previewRecipe: (recipeKey: string) => void;
-   craftItem: (recipeKey: string) => void;
-   foundTown: (worldId: number, x: number, y: number, tile?: TileData) => void;
-   }
+    craftItem: (recipeKey: string) => void;
+    foundTown: (worldId: number, x: number, y: number, tile?: TileData) => void;
+    createListing: (item: InventoryStack, price: number) => void;
+    purchaseListing: (listingId: string) => void;
+    }
 
 export type GameStore = GameStoreState & GameActions;

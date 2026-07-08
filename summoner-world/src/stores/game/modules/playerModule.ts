@@ -48,6 +48,7 @@ import {
   type TravelMode,
 } from '../../../core/fastTravel.ts';
 import { worldEventBus } from '../../../core/worldEventBus.ts';
+import { economyEventBus } from '../../../core/economy/economyEventBus';
 import { foundTown, getTownFoundingRequirements, TOWN_FOUNDING_MIN_BUILDINGS, TOWN_FOUNDING_MIN_WORLD_ID } from '../../../core/playerCore/townFounding.ts';
 
 function buildValidatedUrl(baseUrl: string, playerId: string): string {
@@ -1086,6 +1087,7 @@ const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(cu
       return;
     }
 
+    const previousMoney = player.money;
     const updatedInventory = [...player.inventory];
     const existing = updatedInventory.find(i => i.templateKey === itemId);
     if (existing) {
@@ -1102,6 +1104,17 @@ const updatedPlayer = addPlayerXP(player, xpGain, appendLog, getWorldModifier(cu
       },
       dungeon: { ...s.dungeon, clearedFloors: [...s.dungeon.clearedFloors, s.dungeon.currentFloor] }
     }));
+
+    economyEventBus.publish({
+      type: 'CurrencyChanged',
+      playerId: player.id,
+      previousAmount: previousMoney,
+      newAmount: previousMoney - item.price,
+      changeDirection: 'loss',
+      source: 'vendor_purchase',
+      gameTimeMinutes: player.gameTimeMinutes,
+      turnCount: get().turnCount,
+    });
     
     appendLog(`Purchased ${item.name} for ${item.price} stones!`, 'success');
   },
