@@ -27,6 +27,9 @@ export type {
   CreatureSlotGroup,
   CreatureSlots,
   HousingReference,
+  ProfessionId,
+  ProfessionProgression,
+  ProfessionState,
   WorldUnlocks,
   SaveMetadata,
 } from '../../types/playerCore.ts';
@@ -290,6 +293,23 @@ export type {
   SummonSuccessModifiers,
   SummonHistoryEntry,
 } from './summoningCore';
+export {
+  PROFESSION_DEFINITIONS,
+  PROFESSION_IDS,
+  PROFESSION_LEVEL_CAP,
+  PROFESSION_BASE_XP,
+  PROFESSION_XP_GROWTH,
+  createDefaultProfessionProgression,
+  createDefaultProfessionState,
+  getProfessionXpRequiredForLevel,
+  addProfessionXp,
+  addPlayerProfessionXp,
+  setActiveProfession,
+  getProfessionAggregateBonuses,
+  normalizeProfessionState,
+  isProfessionId,
+} from './professionCore';
+export type { ProfessionDefinition, ProfessionPerkDefinition, ProfessionXpSource } from './professionCore';
 export {
   getStructureDefinition,
   getAllStructureDefinitions,
