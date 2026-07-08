@@ -259,7 +259,7 @@ export function getSmeltingQueueRemainingSeconds(queue: SmeltingQueue, now: numb
   return max;
 }
 
-export type BrokerRouteStatus = 'idle' | 'scouting' | 'scheduled' | 'departed' | 'arrived';
+export type BrokerRouteStatus = 'idle' | 'scheduled' | 'departed' | 'arrived';
 
 export interface BrokerRoute {
   routeId: string;
@@ -365,7 +365,9 @@ export function scheduleBrokerDeparture(
   now: number,
   bonuses?: CareerSystemBonuses
 ): BrokerRoute {
-  const interval = calculateBrokerRouteInterval(bonuses, route.intervalSeconds);
+  const interval = bonuses
+    ? calculateBrokerRouteInterval(bonuses, route.intervalSeconds)
+    : route.intervalSeconds;
   const next = route.lastDepartureAt + interval;
   return {
     ...route,
@@ -408,13 +410,15 @@ export function tickBrokerRoute(
     }
   }
   if (route.status === 'arrived' || route.status === 'idle') {
-    const interval = calculateBrokerRouteInterval(bonuses, route.intervalSeconds);
+    const interval = bonuses
+      ? calculateBrokerRouteInterval(bonuses, route.intervalSeconds)
+      : route.intervalSeconds;
     if (now - route.lastDepartureAt >= interval) {
       return {
         route: {
           ...route,
           status: 'scheduled',
-          scheduledDepartureAt: now,
+          scheduledDepartureAt: route.lastDepartureAt + interval,
           intervalSeconds: interval,
         },
         departed: false,
@@ -500,10 +504,4 @@ export function buildCareerTimerSnapshot(params: {
   };
 }
 
-export function getCategoryForTemplate(templateKey: string): GoodCategory {
-  return getGoodCategory(templateKey);
-}
 
-export function getBasePriceForTemplate(templateKey: string): number {
-  return getBasePrice(templateKey);
-}

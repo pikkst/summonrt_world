@@ -403,7 +403,7 @@ describe('T8.16 - Non-Combat Career Timers', () => {
       const arrived = { ...route, status: 'arrived' as const, lastDepartureAt: 0 };
       const { route: ticked } = tickBrokerRoute(arrived, BROKER_ROUTE_BASE_INTERVAL_SECONDS + 1);
       expect(ticked.status).toBe('scheduled');
-      expect(ticked.scheduledDepartureAt).toBe(BROKER_ROUTE_BASE_INTERVAL_SECONDS + 1);
+      expect(ticked.scheduledDepartureAt).toBe(BROKER_ROUTE_BASE_INTERVAL_SECONDS);
     });
 
     it('tickBrokerRoute leaves an in-progress caravan as departed', () => {
