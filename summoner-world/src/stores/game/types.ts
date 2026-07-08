@@ -156,7 +156,7 @@ missions: ActiveMission[];
     demonlordState?: DemonlordState;
     demonlordFloorActivity?: FloorActivity;
     crafting?: CraftingUIState;
-    marketplace?: { listings: Array<{ listingId: string; playerId: string; itemKey: string; quantity: number; price: number; purchased: boolean }> };
+    marketplace?: { listings: Array<{ listingId: string; playerId: string; itemKey: string; quantity: number; price: number; purchased: boolean }>; escrow: Record<string, number> };
     }
 
 export interface GameActions {
@@ -284,6 +284,7 @@ showLevelUpNotification: (notifications: Array<{ creatureName: string; newLevel:
     foundTown: (worldId: number, x: number, y: number, tile?: TileData) => void;
     createListing: (item: InventoryStack, price: number) => void;
     purchaseListing: (listingId: string) => void;
+    claimEscrow: (sellerId?: string) => void;
     }
 
 export type GameStore = GameStoreState & GameActions;

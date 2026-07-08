@@ -1,6 +1,8 @@
 import type { GameStore, SetState, InventoryStack } from '../types.ts';
 import { canListItemOnMarketplace, calculateListingFee } from '../../../core/economy/marketplaceRules';
 import { economyEventBus } from '../../../core/economy/economyEventBus';
+import { addItemToInventory } from '../../../core/playerCore/inventoryCore';
+import { getItemTemplate } from '../../../data/crafting/itemTemplates';
 
 interface MarketListing {
   listingId: string;
@@ -15,6 +17,22 @@ const makeDefaultMarketplaceState = (): { listings: MarketListing[]; escrow: Rec
   listings: [],
   escrow: {},
 });
+
+function deductInventoryQuantity(inventory: InventoryStack[], item: InventoryStack): InventoryStack[] {
+  let remaining = item.quantity;
+  const next = inventory
+    .map((stack) => {
+      if (remaining <= 0) return stack;
+      if (stack.templateKey !== item.templateKey) return stack;
+      const take = Math.min(remaining, stack.quantity);
+      stack = { ...stack, quantity: stack.quantity - take };
+      remaining -= take;
+      if (stack.quantity <= 0) return null;
+      return stack;
+    })
+    .filter((stack): stack is InventoryStack => stack !== null);
+  return next;
+}
 
 export const marketplaceActions = (set: SetState<GameStore>, get: () => GameStore) => ({
   selectRecipe: () => undefined,
@@ -38,6 +56,14 @@ export const marketplaceActions = (set: SetState<GameStore>, get: () => GameStor
       return;
     }
 
+    const available = playerCore.inventory
+      .filter((i) => i.templateKey === item.templateKey)
+      .reduce((sum, i) => sum + i.quantity, 0);
+    if (available < item.quantity) {
+      appendLog('Insufficient item quantity to list.', 'warning');
+      return;
+    }
+
     const listingId = `listing_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
     const listing: MarketListing = {
       listingId,
@@ -49,9 +75,7 @@ export const marketplaceActions = (set: SetState<GameStore>, get: () => GameStor
     };
 
     set((state: any) => {
-      const inventory = state.playerCore.inventory.filter(
-        (i: InventoryStack) => i.templateKey !== item.templateKey
-      );
+      const inventory = deductInventoryQuantity(state.playerCore.inventory, item);
       return {
         playerCore: {
           ...state.playerCore,
@@ -107,11 +131,22 @@ export const marketplaceActions = (set: SetState<GameStore>, get: () => GameStor
       const escrow = { ...(state.marketplace?.escrow || {}) };
       escrow[listing.playerId] = (escrow[listing.playerId] || 0) + listing.price;
 
+      const template = getItemTemplate(listing.itemKey);
+      const newInventory = template
+        ? addItemToInventory(
+            state.playerCore.inventory,
+            { templateKey: listing.itemKey, quantity: listing.quantity },
+            template,
+            'tradeable',
+            playerCore.identity.id
+          ).inventory
+        : [...state.playerCore.inventory, { templateKey: listing.itemKey, quantity: listing.quantity }];
+
       return {
         playerCore: {
           ...state.playerCore,
           money: state.playerCore.money - listing.price,
-          inventory: [...state.playerCore.inventory, { templateKey: listing.itemKey, quantity: listing.quantity }],
+          inventory: newInventory,
         },
         marketplace: {
           ...(state.marketplace ?? makeDefaultMarketplaceState()),
@@ -133,5 +168,39 @@ export const marketplaceActions = (set: SetState<GameStore>, get: () => GameStor
     });
 
     appendLog(`Purchased ${listing.itemKey} for ${listing.price} stones.`, 'success');
+  },
+
+  claimEscrow: (sellerId?: string) => {
+    const { playerCore, player, appendLog } = get();
+    if (!playerCore || !player) return;
+
+    const targetSellerId = sellerId || player.id;
+    const escrowKey = targetSellerId;
+    const escrow = get().marketplace?.escrow || {};
+    const amount = escrow[escrowKey];
+
+    if (!amount || amount <= 0) {
+      appendLog('No escrow funds to claim.', 'warning');
+      return;
+    }
+
+    set((state: any) => {
+      const newEscrow = { ...(state.marketplace?.escrow || {}) };
+      delete newEscrow[escrowKey];
+
+      return {
+        playerCore: {
+          ...state.playerCore,
+          money: state.playerCore.money + amount,
+        },
+        marketplace: {
+          ...(state.marketplace ?? makeDefaultMarketplaceState()),
+          listings: state.marketplace?.listings || [],
+          escrow: newEscrow,
+        },
+      };
+    });
+
+    appendLog(`Claimed ${amount} stones from escrow.`, 'success');
   },
 });
