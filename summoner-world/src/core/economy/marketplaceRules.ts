@@ -57,7 +57,13 @@ export function canListItemByRarity(rarity: ItemRarity, playerLevel: number): Ma
   return { valid: true };
 }
 
-export function getRarityListingRestrictions(rarity: ItemRarity) {
+export interface RarityListingRestrictions {
+  rarity: ItemRarity;
+  levelRequirement: number;
+  listingFeeMultiplier: number;
+}
+
+export function getRarityListingRestrictions(rarity: ItemRarity): RarityListingRestrictions {
   return {
     rarity,
     levelRequirement: RARITY_LEVEL_REQUIREMENT[rarity],
@@ -84,7 +90,8 @@ export function validateListingPrice(basePrice: number, listingPrice: number): M
   if (listingPrice < MIN_LISTING_PRICE) {
     return { valid: false, reason: 'price_too_low' };
   }
-  if (basePrice > 0 && listingPrice > basePrice * MAX_LISTING_PRICE_FACTOR) {
+  const effectiveBasePrice = Math.max(basePrice, MIN_LISTING_PRICE);
+  if (listingPrice > effectiveBasePrice * MAX_LISTING_PRICE_FACTOR) {
     return { valid: false, reason: 'price_too_high' };
   }
   return { valid: true };

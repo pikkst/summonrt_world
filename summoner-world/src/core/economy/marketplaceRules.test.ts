@@ -170,9 +170,15 @@ describe('T8.18 - Marketplace rules from Player Core Bible', () => {
       expect(validateListingPrice(10, 10 * MAX_LISTING_PRICE_FACTOR).valid).toBe(true);
     });
 
+    it('still caps price when basePrice is 0 to prevent manipulation', () => {
+      expect(validateListingPrice(0, MIN_LISTING_PRICE * MAX_LISTING_PRICE_FACTOR).valid).toBe(true);
+      expect(validateListingPrice(0, MIN_LISTING_PRICE * MAX_LISTING_PRICE_FACTOR + 1).valid).toBe(false);
+    });
+
     it('allows valid prices within bounds', () => {
       expect(validateListingPrice(10, 50).valid).toBe(true);
-      expect(validateListingPrice(0, 100).valid).toBe(true);
+      expect(validateListingPrice(0, 10).valid).toBe(true);
+      expect(validateListingPrice(0, 11).valid).toBe(false);
     });
 
     it('flags suspicious quantities and duplicate listings in fraud checks', () => {
