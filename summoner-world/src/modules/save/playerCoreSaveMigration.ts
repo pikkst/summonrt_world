@@ -11,6 +11,7 @@ import {
   normalizeTitleEntry,
   evaluateAchievements,
 } from '../../core/playerCore/titleAchievementCore.ts';
+import { normalizeProfessionState } from '../../core/playerCore/professionCore.ts';
 
 export const ACTIVE_SAVE_KEY = 'summonerworld-save';
 export const LEGACY_HELPER_SAVE_KEY = 'summonerworld-save-v1';
@@ -135,6 +136,7 @@ export function deserializePlayerCore(data: unknown): PlayerCoreState {
     },
     creatureSlots: raw.creatureSlots ?? defaults.creatureSlots,
     housing: normalizeHousing(raw.housing, defaults.housing, raw),
+    professions: normalizeProfessionState(raw.professions),
     worldUnlocks: {
       ...defaults.worldUnlocks,
       ...raw.worldUnlocks,
@@ -249,6 +251,7 @@ export function migrateLegacyPlayerToCore(player: PlayerState, previous?: Player
     statistics: mergePlayerStatistics(previous?.statistics, migrated.statistics),
     reputation: previous?.reputation ?? migrated.reputation,
     housing: previous?.housing ?? migrated.housing,
+    professions: previous?.professions ?? migrated.professions,
     saveMetadata: {
       ...(previous?.saveMetadata ?? migrated.saveMetadata),
       lastSavedAt: new Date().toISOString(),

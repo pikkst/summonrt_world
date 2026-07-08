@@ -301,6 +301,28 @@ export interface HousingReference {
   townHallPolicies?: TownHallPolicy[];
 }
 
+export type ProfessionId =
+  | 'blacksmith'
+  | 'explorer'
+  | 'shopkeeper'
+  | 'broker'
+  | 'official'
+  | 'summoner';
+
+export interface ProfessionProgression {
+  professionId: ProfessionId;
+  level: number;
+  xp: number;
+  totalXpEarned: number;
+  unlockedPerkIds: string[];
+  lastAdvancedAt?: number;
+}
+
+export interface ProfessionState {
+  activeProfessionId: ProfessionId;
+  entries: Record<ProfessionId, ProfessionProgression>;
+}
+
 export interface WorldUnlocks {
   unlockedWorlds: number[];
   activeWorldId: number;
@@ -337,6 +359,7 @@ export interface PlayerCoreState {
   creatureContracts: CreatureContract[];
   creatureSlots: CreatureSlots;
   housing: HousingReference;
+  professions?: ProfessionState;
   worldUnlocks: WorldUnlocks;
   fastTravel: FastTravelState;
   saveMetadata: SaveMetadata;

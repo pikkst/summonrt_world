@@ -466,13 +466,13 @@ Sprint goal: implement full economic, housing and crafting system with career-ba
   - [x] T8.16.1 – Shopkeeper: storefront customer arrival timer (base 5min reduced by tree modifier), bulk purchase chance
   - [x] T8.16.2 – Blacksmith: smelting queue (30s per bar, background process), "Blast Furnace Mastery" speed boost
   - [x] T8.16.3 – Broker: trade route timer, arbitrage opportunity detection, caravan departure scheduling
-- [ ] T8.17 – Add Profession system
-  - [ ] T8.17.1 – Blacksmith profession progression
-  - [ ] T8.17.2 – Explorer profession progression
-  - [ ] T8.17.3 – Shopkeeper profession progression
-  - [ ] T8.17.4 – Broker profession progression
-  - [ ] T8.17.5 – Official profession progression
-  - [ ] T8.17.6 – Summoner profession progression
+- [x] T8.17 – Add Profession system
+  - [x] T8.17.1 – Blacksmith profession progression
+  - [x] T8.17.2 – Explorer profession progression
+  - [x] T8.17.3 – Shopkeeper profession progression
+  - [x] T8.17.4 – Broker profession progression
+  - [x] T8.17.5 – Official profession progression
+  - [x] T8.17.6 – Summoner profession progression
 - [ ] T8.18 – Add Marketplace rules from Player Core Bible
   - [ ] T8.18.1 – Binding restrictions
   - [ ] T8.18.2 – Rarity restrictions

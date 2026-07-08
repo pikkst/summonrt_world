@@ -79,6 +79,7 @@ model Player {
   mana            Int
   maxMana         Int
   reputation      Json?     // {world_rep, faction_rep, settlement_rep, creature_rep}
+  professions     Json?     // { activeProfessionId, entries: { blacksmith, explorer, shopkeeper, broker, official, summoner } }
 
   // Position & world
   currentWorldId  Int

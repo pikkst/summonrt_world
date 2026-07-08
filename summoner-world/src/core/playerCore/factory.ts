@@ -9,6 +9,7 @@ import { createSkillEntry, createTalentNode, inferTalentCategory } from './skill
 import { createDefaultReputationState } from './reputationCore';
 import { refreshTitleAchievementState } from './titleAchievementCore';
 import { createDefaultPlayerStatistics } from './playerStatisticsTracking';
+import { createDefaultProfessionState } from './professionCore';
 
 export const ARCHETYPE_TO_CLASS: Record<string, SummonerClass> = {
   fighter: 'tactician',
@@ -73,6 +74,7 @@ export function createDefaultPlayerCoreState(
     },
     creatureContracts: [],
     housing: { structures: [] },
+    professions: createDefaultProfessionState(),
     worldUnlocks: {
       unlockedWorlds: [startingWorldId],
       activeWorldId: startingWorldId,
@@ -197,6 +199,7 @@ export function migratePlayerStateToCore(player: PlayerState): PlayerCoreState {
       })
     ),
     housing: { structures: [] },
+    professions: createDefaultProfessionState(),
     worldUnlocks: {
       unlockedWorlds,
       activeWorldId: currentWorldId,
