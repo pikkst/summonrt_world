@@ -1,5 +1,7 @@
 import { SeededRandom } from '../../utils/SeededRandom';
 import { ITEM_TEMPLATES } from '../../data/crafting/itemTemplates';
+import type { CareerSystemBonuses } from '../../data/careerTreeIntegration';
+import { applyCaravanTariffDiscount } from './careerEconomy';
 import type { InventoryStack } from '../../types/game';
 
 export const CARAVAN_BASE_DURATION_SECONDS = 4 * 60 * 60;
@@ -147,26 +149,32 @@ export function isArbitrageProfitable(
 
 export function resolveCaravanTrade(
   caravan: TradeCaravan,
-  applyTax: boolean = true
+  applyTax: boolean = true,
+  careerBonuses?: CareerSystemBonuses
 ): {
   profit: number;
   taxPaid: number;
+  taxRatePct: number;
   netProfit: number;
   deliveredGoods: InventoryStack[];
   success: boolean;
 } {
   if (caravan.goods.length === 0) {
-    return { profit: 0, taxPaid: 0, netProfit: 0, deliveredGoods: [], success: false };
+    return { profit: 0, taxPaid: 0, taxRatePct: 0, netProfit: 0, deliveredGoods: [], success: false };
   }
 
   const profit = Math.max(0, caravan.totalSellRevenue - caravan.totalBuyCost);
-  const taxPaid = applyTax ? Math.floor((profit * CARAVAN_TAX_RATE_PCT) / 100) : 0;
+  const effectiveTaxRatePct = applyTax
+    ? applyCaravanTariffDiscount(CARAVAN_TAX_RATE_PCT, careerBonuses)
+    : 0;
+  const taxPaid = Math.floor((profit * effectiveTaxRatePct) / 100);
   const grossProfit = profit - taxPaid;
   const netProfit = Math.max(0, Math.floor((grossProfit * CARAVAN_PROFIT_SHARE_PCT) / 100));
 
   return {
     profit,
     taxPaid,
+    taxRatePct: effectiveTaxRatePct,
     netProfit,
     deliveredGoods: caravan.goods,
     success: true,

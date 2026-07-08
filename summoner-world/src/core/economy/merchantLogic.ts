@@ -1,4 +1,6 @@
 import { getBasePrice } from './settlementLedger';
+import type { CareerSystemBonuses } from '../../data/careerTreeIntegration';
+import { applySellingPriceBonus } from './careerEconomy';
 
 export const MERCHANT_BUY_PRICE_FACTOR = 0.6;
 export const MERCHANT_SELL_PRICE_FACTOR = 1.2;
@@ -121,7 +123,7 @@ export function restockMerchant(state: MerchantState, turnsElapsed: number): Mer
   };
 }
 
-export function merchantBuyFromPlayer(state: MerchantState, goodKey: string, quantity: number, unitPrice: number): MerchantBuyResult {
+export function merchantBuyFromPlayer(state: MerchantState, goodKey: string, quantity: number, unitPrice: number, careerBonuses?: CareerSystemBonuses): MerchantBuyResult {
   const entry = state.stock[goodKey];
   if (!entry) {
     return { accepted: false, state, reason: 'unknown_good' };
@@ -131,7 +133,8 @@ export function merchantBuyFromPlayer(state: MerchantState, goodKey: string, qua
     return { accepted: false, state, reason: 'invalid_quantity' };
   }
 
-  if (unitPrice <= 0 || unitPrice > entry.sellPrice) {
+  const maxAcceptablePrice = applySellingPriceBonus(entry.sellPrice, careerBonuses);
+  if (unitPrice <= 0 || unitPrice > maxAcceptablePrice) {
     return { accepted: false, state, reason: 'invalid_price' };
   }
 
