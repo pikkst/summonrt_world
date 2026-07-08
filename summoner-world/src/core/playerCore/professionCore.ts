@@ -10,7 +10,7 @@ export interface ProfessionDefinition {
   id: ProfessionId;
   name: string;
   description: string;
-  xpSources: string[];
+  xpSources: ProfessionXpSource[];
   perks: ProfessionPerkDefinition[];
 }
 
