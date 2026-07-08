@@ -473,13 +473,13 @@ Sprint goal: implement full economic, housing and crafting system with career-ba
   - [x] T8.17.4 – Broker profession progression
   - [x] T8.17.5 – Official profession progression
   - [x] T8.17.6 – Summoner profession progression
-- [ ] T8.18 – Add Marketplace rules from Player Core Bible
-  - [ ] T8.18.1 – Binding restrictions
-  - [ ] T8.18.2 – Rarity restrictions
-  - [ ] T8.18.3 – Listing fees
-  - [ ] T8.18.4 – Trade taxes
-  - [ ] T8.18.5 – Fraud prevention checks
-  - [ ] T8.18.6 – Contract listing rules for eligible creatures
+- [x] T8.18 – Add Marketplace rules from Player Core Bible
+  - [x] T8.18.1 – Binding restrictions
+  - [x] T8.18.2 – Rarity restrictions
+  - [x] T8.18.3 – Listing fees
+  - [x] T8.18.4 – Trade taxes
+  - [x] T8.18.5 – Fraud prevention checks
+  - [x] T8.18.6 – Contract listing rules for eligible creatures
 - [ ] T8.19 – Publish economy events
   - [ ] T8.19.1 – ItemCrafted
   - [ ] T8.19.2 – ItemTraded
