@@ -1,5 +1,5 @@
 import { SeededRandom } from '../../utils/SeededRandom';
-import { getBasePrice, getGoodCategory, GoodCategory } from './settlementLedger';
+import { ITEM_TEMPLATES } from '../../data/crafting/itemTemplates';
 import type { InventoryStack } from '../../types/game';
 
 export const CARAVAN_BASE_DURATION_SECONDS = 4 * 60 * 60;
@@ -11,6 +11,38 @@ export const ARBITRAGE_MIN_DISTANCE = 10;
 export const ARBITRAGE_MIN_PROFIT_PCT = 5;
 
 export type TradeCaravanStatus = 'preparing' | 'departed' | 'arrived' | 'completed' | 'failed';
+
+export type GoodCategory = 'raw_material' | 'refined_material' | 'consumable' | 'food' | 'reagent' | 'trade_good';
+
+const GOOD_CATEGORY_MAP: Record<string, GoodCategory> = {
+  wood: 'raw_material',
+  stone: 'raw_material',
+  ore: 'raw_material',
+  herbs: 'raw_material',
+  crystal: 'refined_material',
+  essence: 'refined_material',
+  wooden_plank: 'refined_material',
+  stone_brick: 'refined_material',
+  iron_ingot: 'refined_material',
+  basic_food: 'food',
+  healing_salve: 'consumable',
+  mana_vial: 'consumable',
+  elemental_catalyst: 'reagent',
+  legendary_ingot: 'trade_good',
+  forgemasters_crown: 'trade_good',
+  coin: 'trade_good',
+};
+
+export function getGoodCategory(templateKey: string): GoodCategory {
+  return GOOD_CATEGORY_MAP[templateKey] || 'trade_good';
+}
+
+export function getBasePrice(templateKey: string): number {
+  const template = ITEM_TEMPLATES[templateKey];
+  if (!template) return 10;
+  const rarityMod = 1 + template.rarity * 0.5;
+  return Math.max(1, Math.floor(10 * rarityMod));
+}
 
 export interface TradeCaravan {
   caravanId: string;
@@ -62,9 +94,6 @@ export function createTradeCaravan(params: {
   totalSellRevenue: number;
 }): TradeCaravan {
   const rng = new SeededRandom(params.seed);
-  const distance = Math.abs(params.destinationWorldId - params.originWorldId);
-  const baseDuration = Math.max(CARAVAN_MIN_DURATION_SECONDS, CARAVAN_BASE_DURATION_SECONDS + distance * 60);
-  const jitter = Math.floor(rng.next() * 600);
   const now = Date.now();
 
   return {
@@ -79,7 +108,7 @@ export function createTradeCaravan(params: {
     status: 'preparing',
     createdAt: now,
     departedAt: now,
-    distance,
+    distance: Math.abs(params.destinationWorldId - params.originWorldId),
     profitPct: params.totalBuyCost > 0 ? ((params.totalSellRevenue - params.totalBuyCost) / params.totalBuyCost) * 100 : 0,
   };
 }
@@ -87,8 +116,7 @@ export function createTradeCaravan(params: {
 export function calculateCaravanProfit(
   originPrice: number,
   destinationPrice: number,
-  quantity: number,
-  distance: number
+  quantity: number
 ): { buyCost: number; sellRevenue: number; profit: number; profitPct: number } {
   const buyCost = originPrice * quantity;
   const sellRevenue = destinationPrice * quantity;
@@ -113,7 +141,7 @@ export function isArbitrageProfitable(
   if (quantity <= 0) return false;
   if (distance < ARBITRAGE_MIN_DISTANCE) return false;
 
-  const { profitPct } = calculateCaravanProfit(originPrice, destinationPrice, quantity, distance);
+  const { profitPct } = calculateCaravanProfit(originPrice, destinationPrice, quantity);
   return profitPct >= ARBITRAGE_MIN_PROFIT_PCT;
 }
 

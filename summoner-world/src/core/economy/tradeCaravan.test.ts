@@ -107,7 +107,7 @@ describe('T8.14 - Trade Caravan System', () => {
 
   describe('calculateCaravanProfit', () => {
     it('returns zero profit when origin and destination prices are equal', () => {
-      const result = calculateCaravanProfit(10, 10, 5, 10);
+      const result = calculateCaravanProfit(10, 10, 5);
       expect(result.buyCost).toBe(50);
       expect(result.sellRevenue).toBe(50);
       expect(result.profit).toBe(0);
@@ -115,7 +115,7 @@ describe('T8.14 - Trade Caravan System', () => {
     });
 
     it('computes profit when destination price is higher', () => {
-      const result = calculateCaravanProfit(10, 15, 5, 10);
+      const result = calculateCaravanProfit(10, 15, 5);
       expect(result.buyCost).toBe(50);
       expect(result.sellRevenue).toBe(75);
       expect(result.profit).toBe(25);
@@ -123,7 +123,7 @@ describe('T8.14 - Trade Caravan System', () => {
     });
 
     it('does not allow negative profit', () => {
-      const result = calculateCaravanProfit(15, 10, 5, 10);
+      const result = calculateCaravanProfit(15, 10, 5);
       expect(result.profit).toBe(0);
       expect(result.profitPct).toBe(0);
     });
@@ -257,7 +257,7 @@ describe('T8.14 - Trade Caravan System', () => {
     it('validates World 1 raw -> World 50 refined trade yields positive profit', () => {
       const buyCost = getGoodsPriceForWorld('wood', 1) * 5;
       const sellRevenue = getGoodsPriceForWorld('wood', 50) * 5;
-      const result = calculateCaravanProfit(buyCost, sellRevenue, 5, 49);
+      const result = calculateCaravanProfit(getGoodsPriceForWorld('wood', 1), getGoodsPriceForWorld('wood', 50), 5);
       expect(result.profit).toBeGreaterThan(0);
       expect(result.profitPct).toBeGreaterThan(ARBITRAGE_MIN_PROFIT_PCT);
     });
