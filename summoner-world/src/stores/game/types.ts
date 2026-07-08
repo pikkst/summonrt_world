@@ -42,8 +42,9 @@ import type {
   import type { TrapRoomInteraction, PuzzleRoomInteraction, EliteRoomInteraction, VendorRoomInteraction, TreasureRoomInteraction } from '../../core/dungeon/DungeonInteractions';
   import type { SummonerClassId } from '../../data/summonerClasses';
   import type { ContractPath } from '../../core/playerCore/characterCreation.ts';
-  import type { PlayerCoreState } from '../../types/playerCore.ts';
-  import type { CraftingUIState } from './modules/craftingModule.ts';
+   import type { PlayerCoreState } from '../../types/playerCore.ts';
+   import type { TileData } from '../../types/game.ts';
+   import type { CraftingUIState } from './modules/craftingModule.ts';
 
 export type {
   PlayerState,
@@ -276,9 +277,10 @@ showLevelUpNotification: (notifications: Array<{ creatureName: string; newLevel:
       startingWorldId?: number;
       contractPathKey?: ContractPath;
     }) => void;
-    selectRecipe: (recipeKey: string | null) => void;
-    previewRecipe: (recipeKey: string) => void;
-    craftItem: (recipeKey: string) => void;
-  }
+   selectRecipe: (recipeKey: string | null) => void;
+   previewRecipe: (recipeKey: string) => void;
+   craftItem: (recipeKey: string) => void;
+   foundTown: (worldId: number, x: number, y: number, tile?: TileData) => void;
+   }
 
 export type GameStore = GameStoreState & GameActions;

@@ -25,6 +25,8 @@ import { generateTrapInteraction, generatePuzzleInteraction, generateEliteIntera
 import type { RoomInteractionState } from '../../../types/game.ts';
 import { applyPlayerStatisticEvent, type PlayerStatisticEvent } from '../../../core/playerCore/playerStatisticsTracking';
 import { applyWorldBossCompletion } from '../../../core/worldProgression';
+import { processHousingEconomyTick } from '../../../core/playerCore/housingEconomy';
+import { applyEquipmentWear } from '../../../core/economy/inflationSinks';
 import { getWeatherEffect, getWeatherResourceYieldModifier, getWeatherEncounterModifier, getPlayerElementalAffinityBonus, getEncounterTableForWeather, updateWeather } from '../../../core/Weather';
 import { worldEventBus } from '../../../core/worldEventBus.ts';
 import {
@@ -1924,6 +1926,11 @@ const modifiers: MissionModifiers = {
                     if (outcome.result.battle_log.length > 0) {
                       state.appendLog(`[Wild Encounter] ${outcome.result.battle_log[outcome.result.battle_log.length - 1]}`, 'combat');
                     }
+                    const wearState = get();
+                    if (wearState.playerCore) {
+                      const wornEquipment = applyEquipmentWear(wearState.playerCore.equipment);
+                      set({ playerCore: { ...wearState.playerCore, equipment: wornEquipment } });
+                    }
                   }
                 } catch (e) {
                   get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
@@ -2032,7 +2039,14 @@ const modifiers: MissionModifiers = {
        world.weather = newWeatherState;
      };
 
-     const instance = createHeartbeat({
+     const applyHousingEconomy = (): void => {
+       const state = get();
+       if (!state.playerCore) return;
+       const updated = processHousingEconomyTick(state.playerCore);
+       set({ playerCore: updated });
+     };
+
+      const instance = createHeartbeat({
         getCurrentTime: Date.now,
         getMissions: () => get().missions,
         removeMission: (id) => get().removeMission(id),
@@ -2053,6 +2067,7 @@ const modifiers: MissionModifiers = {
             applyWorldTickCareerBonuses();
             applyResourceRespawn();
             applyWeatherUpdate();
+            applyHousingEconomy();
           },
          onMissionsProgress: () => {},
        resolveMissionCallbacks: {
@@ -2120,6 +2135,11 @@ const modifiers: MissionModifiers = {
                     }
                     if (outcome.result.battle_log.length > 0) {
                       state.appendLog(`[Wild Encounter] ${outcome.result.battle_log[outcome.result.battle_log.length - 1]}`, 'combat');
+                    }
+                    const wearState = get();
+                    if (wearState.playerCore) {
+                      const wornEquipment = applyEquipmentWear(wearState.playerCore.equipment);
+                      set({ playerCore: { ...wearState.playerCore, equipment: wornEquipment } });
                     }
                   }
                 } catch (e) {

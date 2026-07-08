@@ -1,5 +1,6 @@
 import type { CombatState, DungeonState, InventoryStack, LogEntry, PlayerState, Screen, WorldData } from '../../types/game.ts';
 import type { PlayerCoreState } from '../../types/playerCore.ts';
+import type { Structure } from '../../types/structure.ts';
 import type { ActiveMission } from '../../core/missionQueue.ts';
 import { createDefaultPlayerCoreState, migratePlayerStateToCore } from '../../core/playerCore/index.ts';
 import { normalizeSkillEntry, normalizeTalentNode } from '../../core/playerCore/skillTalentCore.ts';
@@ -133,10 +134,7 @@ export function deserializePlayerCore(data: unknown): PlayerCoreState {
       completed: raw.questHistory?.completed ?? defaults.questHistory.completed,
     },
     creatureSlots: raw.creatureSlots ?? defaults.creatureSlots,
-    housing: {
-      ...defaults.housing,
-      ...raw.housing,
-    },
+    housing: normalizeHousing(raw.housing, defaults.housing, raw),
     worldUnlocks: {
       ...defaults.worldUnlocks,
       ...raw.worldUnlocks,
@@ -542,6 +540,59 @@ function normalizeStringSet(value: unknown): Set<string> {
   if (value instanceof Set) return new Set(Array.from(value).filter((entry): entry is string => typeof entry === 'string'));
   if (!Array.isArray(value)) return new Set();
   return new Set(value.filter((entry): entry is string => typeof entry === 'string'));
+}
+
+function normalizeHousing(
+  rawHousing: unknown,
+  defaults: PlayerCoreState['housing'],
+  raw: Record<string, unknown>
+): PlayerCoreState['housing'] {
+  if (isRecord(rawHousing) && Array.isArray((rawHousing as Record<string, unknown>).structures)) {
+    return {
+      ...defaults,
+      ...(rawHousing as Record<string, unknown>),
+      structures: (rawHousing as Record<string, unknown>).structures as Structure[],
+    };
+  }
+
+  const legacyLevel = isRecord(rawHousing)
+    ? (rawHousing as Record<string, unknown>).structureLevel
+    : undefined;
+
+  const structures: Structure[] = [];
+  const structureLevel = typeof legacyLevel === 'number' && legacyLevel > 0 ? legacyLevel : undefined;
+
+  if (structureLevel) {
+    const worldId = typeof raw.position === 'object' && raw.position && 'worldId' in raw.position
+      ? (raw.position as Record<string, unknown>).worldId as number
+      : 1;
+    const x = typeof raw.position === 'object' && raw.position && 'x' in raw.position
+      ? (raw.position as Record<string, unknown>).x as number
+      : 10;
+    const y = typeof raw.position === 'object' && raw.position && 'y' in raw.position
+      ? (raw.position as Record<string, unknown>).y as number
+      : 10;
+    const ownerId = typeof raw.identity === 'object' && raw.identity && 'id' in raw.identity
+      ? (raw.identity as Record<string, unknown>).id as string
+      : 'player-unknown';
+
+    structures.push({
+      id: `structure_legacy_${ownerId}`,
+      type: 'house',
+      worldId,
+      tileX: x,
+      tileY: y,
+      level: structureLevel,
+      builtAt: 0,
+      ownerId,
+    });
+  }
+
+  return {
+    ...defaults,
+    structures,
+    structureLevel,
+  };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

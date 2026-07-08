@@ -290,4 +290,18 @@ export type {
   SummonSuccessModifiers,
   SummonHistoryEntry,
 } from './summoningCore';
+export {
+  getStructureDefinition,
+  getAllStructureDefinitions,
+  isValidStructureType,
+  canPlaceStructure,
+  canPlaceStructureOnTile,
+  placeStructure,
+  hasStructureType,
+  getStructuresOfType,
+  getStructureById,
+  getAllStructures,
+  getStructuresInWorld,
+} from './structureCore';
+export type { StructureType, Structure, StructureDefinition, StructurePlacementResult } from '../../types/structure';
 
