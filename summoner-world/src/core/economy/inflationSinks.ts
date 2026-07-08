@@ -1,5 +1,6 @@
 import type { EquipmentSlot, EquipmentSlotId, PlayerCoreState } from '../../types/playerCore.ts';
 import type { InventoryStack } from '../../types/game.ts';
+import { economyEventBus } from './economyEventBus';
 
 export const MAX_EQUIPMENT_DURABILITY = 100;
 export const EQUIPMENT_WEAR_PER_COMBAT = 4;
@@ -66,8 +67,23 @@ export function repairEquipmentSlot(
     s.slot === slotId ? { ...s, durability: newDurability } : s
   );
 
+  const newPlayerCore = { ...playerCore, money: playerCore.money - cost, equipment };
+
+  if (cost > 0) {
+    economyEventBus.publish({
+      type: 'CurrencyChanged',
+      playerId: playerCore.identity.id,
+      previousAmount: playerCore.money,
+      newAmount: newPlayerCore.money,
+      changeDirection: 'loss',
+      source: 'equipment_repair',
+      gameTimeMinutes: 0,
+      turnCount: 0,
+    });
+  }
+
   return {
-    playerCore: { ...playerCore, money: playerCore.money - cost, equipment },
+    playerCore: newPlayerCore,
     repaired: restored > 0,
     cost,
     restoredDurability: restored,

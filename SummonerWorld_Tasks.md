@@ -480,13 +480,13 @@ Sprint goal: implement full economic, housing and crafting system with career-ba
   - [x] T8.18.4 – Trade taxes
   - [x] T8.18.5 – Fraud prevention checks
   - [x] T8.18.6 – Contract listing rules for eligible creatures
-- [ ] T8.19 – Publish economy events
-  - [ ] T8.19.1 – ItemCrafted
-  - [ ] T8.19.2 – ItemTraded
-  - [ ] T8.19.3 – MarketListingCreated
-  - [ ] T8.19.4 – MarketListingPurchased
-  - [ ] T8.19.5 – CurrencyChanged
-  - [ ] T8.19.6 – SettlementDemandChanged
+- [x] T8.19 – Publish economy events
+  - [x] T8.19.1 – ItemCrafted
+  - [x] T8.19.2 – ItemTraded
+  - [x] T8.19.3 – MarketListingCreated
+  - [x] T8.19.4 – MarketListingPurchased
+  - [x] T8.19.5 – CurrencyChanged
+  - [x] T8.19.6 – SettlementDemandChanged
 
 ## Sprint 9 – NPCs, Quests & Ecosystem (Month 9)
 Sprint goal: NPC AI, quest generation, ecosystem simulation, ecological balance and career-based event timers.

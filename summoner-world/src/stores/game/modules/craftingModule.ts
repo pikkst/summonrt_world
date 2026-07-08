@@ -6,6 +6,7 @@ import { checkRecipeRequirements, calculateCraftingSuccessChance, calculateCraft
 import { getItemTemplate } from '../../../data/crafting/itemTemplates';
 import { applyPlayerStatisticEvent } from '../../../core/playerCore/playerStatisticsTracking';
 import { refreshTitleAchievementState } from '../../../core/playerCore/titleAchievementCore';
+import { economyEventBus } from '../../../core/economy/economyEventBus';
 
 export interface CraftingUIState {
   selectedRecipeKey: string | null;
@@ -121,6 +122,16 @@ export const craftingActions = (set: SetState<GameStore>, get: () => GameStore) 
       inventory: updatedInventory,
       statistics: updatedStatistics,
     }, Date.now());
+
+    economyEventBus.publish({
+      type: 'ItemCrafted',
+      playerId: playerCore.identity.id,
+      recipeKey: recipe.key,
+      itemKeys: result.outputs.map((o) => o.templateKey),
+      success: result.success,
+      gameTimeMinutes: playerCore.gameTimeMinutes,
+      turnCount: get().turnCount,
+    });
 
     set((state: any) => ({
       playerCore: updatedPlayerCore,

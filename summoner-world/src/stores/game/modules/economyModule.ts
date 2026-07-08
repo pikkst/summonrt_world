@@ -1,6 +1,7 @@
 import type { GameStore, CommunityState, SetState } from '../types.ts';
 import { createLog } from '../helpers.ts';
 import { applyPlayerStatisticEvent } from '../../../core/playerCore/playerStatisticsTracking';
+import { economyEventBus } from '../../../core/economy/economyEventBus';
 import axios from 'axios';
 
 export const economyActions = (set: SetState<GameStore>, get: () => GameStore) => ({
@@ -116,6 +117,15 @@ export const economyActions = (set: SetState<GameStore>, get: () => GameStore) =
     if (!player) return;
     try {
       await axios.post(`http://localhost:5000/api/community/trade`, { initiatorId: player.id, targetId, offeredItems, requestedItems });
+      economyEventBus.publish({
+        type: 'ItemTraded',
+        tradeId: '',
+        initiatorId: player.id,
+        targetId,
+        offeredItems: offeredItems.map((i) => ({ itemKey: i.itemKey, quantity: i.quantity })),
+        requestedItems: (requestedItems || []).map((i) => ({ itemKey: i.itemKey, quantity: i.quantity })),
+        timestamp: Date.now(),
+      });
       appendLog('Trade offer sent.', 'system');
     } catch (err) {
       console.error('Failed to create trade', err);
@@ -130,6 +140,20 @@ export const economyActions = (set: SetState<GameStore>, get: () => GameStore) =
         appendLog('Trade could not be accepted.', 'warning');
         return;
       }
+      const { player } = get();
+      if (!player) {
+        appendLog('Trade accepted but local player state was unavailable.', 'warning');
+        return;
+      }
+      economyEventBus.publish({
+        type: 'ItemTraded',
+        tradeId,
+        initiatorId: res.data?.trade?.initiatorId || '',
+        targetId: player.id,
+        offeredItems: res.data?.trade?.offeredItems || [],
+        requestedItems: res.data?.trade?.requestedItems || [],
+        timestamp: Date.now(),
+      });
       set((state) => state.playerCore ? ({
         playerCore: {
           ...state.playerCore,

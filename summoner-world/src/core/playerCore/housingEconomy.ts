@@ -7,6 +7,7 @@ import { adjustHousingTaxRate } from '../economy/careerEconomy.ts';
 import type { CareerSystemBonuses } from '../../data/careerTreeIntegration.ts';
 import type { InventoryStack, ItemTemplate } from '../../types/game.ts';
 import type { TownHallPolicy } from '../../types/structure.ts';
+import { economyEventBus } from '../economy/economyEventBus';
 
 export function calculateHousingPassiveIncome(structures: Structure[]): number {
   return structures.reduce((total, structure) => {
@@ -96,9 +97,21 @@ export function processHousingEconomyTick(
 
   const decayedInventory = applyFusionMaterialDecay(updatedInventory, rng);
 
+  const newMoney = playerCore.money + totalPassiveIncome;
+  economyEventBus.publish({
+    type: 'CurrencyChanged',
+    playerId: playerCore.identity.id,
+    previousAmount: playerCore.money,
+    newAmount: newMoney,
+    changeDirection: 'gain',
+    source: 'housing_passive_income',
+    gameTimeMinutes: 0,
+    turnCount: 0,
+  });
+
   return {
     ...playerCore,
-    money: playerCore.money + totalPassiveIncome,
+    money: newMoney,
     inventory: decayedInventory,
   };
 }
