@@ -1,4 +1,4 @@
-import type { GameStore, GameStoreState, PlayerState, WorldData, LogEntry, QuestInstance, Element, CreatureInstance, SetState, CreatureTemplate } from '../types.ts';
+import type { GameStore, GameStoreState, PlayerState, WorldData, LogEntry, QuestInstance, Element, CreatureInstance, SetState, CreatureTemplate, InventoryStack } from '../types.ts';
 import { createLog, calculateMovementModifiers, processTileDiscovery, getPlayerElements, addPlayerXP, getWorldModifier, applyMinViableLevelScaling, calculateMinViableLevel } from '../helpers.ts';
 import { generateTile } from '../../../core/worldGenerator.ts';
 import { getTileKey, getAffinityWeight, calculateBaseCaptureProbability, DUNGEON_ASCEND_SCROLL, WORLD_SIZE } from '../../../data/constants.ts';
@@ -29,6 +29,16 @@ import { processHousingEconomyTick } from '../../../core/playerCore/housingEcono
 import { applyEquipmentWear } from '../../../core/economy/inflationSinks';
 import { getWeatherEffect, getWeatherResourceYieldModifier, getWeatherEncounterModifier, getPlayerElementalAffinityBonus, getEncounterTableForWeather, updateWeather } from '../../../core/Weather';
 import { worldEventBus } from '../../../core/worldEventBus.ts';
+import {
+  createTradeCaravan,
+  resolveCaravanTrade,
+  validateCaravanGoods,
+  getGoodsPriceForWorld,
+  ARBITRAGE_MIN_DISTANCE,
+  ARBITRAGE_MIN_PROFIT_PCT,
+  CARAVAN_MIN_DURATION_SECONDS,
+  type TradeCaravan,
+} from '../../../core/economy/tradeCaravan.ts';
 import axios from 'axios';
 
 function recordPlayerCoreStatistic(set: SetState<GameStore>, event: PlayerStatisticEvent): void {
@@ -41,6 +51,88 @@ function recordPlayerCoreStatistic(set: SetState<GameStore>, event: PlayerStatis
       },
     };
   });
+}
+
+function getBaseXP(mission: ActiveMission): number {
+  const worldScale = 1 + (mission.world_layer - 1) * 0.05;
+  const baseByType: Record<string, number> = {
+    EXPLORE_TIER_1: 15,
+    SCOUT_DUNGEON: 30,
+    SMELT_ORE: 20,
+    CRAFT_ITEM: 30,
+    STORE_VISIT: 15,
+    TAX_EDICT: 40,
+    CARAVAN_ROUTE: 35,
+    SEARCH_AREA: 15,
+    GATHER_RESOURCE: 20,
+    CAPTURE_CREATURE: 25,
+    WILD_ENCOUNTER: 20,
+    DEMONLORD_ENCOUNTER: 30,
+  };
+  return Math.floor((baseByType[mission.type] || 10) * worldScale);
+}
+
+function resolveCaravanMission(
+  mission: ActiveMission,
+  set: SetState<GameStore>,
+  get: () => GameStore
+): void {
+  const state = get();
+  if (!state.player) return;
+
+  const goodsJson = mission.modifiers?.trade_goods as string | undefined;
+  const originWorldId = mission.modifiers?.origin_world_id as number | undefined;
+  const destinationWorldId = mission.modifiers?.destination_world_id as number | undefined;
+
+  if (!goodsJson || !originWorldId || !destinationWorldId) {
+    get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+    return;
+  }
+
+  try {
+    const goods: InventoryStack[] = JSON.parse(goodsJson);
+    const validation = validateCaravanGoods(goods);
+    if (!validation.valid) {
+      get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+      return;
+    }
+
+    let totalBuyCost = 0;
+    let totalSellRevenue = 0;
+    for (const item of goods) {
+      totalBuyCost += getGoodsPriceForWorld(item.templateKey, originWorldId) * item.quantity;
+      totalSellRevenue += getGoodsPriceForWorld(item.templateKey, destinationWorldId) * item.quantity;
+    }
+
+    const caravan: TradeCaravan = {
+      caravanId: mission.mission_id,
+      originWorldId,
+      destinationWorldId,
+      originSettlementId: '',
+      destinationSettlementId: '',
+      goods,
+      totalBuyCost,
+      totalSellRevenue,
+      status: 'completed',
+      createdAt: mission.start_time,
+      arrivedAt: Date.now(),
+      distance: Math.abs(destinationWorldId - originWorldId),
+      profitPct: totalBuyCost > 0 ? ((totalSellRevenue - totalBuyCost) / totalBuyCost) * 100 : 0,
+    };
+
+    const result = resolveCaravanTrade(caravan, true);
+
+    set((s) => ({
+      player: s.player ? {
+        ...s.player,
+        money: s.player.money + result.netProfit,
+      } : s.player,
+    }));
+    recordPlayerCoreStatistic(set, { type: 'TradeCompleted' });
+    get().appendLog(`Caravan arrived! Trade completed. Net profit: ${result.netProfit} gold (after ${result.taxPaid} tax).`, 'success');
+  } catch (e) {
+    get().grantMissionXP(state.player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
+  }
 }
 
 export const missionActions = (set: SetState<GameStore>, get: () => GameStore) => ({
@@ -1467,6 +1559,116 @@ fleeDungeon: () => {
     }
   },
 
+  startCaravanMission: (originWorldId?: number, destinationWorldId?: number) => {
+    const { player, worlds, currentWorldId, appendLog } = get();
+    if (!player) return;
+
+    const origin = originWorldId ?? currentWorldId;
+    let destination = destinationWorldId;
+
+    const dispatchSeed = origin * 10000 + (player.dayCount ?? 1);
+    const rng = new SeededRandom(dispatchSeed);
+
+    if (destination === undefined) {
+      if (origin <= 20) {
+        destination = Math.min(100, origin + 30 + rng.int(0, 19));
+      } else if (origin >= 80) {
+        destination = Math.max(1, origin - 30 - rng.int(0, 19));
+      } else {
+        destination = rng.chance(0.5) ? Math.min(100, origin + 30) : Math.max(1, origin - 30);
+      }
+    }
+
+    destination = Math.max(1, Math.min(100, destination));
+    const distance = Math.abs(destination - origin);
+    if (distance < ARBITRAGE_MIN_DISTANCE) {
+      appendLog(`Trade route too short. Minimum ${ARBITRAGE_MIN_DISTANCE} worlds apart required.`, 'warning');
+      return;
+    }
+
+    const originWorld = worlds.get(origin);
+    const destinationWorld = worlds.get(destination);
+    if (!originWorld || !destinationWorld) {
+      appendLog('Both origin and destination worlds must be discovered.', 'warning');
+      return;
+    }
+
+    const tradeGoods: InventoryStack[] = [];
+    let totalBuyCost = 0;
+    let totalSellRevenue = 0;
+
+    const rawMaterials = ['wood', 'stone', 'ore', 'herbs'];
+    const refinedMaterials = ['crystal', 'essence', 'iron_ingot', 'wooden_plank', 'stone_brick'];
+    const goods = origin < destination ? rawMaterials : refinedMaterials;
+
+    const shuffled = rng.shuffle(goods);
+    const selected = shuffled.slice(0, 3);
+
+    for (const templateKey of selected) {
+      const originPrice = getGoodsPriceForWorld(templateKey, origin);
+      const destPrice = getGoodsPriceForWorld(templateKey, destination);
+      const quantity = 1 + rng.int(0, 2);
+
+      totalBuyCost += originPrice * quantity;
+      totalSellRevenue += destPrice * quantity;
+
+      tradeGoods.push({ templateKey, quantity });
+    }
+
+    const profitValue = totalSellRevenue - totalBuyCost;
+    const profitPct = totalBuyCost > 0 ? (profitValue / totalBuyCost) * 100 : 0;
+
+    if (profitPct < ARBITRAGE_MIN_PROFIT_PCT) {
+      appendLog(`Trade route not profitable enough (${profitPct.toFixed(1)}% profit). Minimum ${ARBITRAGE_MIN_PROFIT_PCT}% required.`, 'warning');
+      return;
+    }
+
+    const updatedInventory = [...(player.inventory || [])];
+    for (const item of tradeGoods) {
+      const idx = updatedInventory.findIndex(i => i.templateKey === item.templateKey);
+      if (idx >= 0 && updatedInventory[idx]) {
+        updatedInventory[idx] = {
+          ...updatedInventory[idx],
+          quantity: updatedInventory[idx].quantity - item.quantity,
+        };
+        if (updatedInventory[idx].quantity <= 0) {
+          updatedInventory.splice(idx, 1);
+        }
+      }
+    }
+
+    set((s) => ({
+      player: s.player ? {
+        ...s.player,
+        inventory: updatedInventory,
+        money: s.player.money - totalBuyCost,
+      } : s.player,
+    }));
+    appendLog(`Caravan dispatched to World ${destination}. Goods purchased for ${totalBuyCost} gold.`, 'info');
+
+    const seed = origin * 1000 + destination + (player.dayCount ?? 1);
+    const duration = Math.max(CARAVAN_MIN_DURATION_SECONDS, 4 * 60 * 60 + distance * 60);
+
+    const modifiers: MissionModifiers = {
+      origin_world_id: origin,
+      destination_world_id: destination,
+      trade_goods: JSON.stringify(tradeGoods),
+      profit_pct: profitPct,
+    };
+
+    const mission = get().addMissionWithModifiers({
+      type: 'CARAVAN_ROUTE',
+      assigned_creatures: [],
+      world_layer: origin,
+      duration_seconds: duration,
+      extraModifiers: modifiers,
+    });
+
+    if (mission) {
+      appendLog(`Caravan dispatched. Expected profit: ${profitPct.toFixed(1)}%`, 'info');
+    }
+  },
+
   startActivity: (type: 'creature_training' | 'physical_training' | 'rest' | 'search_tracks' | 'search_animals', duration: number, message: string, creatureId?: string) => {
     const { player, appendLog, activity } = get();
     if (!player) return;
@@ -1643,24 +1845,6 @@ const modifiers: MissionModifiers = {
     );
     set({ missions: updatedMissions });
 
-    const getBaseXP = (mission: ActiveMission): number => {
-      const worldScale = 1 + (mission.world_layer - 1) * 0.05;
-      const baseByType: Record<string, number> = {
-        EXPLORE_TIER_1: 15,
-        SCOUT_DUNGEON: 30,
-        SMELT_ORE: 20,
-        CRAFT_ITEM: 30,
-        STORE_VISIT: 15,
-        TAX_EDICT: 40,
-        CARAVAN_ROUTE: 35,
-        SEARCH_AREA: 15,
-        GATHER_RESOURCE: 20,
-        CAPTURE_CREATURE: 25,
-        WILD_ENCOUNTER: 20,
-      };
-      return Math.floor((baseByType[mission.type] || 10) * worldScale);
-    };
-
     const heartbeat = createHeartbeat({
        getCurrentTime: () => now,
        getMissions: () => get().missions,
@@ -1700,9 +1884,9 @@ const modifiers: MissionModifiers = {
          TAX_EDICT: (mission) => {
            get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
          },
-         CARAVAN_ROUTE: (mission) => {
-           get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
-         },
+           CARAVAN_ROUTE: (mission) => {
+             resolveCaravanMission(mission, set, get);
+           },
          SEARCH_AREA: (mission) => {
            const state = get();
            if (state.searching) {
@@ -1786,101 +1970,83 @@ const modifiers: MissionModifiers = {
      const { heartbeat } = get();
      if (heartbeat) return;
 
-      const getBaseXP = (mission: ActiveMission): number => {
-        const worldScale = 1 + (mission.world_layer - 1) * 0.05;
-        const baseByType: Record<string, number> = {
-          EXPLORE_TIER_1: 15,
-          SCOUT_DUNGEON: 30,
-          SMELT_ORE: 20,
-          CRAFT_ITEM: 30,
-          STORE_VISIT: 15,
-          TAX_EDICT: 40,
-          CARAVAN_ROUTE: 35,
-          SEARCH_AREA: 15,
-          GATHER_RESOURCE: 20,
-          CAPTURE_CREATURE: 25,
-          WILD_ENCOUNTER: 20,
-        };
-        return Math.floor((baseByType[mission.type] || 10) * worldScale);
-      };
+     const applyWorldTickCareerBonuses = (): void => {
+       const state = get();
+       if (!state.player) return;
+       const treeData = getAllNodes();
+       const aggregatedStats = getAggregateStats(state.player, treeData);
+        const bonuses = getCareerSystemBonuses(aggregatedStats);
 
-      const applyWorldTickCareerBonuses = (): void => {
-        const state = get();
-        if (!state.player) return;
-        const treeData = getAllNodes();
-        const aggregatedStats = getAggregateStats(state.player, treeData);
-         const bonuses = getCareerSystemBonuses(aggregatedStats);
+        const energyRegenBoost = 1 + ((bonuses.energy_regen_pct || 0) / 100);
+       const nerveRegenBoost = 1 + ((bonuses.nerve_regen_pct || 0) / 100);
+       const happyRegenBoost = 1 + ((bonuses.happy_regen_pct || 0) / 100);
+       const lifeRegenBoost = 1 + ((bonuses.life_regen_pct || 0) / 100);
 
-         const energyRegenBoost = 1 + ((bonuses.energy_regen_pct || 0) / 100);
-        const nerveRegenBoost = 1 + ((bonuses.nerve_regen_pct || 0) / 100);
-        const happyRegenBoost = 1 + ((bonuses.happy_regen_pct || 0) / 100);
-        const lifeRegenBoost = 1 + ((bonuses.life_regen_pct || 0) / 100);
+       if (energyRegenBoost > 1 || nerveRegenBoost > 1 || happyRegenBoost > 1 || lifeRegenBoost > 1) {
+         set((s) => {
+           const p = s.player;
+           if (!p) return {};
+           return {
+             player: {
+               ...p,
+               energy: {
+                 ...p.energy,
+                 current: Math.min(p.energy.max, Math.floor(p.energy.current * Math.max(1, energyRegenBoost * 0.01))),
+               },
+               nerve: {
+                 ...p.nerve,
+                 current: Math.min(p.nerve.max, Math.floor(p.nerve.current * Math.max(1, nerveRegenBoost * 0.01))),
+               },
+               happy: {
+                 ...p.happy,
+                 current: Math.min(p.happy.max, Math.floor(p.happy.current * Math.max(1, happyRegenBoost * 0.01))),
+               },
+               life: {
+                 ...p.life,
+                 current: Math.min(p.life.max, Math.floor(p.life.current * Math.max(1, lifeRegenBoost * 0.01))),
+               },
+             },
+           };
+         });
+       }
+     };
 
-        if (energyRegenBoost > 1 || nerveRegenBoost > 1 || happyRegenBoost > 1 || lifeRegenBoost > 1) {
-          set((s) => {
-            const p = s.player;
-            if (!p) return {};
-            return {
-              player: {
-                ...p,
-                energy: {
-                  ...p.energy,
-                  current: Math.min(p.energy.max, Math.floor(p.energy.current * Math.max(1, energyRegenBoost * 0.01))),
-                },
-                nerve: {
-                  ...p.nerve,
-                  current: Math.min(p.nerve.max, Math.floor(p.nerve.current * Math.max(1, nerveRegenBoost * 0.01))),
-                },
-                happy: {
-                  ...p.happy,
-                  current: Math.min(p.happy.max, Math.floor(p.happy.current * Math.max(1, happyRegenBoost * 0.01))),
-                },
-                life: {
-                  ...p.life,
-                  current: Math.min(p.life.max, Math.floor(p.life.current * Math.max(1, lifeRegenBoost * 0.01))),
-                },
-              },
-            };
-          });
-        }
-      };
+     const applyResourceRespawn = (): void => {
+       const { worlds, currentWorldId, dayCount, turnCount, player } = get();
+       processResourceRespawn({ dayCount, worlds, currentWorldId, turnCount, gameTimeMinutes: player?.gameTimeMinutes });
+     };
 
-      const applyResourceRespawn = (): void => {
-        const { worlds, currentWorldId, dayCount, turnCount, player } = get();
-        processResourceRespawn({ dayCount, worlds, currentWorldId, turnCount, gameTimeMinutes: player?.gameTimeMinutes });
-      };
+     const applyWeatherUpdate = (): void => {
+       const { worlds, currentWorldId, turnCount, player } = get();
+       const world = worlds.get(currentWorldId);
+       if (!world || !player) return;
+       const oldWeather = world.weather.currentWeather;
+       const tileKey = getTileKey(player.tileX, player.tileY);
+       const tile = world.tiles.get(tileKey);
+       const biome = tile?.biome as any;
+       const newWeatherState = updateWeather(world.weather, world.seed, turnCount, biome);
+       if (newWeatherState.currentWeather !== oldWeather) {
+         worldEventBus.publish({
+           type: 'WeatherChanged',
+           worldId: currentWorldId,
+           previousWeather: oldWeather,
+           currentWeather: newWeatherState.currentWeather,
+           intensity: newWeatherState.weatherIntensity,
+           gameTimeMinutes: player.gameTimeMinutes,
+           turnCount,
+         });
+       }
+       world.weather = newWeatherState;
+     };
 
-      const applyWeatherUpdate = (): void => {
-        const { worlds, currentWorldId, turnCount, player } = get();
-        const world = worlds.get(currentWorldId);
-        if (!world || !player) return;
-        const oldWeather = world.weather.currentWeather;
-        const tileKey = getTileKey(player.tileX, player.tileY);
-        const tile = world.tiles.get(tileKey);
-        const biome = tile?.biome as any;
-        const newWeatherState = updateWeather(world.weather, world.seed, turnCount, biome);
-        if (newWeatherState.currentWeather !== oldWeather) {
-          worldEventBus.publish({
-            type: 'WeatherChanged',
-            worldId: currentWorldId,
-            previousWeather: oldWeather,
-            currentWeather: newWeatherState.currentWeather,
-            intensity: newWeatherState.weatherIntensity,
-            gameTimeMinutes: player.gameTimeMinutes,
-            turnCount,
-          });
-        }
-        world.weather = newWeatherState;
-      };
+     const applyHousingEconomy = (): void => {
+       const state = get();
+       if (!state.playerCore) return;
+       const updated = processHousingEconomyTick(state.playerCore);
+       set({ playerCore: updated });
+     };
 
-      const applyHousingEconomy = (): void => {
-        const state = get();
-        if (!state.playerCore) return;
-        const updated = processHousingEconomyTick(state.playerCore);
-        set({ playerCore: updated });
-      };
-
-  const instance = createHeartbeat({
+      const instance = createHeartbeat({
         getCurrentTime: Date.now,
         getMissions: () => get().missions,
         removeMission: (id) => get().removeMission(id),
@@ -1928,9 +2094,9 @@ const modifiers: MissionModifiers = {
           TAX_EDICT: (mission) => {
             get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
           },
-          CARAVAN_ROUTE: (mission) => {
-            get().grantMissionXP(get().player?.creatures.map((c) => c.id) || [], getBaseXP(mission));
-          },
+           CARAVAN_ROUTE: (mission) => {
+             resolveCaravanMission(mission, set, get);
+            },
           SEARCH_AREA: (mission) => {
             const state = get();
             if (state.searching) {
