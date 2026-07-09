@@ -32,6 +32,7 @@ import { applyEquipmentWear } from '../../../core/economy/inflationSinks';
 import { applyMissionSpeedBonuses } from '../../../core/economy/careerEconomy';
 import { getWeatherEffect, getWeatherResourceYieldModifier, getWeatherEncounterModifier, getPlayerElementalAffinityBonus, getEncounterTableForWeather, updateWeather } from '../../../core/Weather';
 import { worldEventBus } from '../../../core/worldEventBus.ts';
+import { tickNPCTravel } from '../../../core/npc/npcTravel.ts';
 import { economyEventBus } from '../../../core/economy/economyEventBus';
 import {
   createTradeCaravan,
@@ -2136,16 +2137,32 @@ const modifiers: MissionModifiers = {
        world.weather = newWeatherState;
      };
 
-     const applyHousingEconomy = (): void => {
-        const state = get();
-        if (!state.playerCore) return;
-        const treeData = getAllNodes();
-        const aggregatedStats = state.player
-          ? getAggregateStats(state.player, treeData)
-          : {};
-        const careerBonuses = getCareerSystemBonuses(aggregatedStats);
-        const updated = processHousingEconomyTick(state.playerCore, Math.random, careerBonuses);
-        set({ playerCore: updated });
+      const applyHousingEconomy = (): void => {
+         const state = get();
+         if (!state.playerCore) return;
+         const treeData = getAllNodes();
+         const aggregatedStats = state.player
+           ? getAggregateStats(state.player, treeData)
+           : {};
+         const careerBonuses = getCareerSystemBonuses(aggregatedStats);
+         const updated = processHousingEconomyTick(state.playerCore, Math.random, careerBonuses);
+         set({ playerCore: updated });
+       };
+
+      const applyNPCTravelTick = (): void => {
+        const { worlds, currentWorldId, turnCount, player } = get();
+        if (!player) return;
+        const world = worlds.get(currentWorldId);
+        if (!world) return;
+        const patched = tickNPCTravel(worlds, turnCount, player.gameTimeMinutes);
+        if (patched.size !== worlds.size) return;
+        let changed = false;
+        patched.forEach((w, id) => {
+          if (w !== worlds.get(id)) changed = true;
+        });
+        if (changed) {
+          set({ worlds: patched });
+        }
       };
 
       const instance = createHeartbeat({
@@ -2170,6 +2187,7 @@ const modifiers: MissionModifiers = {
             applyResourceRespawn();
             applyWeatherUpdate();
             applyHousingEconomy();
+            applyNPCTravelTick();
           },
          onMissionsProgress: () => {},
        resolveMissionCallbacks: {

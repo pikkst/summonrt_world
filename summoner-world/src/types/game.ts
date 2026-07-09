@@ -380,6 +380,20 @@ export interface NPCRelationship {
   romance: number;
 }
 
+export interface NPCTravelPlan {
+  npcId: string;
+  originSettlementId: string;
+  destinationSettlementId: string;
+  originX: number;
+  originY: number;
+  destinationX: number;
+  destinationY: number;
+  progress: number;
+  goods: InventoryStack[];
+  status: 'traveling' | 'interrupted' | 'arrived';
+  interruptType?: 'robbery' | 'monster';
+}
+
 export interface NPC {
   id: string;
   name: string;
@@ -390,6 +404,7 @@ export interface NPC {
   currentActivity: NPCActivity;
   homeSettlementId?: string;
   relationships?: Record<string, NPCRelationship>;
+  travel?: NPCTravelPlan;
 }
 
 export type RoomType = 'entrance' | 'boss' | 'treasure' | 'combat' | 'trap' | 'puzzle' | 'rest' | 'elite' | 'vendor';
