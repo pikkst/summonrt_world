@@ -1,7 +1,9 @@
-import type { ElementalAffinity, CreatureInstance, WorldData, LogEntry, ItemTemplate, TileData, CreatureTemplate, PlayerState } from '../types/game.ts';
+import type { ElementalAffinity, CreatureInstance, WorldData, LogEntry, ItemTemplate, TileData, CreatureTemplate, PlayerState, NPCActivity } from '../types/game.ts';
 import { generateCreatureTemplate, pickRandomSpeciesKey, getRandomSpeciesStage, registerSpeciesLine } from '../modules/creatures/creatureFactory.ts';
 import { SeededRandom } from '../utils/SeededRandom.ts';
 import { applyCreatureXP, grantPartyXP, getXPThreshold } from './xpCurve.ts';
+import { worldEventBus } from './worldEventBus.ts';
+import { getCurrentActivity } from './npc/schedule.ts';
 
 export interface GameEngineState {
   player: PlayerState | null;
@@ -23,7 +25,8 @@ export class GameEngine {
     const worldPatch = this.tickWorlds();
     const playerPatch = this.tickPlayer();
     const creaturePatch = this.tickCreatures();
-    return { ...worldPatch, ...playerPatch, ...creaturePatch };
+    const npcPatch = this.tickNPCs();
+    return { ...worldPatch, ...playerPatch, ...creaturePatch, ...npcPatch };
   }
 
   private tickWorlds(): Partial<GameEngineState> {
@@ -98,6 +101,35 @@ export class GameEngine {
         creatures: updatedCreatures,
       },
     };
+  }
+
+  private tickNPCs(): Partial<GameEngineState> {
+    const worlds = new Map(this.state.worlds);
+    const gameTimeMinutes = this.state.player?.gameTimeMinutes ?? 0;
+    const turnCount = this.state.turnCount;
+
+    worlds.forEach((world) => {
+      world.tiles.forEach((tile) => {
+        if (!tile.npc) return;
+        const previousActivity = tile.npc.currentActivity;
+        const nextActivity = getCurrentActivity(tile.npc.schedule, gameTimeMinutes);
+        if (previousActivity !== nextActivity) {
+          tile.npc = {
+            ...tile.npc,
+            currentActivity: nextActivity,
+          };
+          worldEventBus.publish({
+            type: 'NPCActivityChanged',
+            npcId: tile.npc.id,
+            activity: nextActivity,
+            gameTimeMinutes,
+            turnCount,
+          });
+        }
+      });
+    });
+
+    return { worlds };
   }
 
   grantPartyXP(creatureIds: string[], baseXP: number): Partial<GameEngineState> {
