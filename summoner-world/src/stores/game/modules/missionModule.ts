@@ -10,6 +10,8 @@ import { createActiveMission, getCreatureAgilityMod, MissionType, resolveAutomat
 import type { HeartbeatInstance } from '../../../core/heartbeat.ts';
 import { grantPartyXP, applyCreatureXP } from '../../../core/xpCurve.ts';
 import { applyAffectionGain } from '../../../core/affection.ts';
+import { createDefaultRelationship, updateRelationship } from '../../../core/npc/relationship.ts';
+import type { NPC } from '../../../types/game.ts';
 import type { GameEngineState } from '../../../core/gameEngine.ts';
 import { createHeartbeat } from '../../../core/heartbeat.ts';
 import { getAggregateStats, getAllNodes, getCareerModifiers } from '../../../data/careerTree/index';
@@ -761,7 +763,7 @@ finishCapture: () => {
    },
 
   interactNPC: () => {
-    const { player, worlds, currentWorldId, appendLog } = get();
+    const { player, worlds, currentWorldId, appendLog, turnCount } = get();
     if (!player) return;
     const world = worlds.get(currentWorldId);
     const tile = world?.tiles.get(getTileKey(player.tileX, player.tileY));
@@ -783,6 +785,44 @@ finishCapture: () => {
         if (!alreadyHas && !alreadyDone) {
           get().acceptQuest(qKey);
         }
+      });
+    }
+
+    const relationships = npc.relationships ?? {};
+    const currentRel = relationships[player.id] ?? createDefaultRelationship();
+    const updatedRel = updateRelationship(currentRel, 'friendship', 1);
+    if (updatedRel !== currentRel) {
+      const updatedNPC: NPC = {
+        ...npc,
+        relationships: { ...relationships, [player.id]: updatedRel },
+      };
+      set((state) => {
+        const newWorlds = new Map(state.worlds);
+        const targetWorld = newWorlds.get(currentWorldId);
+        if (targetWorld) {
+          const newTiles = new Map(targetWorld.tiles);
+          const targetTile = newTiles.get(getTileKey(player.tileX, player.tileY));
+          if (targetTile) {
+            newTiles.set(getTileKey(player.tileX, player.tileY), {
+              ...targetTile,
+              npc: updatedNPC,
+            });
+            newWorlds.set(currentWorldId, {
+              ...targetWorld,
+              tiles: newTiles,
+            });
+          }
+        }
+        return { worlds: newWorlds };
+      });
+
+      worldEventBus.publish({
+        type: 'NPCRelationshipChanged',
+        npcId: npc.id,
+        playerId: player.id,
+        relationship: updatedRel,
+        gameTimeMinutes: player.gameTimeMinutes,
+        turnCount,
       });
     }
   },

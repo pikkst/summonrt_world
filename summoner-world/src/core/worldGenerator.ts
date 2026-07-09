@@ -5,6 +5,7 @@ import { getBiomeForCoords } from './dungeon/Biome';
 import { createInitialWeatherState } from './Weather';
 import { generateSettlements } from './settlementGenerator';
 import { buildDefaultSchedule } from './npc/schedule';
+import { createDefaultRelationship } from './npc/relationship';
 import { worldEventBus } from './worldEventBus.ts';
 
 const NPC_NAMES = ['Elder Thorne', 'Summoner Kai', 'Merchant Jace', 'Healer Aria', 'Guide Lyra'];
@@ -28,6 +29,7 @@ function generateNPC(rng: SeededRandom, role: NPC['role'], baseSeed: number): NP
     quests: role === 'quest_giver' ? ['starter_explore', 'starter_capture'] : [],
     schedule,
     currentActivity: schedule[0]?.activity ?? 'work',
+    relationships: {},
   };
 }
 
@@ -75,6 +77,7 @@ export function generateTileFromSeed(x: number, y: number, seed: number): TileDa
       dialogue: ['Only the worthy may challenge the Floor Boss. The Spire reaches for the stars.'],
       schedule: buildDefaultSchedule('elder', 'dungeon_gatekeeper'),
       currentActivity: 'work',
+      relationships: {},
     };
   } else if (x < 50 && y < 50) { // Starting Area
     if (x === 10 && y === 10) {
@@ -87,6 +90,7 @@ export function generateTileFromSeed(x: number, y: number, seed: number): TileDa
         quests: ['starter_explore', 'starter_capture', 'dungeon_clear_1', 'capture_rare', 'explore_10'],
         schedule: buildDefaultSchedule('elder', 'nexus_elder'),
         currentActivity: 'work',
+        relationships: {},
       };
     }
   } else if (specialRoll < 0.005) { // 0.5% chance for landmark

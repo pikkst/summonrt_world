@@ -47,7 +47,7 @@ const ROLE_SCHEDULE_VARIANTS: Record<string, ScheduleVariant[]> = {
       activities: ['sleep', 'work', 'work', 'work', 'work', 'work', 'work', 'work', 'work', 'travel', 'work', 'work', 'work', 'work', 'work', 'work', 'work', 'tavern', 'work', 'work', 'work', 'work', 'travel', 'sleep'],
     },
     {
-      activities: ['sleep', 'work', 'work', 'work', 'work', 'travel', 'work', 'work', 'work', 'work', 'work', 'work', 'work', 'work', 'work', 'work', 'tavern', 'work', 'work', 'work', 'work', 'travel', 'sleep', 'sleep'],
+      activities: ['sleep', 'work', 'work', 'work', 'work', 'work', 'travel', 'work', 'work', 'work', 'work', 'work', 'work', 'work', 'work', 'work', 'tavern', 'work', 'work', 'work', 'work', 'travel', 'sleep', 'sleep'],
     },
   ],
 };
