@@ -146,14 +146,15 @@ export function advanceNPCTravel(
     `${npc.id}-${worldId}-${turnCount}-interrupt`
   );
 
-  if (interruptRng.next() < NPC_TRAVEL_ROBBERY_CHANCE) {
-    const remainingGoods = applyRobbery(travel.goods, interruptRng);
+  const roll = interruptRng.next();
+  if (roll < NPC_TRAVEL_ROBBERY_CHANCE) {
+    const { remaining, lost } = applyRobbery(travel.goods, interruptRng);
     const updatedNPC: NPC = {
       ...npc,
       travel: {
         ...travel,
         progress: nextProgress,
-        goods: remainingGoods,
+        goods: remaining,
         interruptType: 'robbery',
       },
     };
@@ -165,9 +166,7 @@ export function advanceNPCTravel(
       interruptType: 'robbery',
       originSettlementId: travel.originSettlementId,
       destinationSettlementId: travel.destinationSettlementId,
-      goodsLost: travel.goods.filter((g) =>
-        !remainingGoods.find((r) => r.templateKey === g.templateKey && r.quantity === g.quantity)
-      ),
+      goodsLost: lost,
       gameTimeMinutes: 0,
       turnCount,
     });
@@ -175,7 +174,7 @@ export function advanceNPCTravel(
     return updatedNPC;
   }
 
-  if (interruptRng.next() < NPC_TRAVEL_MONSTER_CHANCE) {
+  if (roll < NPC_TRAVEL_ROBBERY_CHANCE + NPC_TRAVEL_MONSTER_CHANCE) {
     const updatedNPC: NPC = {
       ...npc,
       travel: {
@@ -268,21 +267,26 @@ function completeTravel(npc: NPC, worldId: number, turnCount: number): NPC {
 function applyRobbery(
   goods: InventoryStack[],
   rng: SeededRandom
-): InventoryStack[] {
-  if (goods.length === 0) return goods;
+): { remaining: InventoryStack[]; lost: InventoryStack[] } {
+  if (goods.length === 0) return { remaining: [], lost: [] };
 
   const remaining: InventoryStack[] = [];
+  const lost: InventoryStack[] = [];
   for (const good of goods) {
     if (rng.chance(NPC_TRAVEL_GOODS_LOST_PCT)) {
       const remainingQty = Math.max(0, Math.floor(good.quantity * (1 - NPC_TRAVEL_GOODS_LOST_PCT)));
       if (remainingQty > 0) {
         remaining.push({ templateKey: good.templateKey, quantity: remainingQty });
       }
+      const lostQty = good.quantity - remainingQty;
+      if (lostQty > 0) {
+        lost.push({ templateKey: good.templateKey, quantity: lostQty });
+      }
     } else {
       remaining.push({ ...good });
     }
   }
-  return remaining;
+  return { remaining, lost };
 }
 
 export function tickNPCTravel(
