@@ -372,6 +372,14 @@ export interface NPCScheduleEntry {
   activity: NPCActivity;
 }
 
+export type RelationshipType = 'friendship' | 'rivalry' | 'romance';
+
+export interface NPCRelationship {
+  friendship: number;
+  rivalry: number;
+  romance: number;
+}
+
 export interface NPC {
   id: string;
   name: string;
@@ -381,6 +389,7 @@ export interface NPC {
   schedule: NPCScheduleEntry[];
   currentActivity: NPCActivity;
   homeSettlementId?: string;
+  relationships?: Record<string, NPCRelationship>;
 }
 
 export type RoomType = 'entrance' | 'boss' | 'treasure' | 'combat' | 'trap' | 'puzzle' | 'rest' | 'elite' | 'vendor';

@@ -1,4 +1,4 @@
-import type { NPCActivity } from '../types/game';
+import type { NPCActivity, NPCRelationship } from '../types/game';
 export type WorldTravelEvent =
   | {
       type: 'PlayerEnteredWorld';
@@ -50,6 +50,14 @@ export type WorldTravelEvent =
       type: 'NPCActivityChanged';
       npcId: string;
       activity: NPCActivity;
+      gameTimeMinutes: number;
+      turnCount: number;
+    }
+  | {
+      type: 'NPCRelationshipChanged';
+      npcId: string;
+      playerId: string;
+      relationship: NPCRelationship;
       gameTimeMinutes: number;
       turnCount: number;
     }
