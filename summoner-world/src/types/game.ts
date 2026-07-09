@@ -365,12 +365,22 @@ export interface QuestTemplate {
   };
 }
 
+export type NPCActivity = 'sleep' | 'work' | 'travel' | 'market' | 'tavern';
+
+export interface NPCScheduleEntry {
+  hour: number;
+  activity: NPCActivity;
+}
+
 export interface NPC {
   id: string;
   name: string;
   role: 'quest_giver' | 'merchant' | 'healer' | 'elder' | 'trainer';
   dialogue: string[];
   quests?: string[];
+  schedule: NPCScheduleEntry[];
+  currentActivity: NPCActivity;
+  homeSettlementId?: string;
 }
 
 export type RoomType = 'entrance' | 'boss' | 'treasure' | 'combat' | 'trap' | 'puzzle' | 'rest' | 'elite' | 'vendor';

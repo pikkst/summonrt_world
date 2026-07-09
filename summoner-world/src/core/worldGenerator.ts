@@ -4,6 +4,7 @@ import { RESOURCES, getWorldName, getFloorSeed, getTileKey, getNeighbors, WORLD_
 import { getBiomeForCoords } from './dungeon/Biome';
 import { createInitialWeatherState } from './Weather';
 import { generateSettlements } from './settlementGenerator';
+import { buildDefaultSchedule } from './npc/schedule';
 import { worldEventBus } from './worldEventBus.ts';
 
 const NPC_NAMES = ['Elder Thorne', 'Summoner Kai', 'Merchant Jace', 'Healer Aria', 'Guide Lyra'];
@@ -17,13 +18,16 @@ function hash(x: number, y: number, floorSeed: number, salt: string = ''): numbe
   return Math.abs(h % 1000000) / 1000000;
 }
 
-function generateNPC(rng: SeededRandom, role: NPC['role']): NPC {
+function generateNPC(rng: SeededRandom, role: NPC['role'], baseSeed: number): NPC {
+  const schedule = buildDefaultSchedule(role, `${baseSeed}_${role}_${rng.int(0, 9999)}`);
   return {
     id: `npc_${rng.int(0, 99999)}`,
     name: rng.pick(NPC_NAMES) || 'Unknown NPC',
     role,
     dialogue: [`Greetings, Traveler. This sector of Floor 1 is vast beyond imagination.`],
     quests: role === 'quest_giver' ? ['starter_explore', 'starter_capture'] : [],
+    schedule,
+    currentActivity: schedule[0]?.activity ?? 'work',
   };
 }
 
@@ -69,6 +73,8 @@ export function generateTileFromSeed(x: number, y: number, seed: number): TileDa
       name: 'The Warden',
       role: 'elder',
       dialogue: ['Only the worthy may challenge the Floor Boss. The Spire reaches for the stars.'],
+      schedule: buildDefaultSchedule('elder', 'dungeon_gatekeeper'),
+      currentActivity: 'work',
     };
   } else if (x < 50 && y < 50) { // Starting Area
     if (x === 10 && y === 10) {
@@ -78,7 +84,9 @@ export function generateTileFromSeed(x: number, y: number, seed: number): TileDa
         name: 'Elder Thorne',
         role: 'elder',
         dialogue: ['Welcome to the Edge of the World. The Great Spire lies at the exact center (1000, 1000). Your journey begins here.'],
-        quests: ['starter_explore', 'starter_capture', 'dungeon_clear_1', 'capture_rare', 'explore_10']
+        quests: ['starter_explore', 'starter_capture', 'dungeon_clear_1', 'capture_rare', 'explore_10'],
+        schedule: buildDefaultSchedule('elder', 'nexus_elder'),
+        currentActivity: 'work',
       };
     }
   } else if (specialRoll < 0.005) { // 0.5% chance for landmark
@@ -87,7 +95,7 @@ export function generateTileFromSeed(x: number, y: number, seed: number): TileDa
     specialType = specialTypes[specialIdx] as TileData['specialType'];
     if (specialType === 'city' || specialType === 'outpost') {
       const rng = new SeededRandom(x * y + seed);
-      npc = generateNPC(rng, 'quest_giver');
+      npc = generateNPC(rng, 'quest_giver', seed);
     }
   }
 

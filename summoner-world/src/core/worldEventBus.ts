@@ -1,3 +1,4 @@
+import type { NPCActivity } from '../types/game';
 export type WorldTravelEvent =
   | {
       type: 'PlayerEnteredWorld';
@@ -42,6 +43,24 @@ export type WorldTravelEvent =
       y: number;
       resourceType: string;
       quantity: number;
+      gameTimeMinutes: number;
+      turnCount: number;
+    }
+  | {
+      type: 'NPCActivityChanged';
+      npcId: string;
+      activity: NPCActivity;
+      gameTimeMinutes: number;
+      turnCount: number;
+    }
+  | {
+      type: 'NPCMoved';
+      npcId: string;
+      worldId: number;
+      fromX: number;
+      fromY: number;
+      toX: number;
+      toY: number;
       gameTimeMinutes: number;
       turnCount: number;
     }
