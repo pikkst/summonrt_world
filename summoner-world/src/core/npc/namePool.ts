@@ -41,7 +41,7 @@ const CULTURE_DICTIONARY: Record<BiomeType, NameCulture> = {
   coast: {
     firstNames: ['Marina','Coral','Shore','Bay','Tide','Wave','Sailor','Port','Wynn','Cove'],
     lastNames: ['Seabreeze','Wavecrest','Harbor','Anchor','Salt','Tidewater','Cove','Deepwater','Shoreham','Portmaster'],
-    epithets: ['the Tidal','the Salt-Touched','the fearless','the Drifter','the Keeper of Tides'],
+    epithets: ['the Tidal','the Salt-Touched','the Fearless','the Drifter','the Keeper of Tides'],
   },
   volcanic: {
     firstNames: ['Cinder','Ash','Flame','Ember','Pyra','Forge','Mag','Vulcan','Blaze','Smoke'],

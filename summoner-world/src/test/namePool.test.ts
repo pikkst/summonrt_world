@@ -38,13 +38,13 @@ describe('T9.1 - NamePool system', () => {
     expect(culture.firstNames.length).toBeGreaterThan(0);
   });
 
-  it('generates determistic first names from seed', () => {
+  it('generates deterministic first names from seed', () => {
     const first1 = generateFirstName('mountains', 'seed-a');
     const first2 = generateFirstName('mountains', 'seed-a');
     expect(first1).toBe(first2);
   });
 
-  it('generates determistic last names from seed', () => {
+  it('generates deterministic last names from seed', () => {
     const last1 = generateLastName('desert', 'seed-b');
     const last2 = generateLastName('desert', 'seed-b');
     expect(last1).toBe(last2);
