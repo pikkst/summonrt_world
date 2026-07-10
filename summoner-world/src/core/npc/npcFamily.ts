@@ -3,11 +3,10 @@ import { SeededRandom } from '../../utils/SeededRandom';
 import { worldEventBus } from '../worldEventBus';
 
 export const MARRIAGE_ROMANCE_THRESHOLD = 40;
-export const INHERITANCE_SPOUSE_SHARE = 0.5;
-export const INHERITANCE_CHILD_SHARE = 0.5;
 export const MARRIAGE_CHANCE_PER_TICK = 0.02;
 export const CHILD_BIRTH_CHANCE_PER_TICK = 0.01;
-export const NPC_DEATH_AGE_TURNS = 2000;
+export const NPC_DEATH_WEALTH_THRESHOLD = 0;
+export const NPC_MAX_CHILDREN = 3;
 
 interface NPCMarriageParams {
   npcA: NPC;
@@ -93,13 +92,13 @@ export function createChildNPC(params: {
   npcB: NPC;
   seed: number | string;
   firstName?: string;
-}): NPC {
+}): { child: NPC; updatedA: NPC; updatedB: NPC } {
   const { npcA, npcB, seed, firstName } = params;
   const rng = new SeededRandom(seed);
 
   const familyName = npcA.familyName ?? npcB.familyName ?? 'Unknown';
   const first = firstName ?? generateInheritedFirstName(rng, npcA, npcB);
-  const childId = `npc_${rng.int(0, 99999)}`;
+  const childId = `npc_${npcA.id}_${npcB.id}_${rng.int(0, 9999)}`;
 
   const child: NPC = {
     id: childId,
@@ -124,7 +123,7 @@ export function createChildNPC(params: {
     childIds: [...(npcB.childIds ?? []), child.id],
   };
 
-  return child;
+  return { child, updatedA, updatedB };
 }
 
 function generateInheritedFirstName(rng: SeededRandom, npcA: NPC, npcB: NPC): string {
@@ -180,7 +179,8 @@ export function processInheritance(
 
     events.push({
       deceasedId: deceasedNPC.id,
-      deceasedWealth: share,
+      sharePerHeir: share,
+      totalWealthShare: totalWealth / heirIds.length,
       heirs: [{ npcId: heirId, share }],
       timestamp: Date.now(),
     });
@@ -276,12 +276,12 @@ export function tickNPCFamilies(
         }
       }
 
-      if (npc.spouseId && (npc.childIds?.length ?? 0) < 3) {
+      if (npc.spouseId && (npc.childIds?.length ?? 0) < NPC_MAX_CHILDREN) {
         const rng = new SeededRandom(`${npcSeed}-child`);
         if (rng.chance(CHILD_BIRTH_CHANCE_PER_TICK)) {
           const spouse = npcMap.get(npc.spouseId);
           if (spouse) {
-            const child = createChildNPC({
+            const { child, updatedA, updatedB } = createChildNPC({
               npcA: npc,
               npcB: spouse,
               seed: `${npcSeed}-child`,
@@ -289,6 +289,8 @@ export function tickNPCFamilies(
 
             worldChanged = true;
             npcMap.set(child.id, child);
+            npcMap.set(updatedA.id, updatedA);
+            npcMap.set(updatedB.id, updatedB);
             tilesToAdd.set(`child_${child.id}_${tileKey}`, {
               x: tile.x ?? 0,
               y: tile.y ?? 0,
@@ -296,6 +298,15 @@ export function tickNPCFamilies(
               discovered: false,
               explored: false,
               npc: child,
+            });
+
+            newTiles.forEach((t, key) => {
+              if (t.npc?.id === updatedA.id) {
+                newTiles.set(key, { ...t, npc: updatedA });
+              }
+              if (t.npc?.id === updatedB.id) {
+                newTiles.set(key, { ...t, npc: updatedB });
+              }
             });
 
             worldEventBus.publish({

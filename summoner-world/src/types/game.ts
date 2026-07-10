@@ -403,7 +403,8 @@ export interface NPCMarriageRecord {
 
 export interface NPCInheritanceEvent {
   deceasedId: string;
-  deceasedWealth: number;
+  sharePerHeir: number;
+  totalWealthShare: number;
   heirs: { npcId: string; share: number }[];
   timestamp: number;
 }

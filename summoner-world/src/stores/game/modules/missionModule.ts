@@ -2151,12 +2151,9 @@ const modifiers: MissionModifiers = {
        };
 
       const applyNPCTravelTick = (): void => {
-        const { worlds, currentWorldId, turnCount, player } = get();
+        const { worlds, turnCount, player } = get();
         if (!player) return;
-        const world = worlds.get(currentWorldId);
-        if (!world) return;
         const patched = tickNPCTravel(worlds, turnCount, player.gameTimeMinutes);
-        if (patched.size !== worlds.size) return;
         let changed = false;
         patched.forEach((w, id) => {
           if (w !== worlds.get(id)) changed = true;
@@ -2167,12 +2164,9 @@ const modifiers: MissionModifiers = {
       };
 
       const applyNPCFamilyTick = (): void => {
-        const { worlds, currentWorldId, turnCount, player } = get();
+        const { worlds, turnCount, player } = get();
         if (!player) return;
-        const world = worlds.get(currentWorldId);
-        if (!world) return;
         const patched = tickNPCFamilies(worlds, turnCount, player.gameTimeMinutes);
-        if (patched.size !== worlds.size) return;
         let changed = false;
         patched.forEach((w, id) => {
           if (w !== worlds.get(id)) changed = true;

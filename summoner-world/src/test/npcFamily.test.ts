@@ -7,6 +7,7 @@ import {
   getHeirIds,
   processInheritance,
   MARRIAGE_ROMANCE_THRESHOLD,
+  NPC_MAX_CHILDREN,
 } from '../core/npc/npcFamily';
 import { createDefaultRelationship } from '../core/npc/relationship';
 import type { NPC } from '../types/game';
@@ -139,7 +140,7 @@ describe('NPC family and marriage', () => {
   });
 
   describe('createChildNPC', () => {
-    it('creates a child with parents linked and zero wealth', () => {
+    it('creates a child and returns both parents with childIds updated', () => {
       const npcA = createTestNPC({
         familyName: 'Greenwood',
         relationships: {},
@@ -151,7 +152,7 @@ describe('NPC family and marriage', () => {
         relationships: {},
       });
 
-      const child = createChildNPC({
+      const { child, updatedA, updatedB } = createChildNPC({
         npcA,
         npcB,
         seed: 'child-seed',
@@ -163,6 +164,33 @@ describe('NPC family and marriage', () => {
       expect(child.familyName).toBe('Greenwood');
       expect(child.id).toBeDefined();
       expect(child.name).toContain('Greenwood');
+      expect(updatedA.childIds).toEqual([child.id]);
+      expect(updatedB.childIds).toEqual([child.id]);
+      expect(updatedA.id).toBe(npcA.id);
+      expect(updatedB.id).toBe(npcB.id);
+    });
+
+    it('never returns duplicate child references for the same parents', () => {
+      const npcA = createTestNPC({
+        familyName: 'Greenwood',
+        childIds: [],
+        relationships: {},
+      });
+      const npcB = createTestNPC({
+        id: 'npc_b',
+        name: 'Partner B',
+        familyName: 'Greenwood',
+        childIds: [],
+        relationships: {},
+      });
+
+      const first = createChildNPC({ npcA, npcB, seed: 'child-seed' });
+      const second = createChildNPC({ npcA: first.updatedA, npcB: first.updatedB, seed: 'child-seed-2' });
+
+      expect(first.updatedA.childIds).toHaveLength(1);
+      expect(first.updatedB.childIds).toHaveLength(1);
+      expect(second.updatedA.childIds).toHaveLength(2);
+      expect(second.updatedB.childIds).toHaveLength(2);
     });
   });
 
@@ -204,8 +232,8 @@ describe('NPC family and marriage', () => {
       const { events, updatedNPCs } = processInheritance(deceased, resolveNPC);
 
       expect(events).toHaveLength(2);
-      expect(events[0]!.deceasedWealth).toBe(50);
-      expect(events[1]!.deceasedWealth).toBe(50);
+      expect(events[0]!.sharePerHeir).toBe(50);
+      expect(events[1]!.sharePerHeir).toBe(50);
       expect(updatedNPCs).toHaveLength(2);
       expect(updatedNPCs[0]!.wealth).toBe(50);
       expect(updatedNPCs[1]!.wealth).toBe(50);
@@ -240,8 +268,8 @@ describe('NPC family and marriage', () => {
       expect(events).toHaveLength(2);
       expect(events[0]!.heirs[0]!.npcId).toBe('spouse_1');
       expect(events[1]!.heirs[0]!.npcId).toBe('child_1');
-      expect(events[0]!.deceasedWealth).toBe(50);
-      expect(events[1]!.deceasedWealth).toBe(50);
+      expect(events[0]!.sharePerHeir).toBe(50);
+      expect(events[1]!.sharePerHeir).toBe(50);
     });
   });
 });
