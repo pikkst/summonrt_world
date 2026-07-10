@@ -104,6 +104,31 @@ export type WorldTravelEvent =
       turnCount: number;
     }
   | {
+      type: 'NPCMarried';
+      npcId: string;
+      partnerId: string;
+      marriageId: string;
+      gameTimeMinutes: number;
+      turnCount: number;
+    }
+  | {
+      type: 'NPCChildBorn';
+      childNpcId: string;
+      parentAId: string;
+      parentBId: string;
+      familyName: string;
+      gameTimeMinutes: number;
+      turnCount: number;
+    }
+  | {
+      type: 'NPCInheritedProperty';
+      deceasedId: string;
+      heirId: string;
+      inheritedWealth: number;
+      gameTimeMinutes: number;
+      turnCount: number;
+    }
+  | {
       type: 'DungeonDiscovered';
       playerId: string;
       worldId: number;
