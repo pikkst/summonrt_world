@@ -180,7 +180,6 @@ export function processInheritance(
     events.push({
       deceasedId: deceasedNPC.id,
       sharePerHeir: share,
-      totalWealthShare: totalWealth / heirIds.length,
       heirs: [{ npcId: heirId, share }],
       timestamp: Date.now(),
     });
