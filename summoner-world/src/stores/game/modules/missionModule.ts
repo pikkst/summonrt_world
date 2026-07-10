@@ -35,6 +35,7 @@ import { worldEventBus } from '../../../core/worldEventBus.ts';
 import { tickNPCTravel } from '../../../core/npc/npcTravel.ts';
 import { tickNPCFamilies } from '../../../core/npc/npcFamily.ts';
 import { economyEventBus } from '../../../core/economy/economyEventBus';
+import { shiftFactionPower } from '../../../core/faction/factionAI.ts';
 import {
   createTradeCaravan,
   resolveCaravanTrade,
@@ -921,6 +922,15 @@ finishCapture: () => {
         turnCount: get().turnCount,
       });
     }
+
+    if (template.factionEffects) {
+      const turnCount = get().turnCount;
+      const gameTimeMinutes = player.gameTimeMinutes;
+      for (const [factionId, delta] of Object.entries(template.factionEffects)) {
+        shiftFactionPower(factionId, delta, `quest:${quest.templateKey}`);
+      }
+    }
+
     appendLog(`Quest Completed: ${template.title}!`, 'success');
   },
 

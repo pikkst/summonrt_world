@@ -111,6 +111,7 @@ export function createChildNPC(params: {
     familyName,
     wealth: 0,
     relationships: {},
+    factionAlignment: pickInheritedFactionAlignment(npcA.factionAlignment, npcB.factionAlignment, rng),
   };
 
   const updatedA: NPC = {
@@ -370,4 +371,24 @@ function findEligiblePartner(
 
   if (candidates.length === 0) return null;
   return rng.pick(candidates) ?? null;
+}
+
+function pickInheritedFactionAlignment(
+  alignmentA: NPC['factionAlignment'],
+  alignmentB: NPC['factionAlignment'],
+  rng: SeededRandom
+): NPC['factionAlignment'] {
+  if (alignmentA && alignmentB) {
+    const stronger = Math.abs(alignmentA.loyalty) >= Math.abs(alignmentB.loyalty) ? alignmentA : alignmentB;
+    const mutatedLoyalty = Math.round((stronger.loyalty + (rng.next() - 0.5) * 10) / 5) * 5;
+    return { factionId: stronger.factionId, loyalty: Math.max(-100, Math.min(100, mutatedLoyalty)) };
+  }
+
+  const source = alignmentA ?? alignmentB;
+  if (source) {
+    const mutatedLoyalty = Math.round((source.loyalty + (rng.next() - 0.5) * 10) / 5) * 5;
+    return { factionId: source.factionId, loyalty: Math.max(-100, Math.min(100, mutatedLoyalty)) };
+  }
+
+  return { factionId: rng.pick(['merchant_guild', 'circle_of_nature', 'void_cult', 'iron_league']) ?? 'merchant_guild', loyalty: rng.int(-20, 40) };
 }

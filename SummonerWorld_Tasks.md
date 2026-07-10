@@ -18,6 +18,7 @@ Current alignment state:
  - T6P.1, T6P.2, T6P.3, T6P.4, T6P.5, T6P.6, T6P.7, and T6P.8 are complete (PlayerCoreState, Character Creation, Summoner Classes, Element Identity, Player Statistics, Inventory Core, Equipment Core, Creature Slot System).
   - Sprint 8 basic/intermediate/advanced/artifact crafting (T8.1-T8.5) is complete.
   - Sprint 8 housing (T8.6 Structure model, T8.7 housing economy, T8.8 town hall + policies, T8.9 town founding) is complete.
+ - Sprint 9 faction AI (T9.6) is complete.
 
 ## Sprint 0 – Foundation & Tech Debt (Month 0)
 Sprint goal: stabilize prototype, find and fix all technical issues, set up testing and linting foundation.
@@ -496,7 +497,7 @@ Sprint goal: NPC AI, quest generation, ecosystem simulation, ecological balance 
 - [x] T9.3 – Add NPC relationships: affinity values (friendship, rivalry, romance)
 - [x] T9.4 – Implement NPC travel: walk between settlements, carry goods, robbery/monster interrupts
 - [x] T9.5 – Add marriage/inheritance: NPC families pass property/wealth, demographic shifts
-- [ ] T9.6 – Implement faction AI: NPC alignments, faction power shifts from quest outcomes
+ - [x] T9.6 – Implement faction AI: NPC alignments, faction power shifts from quest outcomes
 - [ ] T9.7 – Create rumor system: NPCs share world-state info (boss weakness, hidden quests) based on trust
 - [ ] T9.8 – Enhance quest generation: templated (story/legendary) + procedural (faction/exploration/crafting)
 - [ ] T9.9 – Add quest parameter pull from world state (available monsters, missing resources, NPC needs)
