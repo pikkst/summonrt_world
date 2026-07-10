@@ -394,6 +394,20 @@ export interface NPCTravelPlan {
   interruptType?: 'robbery' | 'monster';
 }
 
+export interface NPCMarriageRecord {
+  id: string;
+  partnerAId: string;
+  partnerBId: string;
+  createdAt: number;
+}
+
+export interface NPCInheritanceEvent {
+  deceasedId: string;
+  deceasedWealth: number;
+  heirs: { npcId: string; share: number }[];
+  timestamp: number;
+}
+
 export interface NPC {
   id: string;
   name: string;
@@ -405,6 +419,11 @@ export interface NPC {
   homeSettlementId?: string;
   relationships?: Record<string, NPCRelationship>;
   travel?: NPCTravelPlan;
+  spouseId?: string;
+  parentIds?: string[];
+  childIds?: string[];
+  familyName?: string;
+  wealth?: number;
 }
 
 export type RoomType = 'entrance' | 'boss' | 'treasure' | 'combat' | 'trap' | 'puzzle' | 'rest' | 'elite' | 'vendor';

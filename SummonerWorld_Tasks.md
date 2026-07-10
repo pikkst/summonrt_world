@@ -495,7 +495,7 @@ Sprint goal: NPC AI, quest generation, ecosystem simulation, ecological balance 
 - [x] T9.2 – Implement NPC schedule: hourly routines (sleep, work, travel, market, tavern)
 - [x] T9.3 – Add NPC relationships: affinity values (friendship, rivalry, romance)
 - [x] T9.4 – Implement NPC travel: walk between settlements, carry goods, robbery/monster interrupts
-- [ ] T9.5 – Add marriage/inheritance: NPC families pass property/wealth, demographic shifts
+- [x] T9.5 – Add marriage/inheritance: NPC families pass property/wealth, demographic shifts
 - [ ] T9.6 – Implement faction AI: NPC alignments, faction power shifts from quest outcomes
 - [ ] T9.7 – Create rumor system: NPCs share world-state info (boss weakness, hidden quests) based on trust
 - [ ] T9.8 – Enhance quest generation: templated (story/legendary) + procedural (faction/exploration/crafting)

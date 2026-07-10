@@ -33,6 +33,7 @@ import { applyMissionSpeedBonuses } from '../../../core/economy/careerEconomy';
 import { getWeatherEffect, getWeatherResourceYieldModifier, getWeatherEncounterModifier, getPlayerElementalAffinityBonus, getEncounterTableForWeather, updateWeather } from '../../../core/Weather';
 import { worldEventBus } from '../../../core/worldEventBus.ts';
 import { tickNPCTravel } from '../../../core/npc/npcTravel.ts';
+import { tickNPCFamilies } from '../../../core/npc/npcFamily.ts';
 import { economyEventBus } from '../../../core/economy/economyEventBus';
 import {
   createTradeCaravan,
@@ -2165,6 +2166,22 @@ const modifiers: MissionModifiers = {
         }
       };
 
+      const applyNPCFamilyTick = (): void => {
+        const { worlds, currentWorldId, turnCount, player } = get();
+        if (!player) return;
+        const world = worlds.get(currentWorldId);
+        if (!world) return;
+        const patched = tickNPCFamilies(worlds, turnCount, player.gameTimeMinutes);
+        if (patched.size !== worlds.size) return;
+        let changed = false;
+        patched.forEach((w, id) => {
+          if (w !== worlds.get(id)) changed = true;
+        });
+        if (changed) {
+          set({ worlds: patched });
+        }
+      };
+
       const instance = createHeartbeat({
         getCurrentTime: Date.now,
         getMissions: () => get().missions,
@@ -2188,6 +2205,7 @@ const modifiers: MissionModifiers = {
             applyWeatherUpdate();
             applyHousingEconomy();
             applyNPCTravelTick();
+            applyNPCFamilyTick();
           },
          onMissionsProgress: () => {},
        resolveMissionCallbacks: {
