@@ -1,4 +1,4 @@
-import type { NPCActivity, NPCRelationship } from '../types/game';
+import type { NPCActivity, NPCRelationship, InventoryStack } from '../types/game';
 export type WorldTravelEvent =
   | {
       type: 'PlayerEnteredWorld';
@@ -69,6 +69,37 @@ export type WorldTravelEvent =
       fromY: number;
       toX: number;
       toY: number;
+      gameTimeMinutes: number;
+      turnCount: number;
+    }
+  | {
+      type: 'NPCTravelStarted';
+      npcId: string;
+      worldId: number;
+      originSettlementId: string;
+      destinationSettlementId: string;
+      goods: InventoryStack[];
+      gameTimeMinutes: number;
+      turnCount: number;
+    }
+  | {
+      type: 'NPCTravelArrived';
+      npcId: string;
+      worldId: number;
+      originSettlementId: string;
+      destinationSettlementId: string;
+      goodsDelivered: InventoryStack[];
+      gameTimeMinutes: number;
+      turnCount: number;
+    }
+  | {
+      type: 'NPCTravelInterrupted';
+      npcId: string;
+      worldId: number;
+      interruptType: 'robbery' | 'monster';
+      originSettlementId: string;
+      destinationSettlementId: string;
+      goodsLost: InventoryStack[];
       gameTimeMinutes: number;
       turnCount: number;
     }
