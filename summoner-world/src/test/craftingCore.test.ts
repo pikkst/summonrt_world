@@ -75,6 +75,7 @@ const makePlayerCore = (overrides: Partial<PlayerCoreState> = {}): PlayerCoreSta
     questsCompleted: 0,
   },
   reputation: { world_rep: {}, faction_rep: {}, settlement_rep: {}, creature_rep: {} },
+  discoveredRumors: [],
   questHistory: { active: [], completed: [] },
   creatureContracts: [],
   creatureSlots: { groups: [] },

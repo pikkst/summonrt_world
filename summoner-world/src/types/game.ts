@@ -425,6 +425,17 @@ export interface Faction {
   alignment: 'order' | 'nature' | 'chaos' | 'neutral';
 }
 
+export type RumorCategory = 'boss_weakness' | 'hidden_quest' | 'dungeon_tip' | 'world_secret' | 'creature_location';
+
+export interface Rumor {
+  id: string;
+  category: RumorCategory;
+  content: string;
+  worldId: number;
+  trustRequired: number;
+  sourceNpcId: string;
+}
+
 export interface NPC {
   id: string;
   name: string;

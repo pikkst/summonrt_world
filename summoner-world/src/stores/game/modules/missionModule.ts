@@ -12,6 +12,7 @@ import type { HeartbeatInstance } from '../../../core/heartbeat.ts';
 import { grantPartyXP, applyCreatureXP } from '../../../core/xpCurve.ts';
 import { applyAffectionGain } from '../../../core/affection.ts';
 import { createDefaultRelationship, updateRelationship } from '../../../core/npc/relationship.ts';
+import { shareRumor, isRumorDiscovered } from '../../../core/npc/rumorCore.ts';
 import type { NPC } from '../../../types/game.ts';
 import type { GameEngineState } from '../../../core/gameEngine.ts';
 import { createHeartbeat } from '../../../core/heartbeat.ts';
@@ -767,8 +768,8 @@ finishCapture: () => {
    },
 
   interactNPC: () => {
-    const { player, worlds, currentWorldId, appendLog, turnCount } = get();
-    if (!player) return;
+    const { player, playerCore, worlds, currentWorldId, appendLog, turnCount } = get();
+    if (!player || !playerCore) return;
     const world = worlds.get(currentWorldId);
     const tile = world?.tiles.get(getTileKey(player.tileX, player.tileY));
     const npc = tile?.npc;
@@ -827,6 +828,20 @@ finishCapture: () => {
         relationship: updatedRel,
         gameTimeMinutes: player.gameTimeMinutes,
         turnCount,
+      });
+    }
+
+    const rumor = world ? shareRumor(npc, currentRel, world, turnCount) : null;
+    if (rumor && !isRumorDiscovered(rumor, playerCore.discoveredRumors)) {
+      appendLog(`${npc.name} whispers: "${rumor.content}"`, 'info');
+      set((state) => {
+        if (!state.playerCore) return {};
+        return {
+          playerCore: {
+            ...state.playerCore,
+            discoveredRumors: [...state.playerCore.discoveredRumors, rumor],
+          },
+        };
       });
     }
   },
