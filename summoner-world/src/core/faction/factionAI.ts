@@ -37,7 +37,11 @@ export function getAllFactionPowers(): Record<string, number> {
   return { ...factionPowerState };
 }
 
-export function shiftFactionPower(factionId: string, delta: number, source: string): number {
+export function shiftFactionPower(factionId: string, delta: number, source: string, gameTimeMinutes = 0, turnCount = 0): number {
+  if (!getFactionObject(factionId)) {
+    return getFactionPower(factionId);
+  }
+
   const current = getFactionPower(factionId);
   const next = clampFactionPower(current + delta);
   factionPowerState[factionId] = next;
@@ -49,8 +53,8 @@ export function shiftFactionPower(factionId: string, delta: number, source: stri
     previousPower: current,
     newPower: next,
     source,
-    gameTimeMinutes: 0,
-    turnCount: 0,
+    gameTimeMinutes,
+    turnCount,
   });
 
   return next;

@@ -29,12 +29,19 @@ describe('faction AI', () => {
   });
 
   it('shifts faction power within bounds', () => {
-    const merchantPower = shiftFactionPower('merchant_guild', 60, 'test');
+    const merchantPower = shiftFactionPower('merchant_guild', 60, 'test', 120, 5);
     expect(merchantPower).toBe(FACTION_POWER_MAX);
     expect(getFactionPower('merchant_guild')).toBe(FACTION_POWER_MAX);
 
-    const voidPower = shiftFactionPower('void_cult', -80, 'test');
+    const voidPower = shiftFactionPower('void_cult', -80, 'test', 120, 5);
     expect(voidPower).toBe(FACTION_POWER_MIN);
+  });
+
+  it('returns current power for unknown faction without mutating state', () => {
+    const before = getAllFactionPowers();
+    const result = shiftFactionPower('unknown_faction', 50, 'test', 0, 0);
+    expect(result).toBe(FACTION_POWER_NEUTRAL);
+    expect(getAllFactionPowers()).toEqual(before);
   });
 
   it('returns immutable copies from getAllFactionPowers', () => {
@@ -49,8 +56,12 @@ describe('faction AI', () => {
     expect(merchant?.alignment).toBe('order');
   });
 
-  it('getFactionTone returns higher value for same alignment', () => {
-    expect(getFactionTone('merchant_guild', 'iron_league')).toBeGreaterThanOrEqual(0);
+  it('getFactionTone returns higher value for same faction', () => {
+    expect(getFactionTone('merchant_guild', 'merchant_guild')).toBe(30);
+  });
+
+  it('getFactionTone returns lower value for opposing factions', () => {
+    expect(getFactionTone('merchant_guild', 'iron_league')).toBeLessThan(0);
   });
 
   it('getNPCToneTowardFaction reflects loyalty for aligned faction', () => {
@@ -78,12 +89,14 @@ describe('faction AI', () => {
     const handler = vi.fn();
     const unsubscribe = worldEventBus.subscribe('FactionStandingChanged', handler);
     try {
-      shiftFactionPower('circle_of_nature', 10, 'quest:starter_explore');
+      shiftFactionPower('circle_of_nature', 10, 'quest:starter_explore', 360, 12);
       expect(handler).toHaveBeenCalledTimes(1);
       const event = handler.mock.calls[0]![0];
       expect(event.type).toBe('FactionStandingChanged');
       expect(event.factionId).toBe('circle_of_nature');
       expect(event.newPower).toBeGreaterThan(FACTION_POWER_NEUTRAL);
+      expect(event.gameTimeMinutes).toBe(360);
+      expect(event.turnCount).toBe(12);
     } finally {
       unsubscribe();
     }

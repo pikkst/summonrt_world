@@ -3,6 +3,7 @@ import { createLog, calculateMovementModifiers, processTileDiscovery, getPlayerE
 import { generateTile } from '../../../core/worldGenerator.ts';
 import { getTileKey, getAffinityWeight, calculateBaseCaptureProbability, DUNGEON_ASCEND_SCROLL, WORLD_SIZE } from '../../../data/constants.ts';
 import { QUEST_TEMPLATES } from '../../../data/quests.ts';
+import { FACTION_IDS } from '../../../data/factions.ts';
 import { generateCreatureTemplate, SKILL_TEMPLATES } from '../../../modules/creatures/creatureFactory.ts';
 import { SeededRandom } from '../../../utils/SeededRandom.ts';
 import type { MissionStatus, MissionModifiers, ActiveMission } from '../../../core/missionQueue.ts';
@@ -927,7 +928,8 @@ finishCapture: () => {
       const turnCount = get().turnCount;
       const gameTimeMinutes = player.gameTimeMinutes;
       for (const [factionId, delta] of Object.entries(template.factionEffects)) {
-        shiftFactionPower(factionId, delta, `quest:${quest.templateKey}`);
+        if (!FACTION_IDS.includes(factionId)) continue;
+        shiftFactionPower(factionId, delta, `quest:${quest.templateKey}`, gameTimeMinutes, turnCount);
       }
     }
 

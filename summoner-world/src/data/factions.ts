@@ -8,6 +8,7 @@ export const FACTIONS: Record<string, Faction> = {
     defaultPower: 50,
     power: 50,
     alignment: 'order',
+    opposingFactions: ['iron_league'],
   },
   circle_of_nature: {
     id: 'circle_of_nature',
@@ -16,6 +17,7 @@ export const FACTIONS: Record<string, Faction> = {
     defaultPower: 50,
     power: 50,
     alignment: 'nature',
+    opposingFactions: ['void_cult'],
   },
   void_cult: {
     id: 'void_cult',
@@ -24,6 +26,7 @@ export const FACTIONS: Record<string, Faction> = {
     defaultPower: 50,
     power: 50,
     alignment: 'chaos',
+    opposingFactions: ['circle_of_nature', 'iron_league'],
   },
   iron_league: {
     id: 'iron_league',
@@ -32,6 +35,7 @@ export const FACTIONS: Record<string, Faction> = {
     defaultPower: 50,
     power: 50,
     alignment: 'order',
+    opposingFactions: ['merchant_guild'],
   },
 };
 
