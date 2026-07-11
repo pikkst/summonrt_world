@@ -111,6 +111,7 @@ const createMockState = (overrides: Partial<PlayerCoreState> = {}): PlayerCoreSt
     questsCompleted: 0,
   },
   reputation: { world_rep: {}, faction_rep: {}, settlement_rep: {}, creature_rep: {} },
+  discoveredRumors: [],
   questHistory: { active: [], completed: [] },
   creatureContracts: [],
   creatureSlots: { groups: [] },

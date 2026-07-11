@@ -134,6 +134,7 @@ export function deserializePlayerCore(data: unknown): PlayerCoreState {
       active: raw.questHistory?.active ?? defaults.questHistory.active,
       completed: raw.questHistory?.completed ?? defaults.questHistory.completed,
     },
+    discoveredRumors: raw.discoveredRumors ?? defaults.discoveredRumors,
     creatureSlots: raw.creatureSlots ?? defaults.creatureSlots,
     housing: normalizeHousing(raw.housing, defaults.housing, raw),
     professions: normalizeProfessionState(raw.professions),

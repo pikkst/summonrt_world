@@ -8,6 +8,7 @@ import type {
   FastTravelPointType,
   FastTravelPoint,
   FastTravelDestination,
+  Rumor,
 } from './game.ts';
 import type { Structure, TownHallPolicy } from './structure.ts';
 import type { FastTravelState } from '../core/fastTravel.ts';
@@ -352,6 +353,7 @@ export interface PlayerCoreState {
   achievements: AchievementEntry[];
   statistics: PlayerStatistics;
   reputation: ReputationState;
+  discoveredRumors: Rumor[];
   questHistory: {
     active: QuestInstance[];
     completed: string[];

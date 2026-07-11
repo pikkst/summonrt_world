@@ -66,7 +66,11 @@ function createMockPlayerCore(overrides: Partial<PlayerCoreState> = {}): PlayerC
       settlement_rep: {},
       creature_rep: {},
     },
-    questHistory: { active: [], completed: [] },
+    discoveredRumors: [],
+    questHistory: {
+      active: [],
+      completed: [],
+    },
     creatureContracts: [],
     creatureSlots: {
       groups: [

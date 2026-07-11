@@ -68,6 +68,7 @@ export function createDefaultPlayerCoreState(
     achievements: [],
     statistics: createDefaultPlayerStatistics(1),
     reputation: createDefaultReputationState(startingWorldId),
+    discoveredRumors: [],
     questHistory: {
       active: [],
       completed: [],
@@ -185,6 +186,7 @@ export function migratePlayerStateToCore(player: PlayerState): PlayerCoreState {
       questsCompleted: player.completedQuests.length,
     },
     reputation: createDefaultReputationState(currentWorldId),
+    discoveredRumors: [],
     questHistory: {
       active: player.activeQuests,
       completed: player.completedQuests,
