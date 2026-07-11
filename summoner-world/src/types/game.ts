@@ -363,6 +363,7 @@ export interface QuestTemplate {
     items?: InventoryStack[];
     element?: Element;
   };
+  factionEffects?: Record<string, number>;
 }
 
 export type NPCActivity = 'sleep' | 'work' | 'travel' | 'market' | 'tavern';
@@ -408,6 +409,22 @@ export interface NPCInheritanceEvent {
   timestamp: number;
 }
 
+export interface NPCFactionAlignment {
+  factionId: string;
+  loyalty: number;
+}
+
+export interface Faction {
+  id: string;
+  name: string;
+  description: string;
+  defaultPower: number;
+  power: number;
+  homeWorldId?: number;
+  opposingFactions?: string[];
+  alignment: 'order' | 'nature' | 'chaos' | 'neutral';
+}
+
 export interface NPC {
   id: string;
   name: string;
@@ -424,6 +441,7 @@ export interface NPC {
   childIds?: string[];
   familyName?: string;
   wealth?: number;
+  factionAlignment?: NPCFactionAlignment;
 }
 
 export type RoomType = 'entrance' | 'boss' | 'treasure' | 'combat' | 'trap' | 'puzzle' | 'rest' | 'elite' | 'vendor';

@@ -3,6 +3,7 @@ import { createLog, calculateMovementModifiers, processTileDiscovery, getPlayerE
 import { generateTile } from '../../../core/worldGenerator.ts';
 import { getTileKey, getAffinityWeight, calculateBaseCaptureProbability, DUNGEON_ASCEND_SCROLL, WORLD_SIZE } from '../../../data/constants.ts';
 import { QUEST_TEMPLATES } from '../../../data/quests.ts';
+import { FACTION_IDS } from '../../../data/factions.ts';
 import { generateCreatureTemplate, SKILL_TEMPLATES } from '../../../modules/creatures/creatureFactory.ts';
 import { SeededRandom } from '../../../utils/SeededRandom.ts';
 import type { MissionStatus, MissionModifiers, ActiveMission } from '../../../core/missionQueue.ts';
@@ -35,6 +36,7 @@ import { worldEventBus } from '../../../core/worldEventBus.ts';
 import { tickNPCTravel } from '../../../core/npc/npcTravel.ts';
 import { tickNPCFamilies } from '../../../core/npc/npcFamily.ts';
 import { economyEventBus } from '../../../core/economy/economyEventBus';
+import { shiftFactionPower } from '../../../core/faction/factionAI.ts';
 import {
   createTradeCaravan,
   resolveCaravanTrade,
@@ -921,6 +923,16 @@ finishCapture: () => {
         turnCount: get().turnCount,
       });
     }
+
+    if (template.factionEffects) {
+      const turnCount = get().turnCount;
+      const gameTimeMinutes = player.gameTimeMinutes;
+      for (const [factionId, delta] of Object.entries(template.factionEffects)) {
+        if (!FACTION_IDS.includes(factionId)) continue;
+        shiftFactionPower(factionId, delta, `quest:${quest.templateKey}`, gameTimeMinutes, turnCount);
+      }
+    }
+
     appendLog(`Quest Completed: ${template.title}!`, 'success');
   },
 

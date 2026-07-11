@@ -136,6 +136,15 @@ export type WorldTravelEvent =
       y: number;
       gameTimeMinutes: number;
       turnCount: number;
+    }
+  | {
+      type: 'FactionStandingChanged';
+      factionId: string;
+      previousPower: number;
+      newPower: number;
+      source: string;
+      gameTimeMinutes: number;
+      turnCount: number;
     };
 
 export type WorldTravelEventHandler = (event: WorldTravelEvent) => void;

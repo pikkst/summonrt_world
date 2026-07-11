@@ -7,6 +7,7 @@ import { generateSettlements } from './settlementGenerator';
 import { buildDefaultSchedule } from './npc/schedule';
 import { createDefaultRelationship } from './npc/relationship';
 import { worldEventBus } from './worldEventBus.ts';
+import { FACTIONS, FACTION_IDS } from '../data/factions.ts';
 
 const NPC_NAMES = ['Elder Thorne', 'Summoner Kai', 'Merchant Jace', 'Healer Aria', 'Guide Lyra'];
 
@@ -17,6 +18,13 @@ function hash(x: number, y: number, floorSeed: number, salt: string = ''): numbe
     h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
   }
   return Math.abs(h % 1000000) / 1000000;
+}
+
+function pickFactionAlignment(rng: SeededRandom): NPC['factionAlignment'] {
+  const factionId = rng.pick(FACTION_IDS) ?? 'merchant_guild';
+  const loyaltyRaw = rng.int(-30, 60);
+  const loyalty = Math.round(loyaltyRaw / 5) * 5;
+  return { factionId, loyalty };
 }
 
 function generateNPC(rng: SeededRandom, role: NPC['role'], baseSeed: number): NPC {
@@ -30,6 +38,7 @@ function generateNPC(rng: SeededRandom, role: NPC['role'], baseSeed: number): NP
     schedule,
     currentActivity: schedule[0]?.activity ?? 'work',
     relationships: {},
+    factionAlignment: pickFactionAlignment(rng),
   };
 }
 
