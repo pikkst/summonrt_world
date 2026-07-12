@@ -499,7 +499,7 @@ Sprint goal: NPC AI, quest generation, ecosystem simulation, ecological balance 
 - [x] T9.5 – Add marriage/inheritance: NPC families pass property/wealth, demographic shifts
  - [x] T9.6 – Implement faction AI: NPC alignments, faction power shifts from quest outcomes
 - [x] T9.7 – Create rumor system: NPCs share world-state info (boss weakness, hidden quests) based on trust
-- [ ] T9.8 – Enhance quest generation: templated (story/legendary) + procedural (faction/exploration/crafting)
+- [x] T9.8 – Enhance quest generation: templated (story/legendary) + procedural (faction/exploration/crafting)
 - [ ] T9.9 – Add quest parameter pull from world state (available monsters, missing resources, NPC needs)
 - [ ] T9.10 – Implement ecosystem simulation algorithm (per World Tick):
   - [ ] T9.10.1 – Resource regeneration (plants 30 days, ore 90 days)

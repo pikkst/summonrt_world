@@ -1,6 +1,6 @@
 import type { NPC, NPCRelationship, WorldData, Rumor, RumorCategory } from '../../types/game.ts';
 import { getRelationshipTier } from './relationship.ts';
-import { QUEST_TEMPLATES } from '../../data/quests.ts';
+import { QUEST_TEMPLATES, getQuestTemplate } from '../../data/quests.ts';
 import { getWorldElement } from '../dungeon/BossScaling.ts';
 
 export const RUMOR_TRUST_THRESHOLD: Record<string, number> = {
@@ -53,12 +53,12 @@ export function generateRumor(category: RumorCategory, npc: NPC, world: WorldDat
     case 'hidden_quest': {
       const hiddenQuests = Object.entries(QUEST_TEMPLATES).filter(([key]) => key !== 'starter_explore' && key !== 'starter_capture');
       const index = deterministicIndex(npc.id, category, turnCount, hiddenQuests.length);
-      const quest = hiddenQuests[index];
+      const quest = getQuestTemplate(hiddenQuests[index]?.[0] ?? '');
       if (!quest) return null;
       return {
         id,
         category,
-        content: `Word is, there's a quest called "${quest[1].title}" that not everyone knows about.`,
+        content: `Word is, there's a quest called "${quest.title}" that not everyone knows about.`,
         worldId: world.id,
         trustRequired: getTrustRequirement(category),
         sourceNpcId: npc.id,

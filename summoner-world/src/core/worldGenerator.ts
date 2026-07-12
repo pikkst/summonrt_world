@@ -8,6 +8,7 @@ import { buildDefaultSchedule } from './npc/schedule';
 import { createDefaultRelationship } from './npc/relationship';
 import { worldEventBus } from './worldEventBus.ts';
 import { FACTIONS, FACTION_IDS } from '../data/factions.ts';
+import { generateNPCQuestBundle } from './quest/questGeneration';
 
 const NPC_NAMES = ['Elder Thorne', 'Summoner Kai', 'Merchant Jace', 'Healer Aria', 'Guide Lyra'];
 
@@ -27,23 +28,33 @@ function pickFactionAlignment(rng: SeededRandom): NPC['factionAlignment'] {
   return { factionId, loyalty };
 }
 
-function generateNPC(rng: SeededRandom, role: NPC['role'], baseSeed: number): NPC {
+function generateNPC(rng: SeededRandom, role: NPC['role'], baseSeed: number, worldId: number): NPC {
   const schedule = buildDefaultSchedule(role, `${baseSeed}_${role}_${rng.int(0, 9999)}`);
+  const factionAlignment = pickFactionAlignment(rng);
+  const baseQuests = role === 'quest_giver' ? ['starter_explore', 'starter_capture'] : [];
+  const proceduralQuests = generateNPCQuestBundle(
+    `npc_${rng.int(0, 99999)}`,
+    factionAlignment,
+    worldId,
+    worldId * 5,
+    baseSeed
+  );
+  const quests = [...baseQuests, ...proceduralQuests.map((q) => q.key)];
   return {
     id: `npc_${rng.int(0, 99999)}`,
     name: rng.pick(NPC_NAMES) || 'Unknown NPC',
     role,
     dialogue: [`Greetings, Traveler. This sector of Floor 1 is vast beyond imagination.`],
-    quests: role === 'quest_giver' ? ['starter_explore', 'starter_capture'] : [],
+    quests,
     schedule,
     currentActivity: schedule[0]?.activity ?? 'work',
     relationships: {},
-    factionAlignment: pickFactionAlignment(rng),
+    factionAlignment,
   };
 }
 
 export function generateTile(x: number, y: number, worldId: number): TileData {
-  const tile = generateTileFromSeed(x, y, getFloorSeed(worldId));
+  const tile = generateTileFromSeed(x, y, getFloorSeed(worldId), worldId);
   if (tile.resourceType && tile.resourceQty && tile.resourceQty > 0) {
     worldEventBus.publish({
       type: 'ResourceSpawned',
@@ -59,7 +70,7 @@ export function generateTile(x: number, y: number, worldId: number): TileData {
   return tile;
 }
 
-export function generateTileFromSeed(x: number, y: number, seed: number): TileData {
+export function generateTileFromSeed(x: number, y: number, seed: number, worldId: number): TileData {
   const h = (s: string) => hash(x, y, seed, s);
   const biome = getBiomeForCoords(x, y, seed);
 
@@ -108,7 +119,7 @@ export function generateTileFromSeed(x: number, y: number, seed: number): TileDa
     specialType = specialTypes[specialIdx] as TileData['specialType'];
     if (specialType === 'city' || specialType === 'outpost') {
       const rng = new SeededRandom(x * y + seed);
-      npc = generateNPC(rng, 'quest_giver', seed);
+      npc = generateNPC(rng, 'quest_giver', seed, worldId);
     }
   }
 
@@ -137,7 +148,7 @@ export function generateWorld(worldId: number, _playerAffinity: ElementalAffinit
       for (let dx = -2; dx <= 2; dx++) {
         const tx = startX + dx;
         const ty = startY + dy;
-         const tile = generateTileFromSeed(tx, ty, floorSeed);
+         const tile = generateTileFromSeed(tx, ty, floorSeed, worldId);
         tile.discovered = true;
         if (dx === 0 && dy === 0) tile.explored = true;
         tiles.set(getTileKey(tx, ty), tile);

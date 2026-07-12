@@ -2,8 +2,9 @@ import type { GameStore, GameStoreState, PlayerState, WorldData, LogEntry, Quest
 import { createLog, calculateMovementModifiers, processTileDiscovery, getPlayerElements, addPlayerXP, getWorldModifier, applyMinViableLevelScaling, calculateMinViableLevel } from '../helpers.ts';
 import { generateTile } from '../../../core/worldGenerator.ts';
 import { getTileKey, getAffinityWeight, calculateBaseCaptureProbability, DUNGEON_ASCEND_SCROLL, WORLD_SIZE } from '../../../data/constants.ts';
-import { QUEST_TEMPLATES } from '../../../data/quests.ts';
+import { getQuestTemplate } from '../../../data/quests.ts';
 import { FACTION_IDS } from '../../../data/factions.ts';
+import { getFactionPower } from '../../../core/faction/factionAI.ts';
 import { generateCreatureTemplate, SKILL_TEMPLATES } from '../../../modules/creatures/creatureFactory.ts';
 import { SeededRandom } from '../../../utils/SeededRandom.ts';
 import type { MissionStatus, MissionModifiers, ActiveMission } from '../../../core/missionQueue.ts';
@@ -59,6 +60,18 @@ function recordPlayerCoreStatistic(set: SetState<GameStore>, event: PlayerStatis
         statistics: applyPlayerStatisticEvent(state.playerCore.statistics, event),
       },
     };
+  });
+}
+
+function updateFactionQuestProgress(quests: QuestInstance[]): QuestInstance[] {
+  return quests.map((q) => {
+    const template = getQuestTemplate(q.templateKey);
+    if (!template || q.status !== 'active') return q;
+    if (template.type === 'faction' && template.target && FACTION_IDS.includes(template.target)) {
+      const power = getFactionPower(template.target);
+      return { ...q, progress: Math.min(q.targetProgress, power) };
+    }
+    return q;
   });
 }
 
@@ -248,7 +261,7 @@ export const missionActions = (set: SetState<GameStore>, get: () => GameStore) =
 
     set((state) => {
       const updatedQuests = state.player!.activeQuests.map((q: QuestInstance) => {
-        const template = QUEST_TEMPLATES[q.templateKey];
+        const template = getQuestTemplate(q.templateKey);
         if (!template || q.status !== 'active') return q;
 
         if (template.type === 'explore' && newlyExplored) {
@@ -706,7 +719,7 @@ finishCapture: () => {
 
        set((state) => {
          const updatedQuests = state.player!.activeQuests.map((q: QuestInstance) => {
-           const template = QUEST_TEMPLATES[q.templateKey];
+           const template = getQuestTemplate(q.templateKey);
            if (!template || q.status !== 'active') return q;
            if (template.type === 'summon') {
              return { ...q, progress: Math.min(q.targetProgress, q.progress + 1) };
@@ -783,7 +796,7 @@ finishCapture: () => {
 
     if (npc.quests && npc.quests.length > 0) {
       npc.quests.forEach(qKey => {
-        const template = QUEST_TEMPLATES[qKey];
+        const template = getQuestTemplate(qKey);
         const alreadyHas = player.activeQuests.find(aq => aq.templateKey === qKey);
         const alreadyDone = player.completedQuests.includes(qKey);
 
@@ -844,10 +857,17 @@ finishCapture: () => {
         };
       });
     }
+
+    set((state) => ({
+      player: {
+        ...state.player!,
+        activeQuests: updateFactionQuestProgress(state.player!.activeQuests),
+      },
+    }));
   },
 
   acceptQuest: (questKey: string) => {
-    const template = QUEST_TEMPLATES[questKey];
+    const template = getQuestTemplate(questKey);
     if (!template) return;
 
     set((state) => {
@@ -878,7 +898,7 @@ finishCapture: () => {
     const quest = player.activeQuests[qIdx];
     if (!quest) return;
 
-    const template = QUEST_TEMPLATES[quest.templateKey];
+    const template = getQuestTemplate(quest.templateKey);
     if (!template) return;
 
     if ((quest.progress || 0) < quest.targetProgress) return;
@@ -947,6 +967,13 @@ finishCapture: () => {
         shiftFactionPower(factionId, delta, `quest:${quest.templateKey}`, gameTimeMinutes, turnCount);
       }
     }
+
+    set((state) => ({
+      player: {
+        ...state.player!,
+        activeQuests: updateFactionQuestProgress(state.player!.activeQuests),
+      },
+    }));
 
     appendLog(`Quest Completed: ${template.title}!`, 'success');
   },
@@ -1119,7 +1146,7 @@ finishCapture: () => {
 
     set((state) => {
       const updatedQuests = state.player!.activeQuests.map((q: QuestInstance) => {
-        const template = QUEST_TEMPLATES[q.templateKey];
+        const template = getQuestTemplate(q.templateKey);
         if (template && template.type === 'summon' && template.target === 'fusion' && q.status === 'active') {
           return { ...q, progress: Math.min(q.targetProgress, q.progress + 1) };
         }
@@ -1456,7 +1483,7 @@ resolveDungeonEncounter: (victory: boolean) => {
 
        set((state) => {
          const updatedQuests = state.player!.activeQuests.map((q: QuestInstance) => {
-           const template = QUEST_TEMPLATES[q.templateKey];
+           const template = getQuestTemplate(q.templateKey);
            if (!template || q.status !== 'active') return q;
 
            if (template.type === 'combat' && template.target === 'dungeon_floor') {

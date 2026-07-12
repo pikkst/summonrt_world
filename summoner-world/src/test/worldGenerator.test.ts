@@ -72,9 +72,9 @@ describe('T7.1 - Perlin/Voronoi biome generation', () => {
 
 describe('T7.12 - Deterministic tile generation for all players', () => {
   it('generates identical full tile for same seed and coordinates', () => {
-    const first = generateTileFromSeed(100, 200, 1337);
-    const second = generateTileFromSeed(100, 200, 1337);
-    const third = generateTileFromSeed(100, 200, 1337);
+    const first = generateTileFromSeed(100, 200, 1337, 1);
+    const second = generateTileFromSeed(100, 200, 1337, 1);
+    const third = generateTileFromSeed(100, 200, 1337, 1);
 
     expect(second).toEqual(first);
     expect(third).toEqual(first);
@@ -102,8 +102,8 @@ describe('T7.12 - Deterministic tile generation for all players', () => {
     ];
 
     for (const [x, y] of coords) {
-      const first = generateTileFromSeed(x, y, seed);
-      const second = generateTileFromSeed(x, y, seed);
+      const first = generateTileFromSeed(x, y, seed, 1);
+      const second = generateTileFromSeed(x, y, seed, 1);
       expect(second).toEqual(first);
     }
   });
@@ -149,8 +149,8 @@ describe('T7.12 - Deterministic tile generation for all players', () => {
     const seed2 = 2000;
     const [x, y] = [500, 500];
 
-    const tile1 = generateTileFromSeed(x, y, seed1);
-    const tile2 = generateTileFromSeed(x, y, seed2);
+    const tile1 = generateTileFromSeed(x, y, seed1, 1);
+    const tile2 = generateTileFromSeed(x, y, seed2, 1);
 
     expect(tile2).not.toEqual(tile1);
   });

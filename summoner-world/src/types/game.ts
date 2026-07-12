@@ -354,7 +354,7 @@ export interface QuestTemplate {
   key: string;
   title: string;
   description: string;
-  type: 'explore' | 'combat' | 'gather' | 'summon' | 'social';
+  type: 'explore' | 'combat' | 'gather' | 'summon' | 'social' | 'faction' | 'crafting' | 'story' | 'legendary';
   target?: string;
   amount: number;
   rewards: {
@@ -364,6 +364,7 @@ export interface QuestTemplate {
     element?: Element;
   };
   factionEffects?: Record<string, number>;
+  tags?: string[];
 }
 
 export type NPCActivity = 'sleep' | 'work' | 'travel' | 'market' | 'tavern';
