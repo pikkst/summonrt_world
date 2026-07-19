@@ -160,5 +160,68 @@ export const QUEST_TEMPLATES: Record<string, QuestTemplate> = {
       exp: 5000,
       element: 'omni'
     }
+  },
+  story_void_call: {
+    key: 'story_void_call',
+    title: 'The Void Call',
+    description: 'Darkness whispers from beyond the spire. Face the void to uncover secrets forbidden to mortal summoners.',
+    type: 'story',
+    target: 'dungeon_floor',
+    amount: 15,
+    rewards: {
+      money: 8000,
+      exp: 4000,
+      element: 'darkness'
+    },
+    tags: ['story', 'legendary']
+  },
+  story_primordial_bond: {
+    key: 'story_primordial_bond',
+    title: 'Primordial Bond',
+    description: 'An ancient creature of the first age seeks a worthy contractor. Capture it to forge a bond that transcends time.',
+    type: 'story',
+    amount: 1,
+    rewards: {
+      money: 10000,
+      exp: 5000,
+      items: [{ templateKey: 'soul_crystal_rare', quantity: 5 }]
+    },
+    tags: ['story', 'legendary']
+  },
+  legendary_world_boss: {
+    key: 'legendary_world_boss',
+    title: 'Legend: Ancient Spire Overlord',
+    description: 'An unstoppable force guards the highest reaches of the spire. Only a master summoner can hope to prevail.',
+    type: 'legendary',
+    target: 'world_boss',
+    amount: 1,
+    rewards: {
+      money: 15000,
+      exp: 8000,
+      items: [{ templateKey: 'boss_egg', quantity: 2 }]
+    },
+    tags: ['legendary']
+  },
+  legendary_fusion_master: {
+    key: 'legendary_fusion_master',
+    title: 'Legend: Fusion Mastery',
+    description: 'Master the art of fusion to create a being of impossible power. The ancient texts promise great rewards.',
+    type: 'legendary',
+    target: 'fusion',
+    amount: 3,
+    rewards: {
+      money: 12000,
+      exp: 6000,
+      items: [{ templateKey: 'soul_crystal_rare', quantity: 4 }]
+    },
+    tags: ['legendary']
   }
 };
+
+export function registerQuestTemplate(template: QuestTemplate): void {
+  QUEST_TEMPLATES[template.key] = template;
+}
+
+export function getQuestTemplate(key: string): QuestTemplate | undefined {
+  return QUEST_TEMPLATES[key];
+}

@@ -1,5 +1,5 @@
 import type { GameStore, SetState } from '../types.ts';
-import type { CraftingRecipe, Element } from '../../../types/game.ts';
+import type { CraftingRecipe, Element, QuestInstance } from '../../../types/game.ts';
 import { addItemToInventory } from '../../../core/playerCore/inventoryCore';
 import { ALL_CRAFTING_RECIPES } from '../../../data/crafting/recipes';
 import { checkRecipeRequirements, calculateCraftingSuccessChance, calculateCraftingDurationSeconds, resolveCraftingResult, hasMaterials, getMissingMaterials } from '../../../core/playerCore/craftingCore';
@@ -7,6 +7,7 @@ import { getItemTemplate } from '../../../data/crafting/itemTemplates';
 import { applyPlayerStatisticEvent } from '../../../core/playerCore/playerStatisticsTracking';
 import { refreshTitleAchievementState } from '../../../core/playerCore/titleAchievementCore';
 import { economyEventBus } from '../../../core/economy/economyEventBus';
+import { getQuestTemplate } from '../../../data/quests';
 
 export interface CraftingUIState {
   selectedRecipeKey: string | null;
@@ -117,10 +118,24 @@ export const craftingActions = (set: SetState<GameStore>, get: () => GameStore) 
     }
 
     const updatedStatistics = applyPlayerStatisticEvent(playerCore.statistics, { type: 'ItemCrafted', count: 1 });
+
+    const updatedQuests = playerCore.questHistory.active.map((q: QuestInstance) => {
+      const template = getQuestTemplate(q.templateKey);
+      if (!template || q.status !== 'active') return q;
+      if (template.type === 'crafting' && template.target === recipeKey && result.success) {
+        return { ...q, progress: Math.min(q.targetProgress, q.progress + 1) };
+      }
+      return q;
+    });
+
     const updatedPlayerCore = refreshTitleAchievementState({
       ...playerCore,
       inventory: updatedInventory,
       statistics: updatedStatistics,
+      questHistory: {
+        ...playerCore.questHistory,
+        active: updatedQuests,
+      },
     }, Date.now());
 
     economyEventBus.publish({
