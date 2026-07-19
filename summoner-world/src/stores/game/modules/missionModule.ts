@@ -19,6 +19,7 @@ import type { GameEngineState } from '../../../core/gameEngine.ts';
 import { createHeartbeat } from '../../../core/heartbeat.ts';
 import { getAggregateStats, getAllNodes, getCareerModifiers } from '../../../data/careerTree/index';
 import { RESOURCE_MAX_QTY, getRespawnDays, processResourceRespawn } from '../../../core/worldTick.ts';
+import { processEcosystemTick } from '../../../core/ecosystem';
 import { applyCaptureRateBonus, applyXPBoost, getCareerSystemBonuses } from '../../../data/careerTreeIntegration';
 import { getFusionResult, calculateFusionRarityWithSpecial } from '../../../data/fusionMatrix.ts';
 import { inheritSkills } from '../../../data/fusionUtils.ts';
@@ -2164,12 +2165,23 @@ const modifiers: MissionModifiers = {
        }
      };
 
-     const applyResourceRespawn = (): void => {
-       const { worlds, currentWorldId, dayCount, turnCount, player } = get();
-       processResourceRespawn({ dayCount, worlds, currentWorldId, turnCount, gameTimeMinutes: player?.gameTimeMinutes });
-     };
+      const applyResourceRespawn = (): void => {
+        const { worlds, currentWorldId, dayCount, turnCount, player } = get();
+        processResourceRespawn({ dayCount, worlds, currentWorldId, turnCount, gameTimeMinutes: player?.gameTimeMinutes });
+      };
 
-     const applyWeatherUpdate = (): void => {
+      const applyEcosystemTick = (): void => {
+        const { worlds, currentWorldId, dayCount, turnCount, player } = get();
+        const world = worlds.get(currentWorldId);
+        if (!world) return;
+        processEcosystemTick(world, {
+          dayCount,
+          turnCount,
+          gameTimeMinutes: player?.gameTimeMinutes ?? 0,
+        });
+      };
+
+      const applyWeatherUpdate = (): void => {
        const { worlds, currentWorldId, turnCount, player } = get();
        const world = worlds.get(currentWorldId);
        if (!world || !player) return;
@@ -2250,6 +2262,7 @@ const modifiers: MissionModifiers = {
          onWorldTick: () => {
             applyWorldTickCareerBonuses();
             applyResourceRespawn();
+            applyEcosystemTick();
             applyWeatherUpdate();
             applyHousingEconomy();
             applyNPCTravelTick();

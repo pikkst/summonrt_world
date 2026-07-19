@@ -10,6 +10,7 @@ import { worldEventBus } from './worldEventBus.ts';
 import { FACTIONS, FACTION_IDS } from '../data/factions.ts';
 import { generateNPCQuestBundle } from './quest/questGeneration';
 import { deriveWorldStateSnapshot } from './quest/worldStateQuest';
+import { createDefaultTileEcology, initializeEcosystem } from './ecosystem';
 
 const NPC_NAMES = ['Elder Thorne', 'Summoner Kai', 'Merchant Jace', 'Healer Aria', 'Guide Lyra'];
 
@@ -137,6 +138,7 @@ export function generateTileFromSeed(x: number, y: number, seed: number, worldId
     resourceType,
     resourceQty,
     encounterSeed: Math.floor(h('encounter') * 999999),
+    ecology: createDefaultTileEcology(),
   };
 }
 
@@ -161,7 +163,7 @@ export function generateWorld(worldId: number, _playerAffinity: ElementalAffinit
    const weather = createInitialWeatherState(floorSeed, 0);
    const settlements = generateSettlements(worldId, floorSeed);
 
-   return {
+   const world = {
       id: worldId,
       seed: floorSeed,
       name: getWorldName(worldId),
@@ -173,4 +175,8 @@ export function generateWorld(worldId: number, _playerAffinity: ElementalAffinit
       weather,
       settlements,
     };
-  }
+
+   initializeEcosystem(world);
+
+   return world;
+   }

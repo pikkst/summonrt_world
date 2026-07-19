@@ -508,10 +508,10 @@ Sprint goal: NPC AI, quest generation, ecosystem simulation, ecological balance 
   - [x] T9.9.4 – Add `generateNPCNeedQuest` (resource supply / monster bounty from NPC needs)
   - [x] T9.9.5 – Wire world-state snapshot into `generateNPCQuestBundle` and `worldGenerator` NPC generation
   - [x] T9.9.6 – Add unit tests for snapshot derivation, needs, and world-state quests
-- [ ] T9.10 – Implement ecosystem simulation algorithm (per World Tick):
-  - [ ] T9.10.1 – Resource regeneration (plants 30 days, ore 90 days)
-  - [ ] T9.10.2 – Population dynamics (birth, death, migration)
-  - [ ] T9.10.3 – Player impact (overhunting 60 day penalty, deforestation → herbivore carrying capacity, pollution)
+- [x] T9.10 – Implement ecosystem simulation algorithm (per World Tick):
+  - [x] T9.10.1 – Resource regeneration (plants 30 days, ore 90 days)
+  - [x] T9.10.2 – Population dynamics (birth, death, migration)
+  - [x] T9.10.3 – Player impact (overhunting 60 day penalty, deforestation → herbivore carrying capacity, pollution)
 - [ ] T9.11 – Add ecological balance compensator: <10% baseline triggers Sanctuary event for 3 days
 - [ ] T9.12 – Implement keystone species loss → biome shift (forest → barren, 30 days unresolved)
 - [ ] T9.13 – Test 1000-tick ecosystem simulation (overhunting crash + recovery)

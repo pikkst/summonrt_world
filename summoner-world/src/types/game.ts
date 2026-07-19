@@ -233,6 +233,12 @@ export interface TileData {
   encounterSeed?: number;
   npc?: NPC;
   settlement?: Settlement;
+  ecology?: TileEcology;
+}
+
+export interface TileEcology {
+  plantDensity: number;
+  creatureDensity: number;
 }
 
 export interface WorldData {
@@ -246,12 +252,22 @@ export interface WorldData {
   startTile: { x: number; y: number };
   weather: WeatherState;
   settlements: Settlement[];
+  ecosystem?: EcosystemState;
 }
 
 export interface Resource {
   current: number;
   max: number;
   lastUpdate: string;
+}
+
+export interface EcosystemState {
+  populations: Record<string, number>;
+  carryingCapacity: Record<string, number>;
+  overhuntingPenalties: Record<string, number>;
+  deforestationLevel: number;
+  pollutionLevel: number;
+  lastTickDay: number;
 }
 
 export interface PlayerState {
