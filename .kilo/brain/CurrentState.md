@@ -26,7 +26,7 @@ Player Core
 
 ## Completed Foundation
 
-According to the active task list, Sprint 0 through Sprint 5 are complete.
+According to the active task list, Sprint 0 through Sprint 8 are complete.
 
 Major completed areas include:
 
@@ -39,30 +39,28 @@ Major completed areas include:
 - Creature system
 - Fusion logic
 - Skill inheritance
-- Early combat and dungeon foundation
+- Combat and dungeon system
+- World generation and navigation
+- Economy, housing and crafting
+- NPC AI, quests and ecosystem simulation
 
 ## Current Main Area
 
-Sprint 6: Combat and Dungeon System.
+Sprint 9: NPCs, Quests and Ecosystem.
 
-Important dungeon systems already exist:
+Important ecosystem systems now exist:
 
-- Dungeon floor generation
-- Deterministic floor seeds
-- Room graph generation
-- Treasure placement
-- Room type assignment
-- Boss floor generation
-- Tower generation
-- Safe floors
-- Pathfinding utilities
+- Ecosystem simulation per world tick
+- Resource regeneration (plants 30 days, ore 90 days)
+- Population dynamics (birth, death, migration)
+- Player impact tracking (overhunting, deforestation, pollution)
 
 ## Next High-Value Task
 
 The recommended next implementation task is:
 
 ```text
-T6.12 - Test full clear World 10 dungeon simulation
+T9.11 - Add ecological balance compensator
 ```
 
 This should be implemented as a dedicated branch and Pull Request.
@@ -70,7 +68,7 @@ This should be implemented as a dedicated branch and Pull Request.
 Suggested branch:
 
 ```text
-feature/T6-12-world-10-dungeon-simulation
+feature/T9.11-ecological-balance-compensator
 ```
 
 ## Important Upcoming Work

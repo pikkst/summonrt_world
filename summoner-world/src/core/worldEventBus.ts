@@ -138,6 +138,48 @@ export type WorldTravelEvent =
       turnCount: number;
     }
   | {
+      type: 'CreaturePopulationChanged';
+      worldId: number;
+      creatureKey: string;
+      previousCount: number;
+      newCount: number;
+      gameTimeMinutes: number;
+      turnCount: number;
+    }
+  | {
+      type: 'OverhuntingPenaltyApplied';
+      worldId: number;
+      creatureKey: string;
+      penaltyTurns: number;
+      gameTimeMinutes: number;
+      turnCount: number;
+    }
+  | {
+      type: 'DeforestationEvent';
+      worldId: number;
+      x: number;
+      y: number;
+      severity: number;
+      gameTimeMinutes: number;
+      turnCount: number;
+    }
+  | {
+      type: 'PollutionEvent';
+      worldId: number;
+      x: number;
+      y: number;
+      level: number;
+      gameTimeMinutes: number;
+      turnCount: number;
+    }
+  | {
+      type: 'EcosystemTick';
+      worldId: number;
+      dayCount: number;
+      gameTimeMinutes: number;
+      turnCount: number;
+    }
+  | {
       type: 'FactionStandingChanged';
       factionId: string;
       previousPower: number;
