@@ -9,6 +9,7 @@ import { createDefaultRelationship } from './npc/relationship';
 import { worldEventBus } from './worldEventBus.ts';
 import { FACTIONS, FACTION_IDS } from '../data/factions.ts';
 import { generateNPCQuestBundle } from './quest/questGeneration';
+import { deriveWorldStateSnapshot } from './quest/worldStateQuest';
 
 const NPC_NAMES = ['Elder Thorne', 'Summoner Kai', 'Merchant Jace', 'Healer Aria', 'Guide Lyra'];
 
@@ -28,16 +29,18 @@ function pickFactionAlignment(rng: SeededRandom): NPC['factionAlignment'] {
   return { factionId, loyalty };
 }
 
-function generateNPC(rng: SeededRandom, role: NPC['role'], baseSeed: number, worldId: number): NPC {
+function generateNPC(rng: SeededRandom, role: NPC['role'], baseSeed: number, worldId: number, world?: WorldData): NPC {
   const schedule = buildDefaultSchedule(role, `${baseSeed}_${role}_${rng.int(0, 9999)}`);
   const factionAlignment = pickFactionAlignment(rng);
   const baseQuests = role === 'quest_giver' ? ['starter_explore', 'starter_capture'] : [];
+  const snapshot = world ? deriveWorldStateSnapshot(world) : undefined;
   const proceduralQuests = generateNPCQuestBundle(
     `npc_${rng.int(0, 99999)}`,
     factionAlignment,
     worldId,
     worldId * 5,
-    baseSeed
+    baseSeed,
+    snapshot
   );
   const quests = [...baseQuests, ...proceduralQuests.map((q) => q.key)];
   return {
