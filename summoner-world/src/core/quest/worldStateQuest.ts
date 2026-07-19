@@ -31,7 +31,7 @@ function deriveAvailableMonsters(world: WorldData, count: number): WorldMonsterS
     if (!monsterElements.includes(worldElement)) {
       monsterElements.push(worldElement);
     }
-    const creatureClass = classes[rng.int(0, 4)]!;
+    const creatureClass = classes[rng.int(0, 5)]!;
     const baseMult = 1 + 0.5 + world.tier * 0.1;
     const monstersName = `${rng.pick(MONSTER_NAME_PARTS) ?? 'Wild'} ${rng.pick(MONSTER_NAME_PARTS) ?? 'Beast'}`;
     monsters.push({
@@ -85,10 +85,6 @@ export function generateNPCNeeds(
   snapshot: WorldStateSnapshot,
   turnCount: number
 ): NPCNeed[] {
-  if (snapshot.availableMonsters.length === 0 && snapshot.missingResources.length === 0) {
-    return [];
-  }
-
   const rng = new SeededRandom(`needs_${npcId}_${turnCount}`);
   const needs: NPCNeed[] = [];
 
@@ -122,7 +118,8 @@ export function generateWorldStateQuest(
   if (snapshot.availableMonsters.length === 0) return null;
 
   const rng = new SeededRandom(`wstate_${context.seed}_${context.turnCount}`);
-  const monster = rng.pick(snapshot.availableMonsters)!;
+  const monster = rng.pick(snapshot.availableMonsters);
+  if (!monster) return null;
 
   return {
     key: `proc_worldstate_combat_${snapshot.worldId}_${context.turnCount}`,
