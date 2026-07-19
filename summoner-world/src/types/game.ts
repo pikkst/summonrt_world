@@ -454,6 +454,39 @@ export interface NPC {
   familyName?: string;
   wealth?: number;
   factionAlignment?: NPCFactionAlignment;
+  needs?: NPCNeed[];
+}
+
+export type NPCNeedKind = 'monster' | 'resource' | 'item';
+
+export interface NPCNeed {
+  kind: NPCNeedKind;
+  target: string;
+  quantity: number;
+  reason?: string;
+}
+
+export interface WorldMonsterSummary {
+  key: string;
+  name: string;
+  elements: Element[];
+  creatureClass: CreatureClass;
+  difficulty: number;
+}
+
+export interface WorldResourceSummary {
+  resourceType: string;
+  available: number;
+  depleted: boolean;
+}
+
+export interface WorldStateSnapshot {
+  worldId: number;
+  tier: number;
+  worldElement: Element;
+  availableMonsters: WorldMonsterSummary[];
+  resources: WorldResourceSummary[];
+  missingResources: string[];
 }
 
 export type RoomType = 'entrance' | 'boss' | 'treasure' | 'combat' | 'trap' | 'puzzle' | 'rest' | 'elite' | 'vendor';

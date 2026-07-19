@@ -1,8 +1,9 @@
-import type { QuestTemplate, WorldData, Faction } from '../../types/game';
+import type { QuestTemplate, WorldData, Faction, WorldStateSnapshot } from '../../types/game';
 import { FACTIONS, FACTION_IDS } from '../../data/factions';
 import { ALL_CRAFTING_RECIPES } from '../../data/crafting/recipes';
 import { getWorldElement } from '../dungeon/BossScaling';
 import { registerQuestTemplate } from '../../data/quests';
+import { generateWorldStateQuestBundle } from './worldStateQuest';
 
 export type QuestCategory = 'templated' | 'procedural';
 
@@ -254,7 +255,8 @@ export function generateNPCQuestBundle(
   factionAlignment: { factionId: string; loyalty: number } | undefined,
   worldId: number,
   playerLevel: number,
-  turnCount: number
+  turnCount: number,
+  worldState?: WorldStateSnapshot
 ): QuestTemplate[] {
   const seed = npcId;
   const context: GeneratedQuestContext = { worldId, playerLevel, turnCount, seed };
@@ -293,6 +295,11 @@ export function generateNPCQuestBundle(
       registerQuestTemplate(legendaryQuest);
       quests.push(legendaryQuest);
     }
+  }
+
+  if (worldState) {
+    const worldStateQuests = generateWorldStateQuestBundle(npcId, worldState, context);
+    quests.push(...worldStateQuests);
   }
 
   return quests;
